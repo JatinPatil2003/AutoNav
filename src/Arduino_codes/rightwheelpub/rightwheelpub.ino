@@ -1,3 +1,5 @@
+//new
+//usb0
 #include <ros.h>
 #include <std_msgs/Int32.h>
 #include <geometry_msgs/Twist.h>
@@ -8,16 +10,18 @@
 #define Motor_pinA 5
 #define Motor_pinB 6
 
+// linear = 0.14 angular = 1.5
 int Count_pulses = 0;
 int Count_pulses_prev = 0;
 long currentMillis = 0;
 long previousMillis = 0;
+double rpm = 0;
 double velocity = 0.0;
 double setvelocity_r = 0.0;
 double output = 0;
-double Kp = 35.7;
-double Ki = 0.5;
-double Kd = 0.2;
+double Kp = 500;//1.5
+double Ki = 0;
+double Kd = 1;
 
 void cmdVelCallback(const geometry_msgs::Twist& twist_msg);
 
@@ -38,7 +42,7 @@ void setup() {
   pinMode(Motor_pinA, OUTPUT);
   pinMode(Motor_pinB, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(Encoder_output_B), DC_Motor_Encoder, RISING);
-  pid.SetSampleTime(50);
+  pid.SetSampleTime(10);
   pid.SetOutputLimits(-255, 255);
   pid.SetMode(AUTOMATIC);
 }
@@ -51,12 +55,18 @@ void loop() {
   nh.spinOnce();
   delay(2);
   currentMillis = millis();
-  if (currentMillis - previousMillis > 50) {
+  if (currentMillis - previousMillis > 25) {
     previousMillis = currentMillis;
     int count = Count_pulses - Count_pulses_prev;
-    velocity = (float)(count * 60.0 * 20.0) / 150.0;
+    rpm = (double)(count * 60.0 * 40.0) / 150.0;
+    velocity = (PI * 0.07 * rpm) / 60.0;
     Count_pulses_prev = Count_pulses;
   }
+  Serial.print(velocity);
+  Serial.print(" ");
+  Serial.print(output);
+  Serial.print(" ");
+  Serial.println(setvelocity_r);
 }
 
 void DC_Motor_Encoder() {
@@ -66,18 +76,18 @@ void DC_Motor_Encoder() {
   } else {
     Count_pulses--;
   }
-  Serial.print("Result right: ");
-  Serial.println(Count_pulses);
+//  Serial.print("Result right: ");
+//  Serial.println(Count_pulses);
 }
 
 void cmdVelCallback(const geometry_msgs::Twist& twist_msg)
 {
   float linear_x = twist_msg.linear.x;
   float angular_z = twist_msg.angular.z;
-  linear_x = constrain(linear_x, -0.14, 0.14);
-  angular_z = constrain(angular_z, -1.5, 1.5);
-  setvelocity_r = linear_x + (0.09 * angular_z);
-  setvelocity_r = constrain(setvelocity_r, -0.14, 0.14);
+//  linear_x = constrain(linear_x, -0.14, 0.14);
+//  angular_z = constrain(angular_z, -1.5, 1.5);
+  setvelocity_r = linear_x + (0.5 * angular_z);
+//  setvelocity_r = constrain(setvelocity_r, -0.14, 0.14);
 
 }
 
