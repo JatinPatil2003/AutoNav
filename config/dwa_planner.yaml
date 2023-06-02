@@ -24,8 +24,8 @@ DWAPlannerROS:
   latch_xy_goal_tolerance: false
 
 # Forward Simulation Parameters
-  sim_time: 1.2 # sec
-  vx_samples: 10 # units
+  sim_time: 3 # sec
+  vx_samples: 20 # units
   vy_samples: 0
   vth_samples: 40
   controller_frequency: 10.0 #hz

@@ -1,0 +1,19 @@
+<launch>
+  <node name="left_encoder" pkg="rosserial_python" type="serial_node.py" output="screen">
+    <param name="port" value="/dev/ttyUSB0"/>
+    <param name="baud" value="115200"/>
+  </node>
+  
+  <node name="right_encoder" pkg="rosserial_python" type="serial_node.py" output="screen">
+    <param name="port" value="/dev/ttyUSB1"/>
+    <param name="baud" value="115200"/>
+  </node>
+
+  <node name="odometry_node" pkg="autonav_description" type="odometrypub.py" output="screen">
+  </node>
+  
+  <node name="transform_broad_node" pkg="autonav_description" type="transformbroadcast.py" output="screen">
+  </node>
+  
+  
+</launch>
