@@ -1,5 +1,5 @@
 //old
-//usb1
+//usb0
 #include <ros.h>
 #include <std_msgs/Int32.h>
 #include <geometry_msgs/Twist.h>
@@ -36,7 +36,7 @@ void setup() {
   nh.initNode();
   nh.advertise(encoder_pub_l);
   nh.subscribe(cmd_vel_sub_l);
-  Serial.begin(115200);
+  Serial.begin(57600);
   pinMode(Encoder_output_A, INPUT);
   pinMode(Encoder_output_B, INPUT);
   pinMode(Motor_pinA, OUTPUT);
