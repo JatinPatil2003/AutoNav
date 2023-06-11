@@ -3,7 +3,7 @@
 #include <PID_v1.h>
 #include <Wire.h>
 #define SLAVE_ADDRESS 0x08
-
+#define wheel_radius 0.083
 #define Encoder_output_A 2
 #define Encoder_output_B 3
 #define Motor_pinA 5
@@ -94,6 +94,7 @@ void runmotor(){
 void sendData(){
   int value = Count_pulses;
   intToBytes(value);
+  Serial.println("data sent");
 }
 
 void receiveData(int byteCount){
@@ -105,7 +106,11 @@ void receiveData(int byteCount){
     }
   }
   if(datar != ""){
+    float rpm = (datar.toFloat() / (2 * 3.14159 * wheel_radius)) * 60;
     Serial.print("Received: ");
-    Serial.println(datar.toFloat());
+    Serial.print(datar.toFloat());
+    Serial.print(" RPM: ");
+    Serial.println(rpm);
   }
+  
 }
