@@ -1,7 +1,7 @@
 //old
 //usb0
 #include <PID_v1.h>
-#include <wire.h>
+#include <Wire.h>
 
 #define Encoder_output_A 2
 #define Encoder_output_B 3
@@ -38,18 +38,18 @@ void setup() {
 }
 
 void loop() {
-  pid.Compute();
-//   runmotor();
-
-  currentMillis = millis();
-  if (currentMillis - previousMillis > 25) {
-    previousMillis = currentMillis;
-    int count = Count_pulses - Count_pulses_prev;
-    rpm = (double)(count * 60.0 * 40.0) / 150.0;
-    // velocity = (PI * 0.07 * rpm) / 60.0;
-    Count_pulses_prev = Count_pulses;
-    Serial.println(rpm);
-  }
+//  pid.Compute();
+////   runmotor();
+//
+//  currentMillis = millis();
+//  if (currentMillis - previousMillis > 25) {
+//    previousMillis = currentMillis;
+//    int count = Count_pulses - Count_pulses_prev;
+//    rpm = (double)(count * 60.0 * 40.0) / 150.0;
+//    // velocity = (PI * 0.07 * rpm) / 60.0;
+//    Count_pulses_prev = Count_pulses;
+//    Serial.println(rpm);
+//  }
 }
 
 void DC_Motor_Encoder() {
@@ -59,6 +59,7 @@ void DC_Motor_Encoder() {
   } else {
     Count_pulses++;
   }
+  Serial.println(Count_pulses);
 }
 
 void runmotor(){
@@ -83,7 +84,7 @@ void sendData(){
     Serial.println(data);
 }
 
-void receiveData(){
+void receiveData(int byteCount){
     while (Wire.available()){
         double data = Wire.read();
         setrpm = data;

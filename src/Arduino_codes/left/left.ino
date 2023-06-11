@@ -1,7 +1,8 @@
 //old
 //usb0
 #include <PID_v1.h>
-#include <wire.h>
+#include <Wire.h>
+#define SLAVE_ADDRESS 0x08
 
 #define Encoder_output_A 2
 #define Encoder_output_B 3
@@ -31,25 +32,25 @@ void setup() {
   pid.SetSampleTime(10);
   pid.SetOutputLimits(-255, 255);
   pid.SetMode(AUTOMATIC);
-  Serial.begin(115200);
-  Wire.begin(0x08);
-  Wire.onRequest(sendData);
+  Wire.begin(SLAVE_ADDRESS);
   Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
+  Serial.begin(115200);
 }
 
 void loop() {
-  pid.Compute();
-//   runmotor();
-
-  currentMillis = millis();
-  if (currentMillis - previousMillis > 25) {
-    previousMillis = currentMillis;
-    int count = Count_pulses - Count_pulses_prev;
-    rpm = (double)(count * 60.0 * 40.0) / 150.0;
-    // velocity = (PI * 0.07 * rpm) / 60.0;
-    Count_pulses_prev = Count_pulses;
-    Serial.println(rpm);
-  }
+//  pid.Compute();
+////   runmotor();
+//
+//  currentMillis = millis();
+//  if (currentMillis - previousMillis > 25) {
+//    previousMillis = currentMillis;
+//    int count = Count_pulses - Count_pulses_prev;
+//    rpm = (double)(count * 60.0 * 40.0) / 150.0;
+//    // velocity = (PI * 0.07 * rpm) / 60.0;
+//    Count_pulses_prev = Count_pulses;
+//    Serial.println(rpm);
+//  }
 }
 
 void DC_Motor_Encoder() {
@@ -59,6 +60,20 @@ void DC_Motor_Encoder() {
   } else {
     Count_pulses++;
   }
+  Serial.println(Count_pulses);
+}
+
+void intToBytes(int value) {
+  String strValue = String(value);
+  int i;
+  int len = strValue.length();
+  byte bytearr[len+1];
+  bytearr[0] = len;
+  for(i=0;i<strValue.length(); i++){
+    bytearr[i+1] = int(strValue[i]);
+    Wire.write(bytearr[i]);
+  }
+  Wire.write(bytearr[i]);
 }
 
 void runmotor(){
@@ -77,17 +92,20 @@ void runmotor(){
 }
 
 void sendData(){
-    int data = Count_pulses;
-    Wire.write((byte*)&data, sizeof(data));
-    Serial.print("Sent data : ");
-    Serial.println(data);
+  int value = Count_pulses;
+  intToBytes(value);
 }
 
-void receiveData(){
-    while (Wire.available()){
-        double data = Wire.read();
-        setrpm = data;
-        Serial.print("Received Data : ");
-        Serial.println(setrpm);
+void receiveData(int byteCount){
+  String datar="";
+  while (Wire.available()) {
+    char c = Wire.read();
+    if(c){
+      datar += c;
     }
+  }
+  if(datar != ""){
+    Serial.print("Received: ");
+    Serial.println(datar.toFloat());
+  }
 }
