@@ -10,7 +10,7 @@ wheel_separation = 0.23
 wheel_radius = 0.083
 
 bus = smbus.SMBus(1)
-address = 0x08
+address = 0x09
 
 def send_data(data):
     arrdata = []
@@ -24,7 +24,8 @@ def cmdvelcallback(data):
     angular_z = data.angular.z
     right_wheel_velocity = (2 * linear_x + angular_z * wheel_separation) / 2
     send_data(right_wheel_velocity)
-    print("data sent")
+    datar = (right_wheel_velocity / (3.14159 * wheel_radius)) * 60
+    print("data sent", datar)
 
 rospy.init_node('right_cmdvel')  # Initialize your ROS node
 rospy.Subscriber('cmd_vel', Twist, cmdvelcallback)  # Create a subscriber

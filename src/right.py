@@ -26,9 +26,14 @@ rate = rospy.Rate(10)
 
 while not rospy.is_shutdown():
     try:
-        right_ticks = receive_data()
+        byte = bus.read_byte(address)
+        data = bus.read_i2c_block_data(address, 0, byte+1)
+        strdata = ""
+        for i in data:
+            strdata += chr(i)
+        right_ticks = int(strdata[1:])
         print("right: ",right_ticks)
         pub.publish(right_ticks)
         rate.sleep()
-    except OSError:
+    except OSError or ValueError:
         continue

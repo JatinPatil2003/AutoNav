@@ -15,8 +15,8 @@ class OdometryCalculator:
         self.last_left_ticks = 0
         self.last_right_ticks = 0
         
-        self.wheel_distance = 0.21  # cm
-        self.wheel_radius = 0.035
+        self.wheel_distance = 0.23  # cm
+        self.wheel_radius = 0.04
         self.ticks_per_revolution = 150
         
         self.x = 0.0

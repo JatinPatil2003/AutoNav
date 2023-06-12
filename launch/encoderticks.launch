@@ -1,5 +1,5 @@
 <launch>
-  <node name="left_encoder" pkg="rosserial_python" type="serial_node.py" output="screen">
+  <!-- <node name="left_encoder" pkg="rosserial_python" type="serial_node.py" output="screen">
     <param name="port" value="/dev/ttyUSB0"/>
     <param name="baud" value="57600"/>
   </node>
@@ -7,7 +7,7 @@
   <node name="right_encoder" pkg="rosserial_python" type="serial_node.py" output="screen">
     <param name="port" value="/dev/ttyUSB1"/>
     <param name="baud" value="57600"/>
-  </node>
+  </node> -->
 
   <node name="odometry_node" pkg="autonav_description" type="odometrypub.py" output="screen">
   </node>

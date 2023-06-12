@@ -17,9 +17,9 @@ long previousMillis = 0;
 double rpm = 0;
 double setrpm = 0;
 double output = 0;
-double Kp = 1;
-double Ki = 0;
-double Kd = 0;
+double Kp = 0.6;//0.6
+double Ki = 25;//25
+double Kd = 0.01;//0.01
 
 PID pid(&rpm, &output, &setrpm, Kp, Ki, Kd, DIRECT);
 
@@ -39,18 +39,18 @@ void setup() {
 }
 
 void loop() {
-//  pid.Compute();
-////   runmotor();
-//
-//  currentMillis = millis();
-//  if (currentMillis - previousMillis > 25) {
-//    previousMillis = currentMillis;
-//    int count = Count_pulses - Count_pulses_prev;
-//    rpm = (double)(count * 60.0 * 40.0) / 150.0;
-//    // velocity = (PI * 0.07 * rpm) / 60.0;
-//    Count_pulses_prev = Count_pulses;
-//    Serial.println(rpm);
-//  }
+  pid.Compute();
+  runmotor();
+
+  currentMillis = millis();
+  if (currentMillis - previousMillis > 25) {
+    previousMillis = currentMillis;
+    int count = Count_pulses - Count_pulses_prev;
+    rpm = (double)(count * 60.0 * 40.0) / 150.0;
+    // velocity = (PI * 0.07 * rpm) / 60.0;
+    Count_pulses_prev = Count_pulses;
+    Serial.println(rpm);
+  }
 }
 
 void DC_Motor_Encoder() {
@@ -60,7 +60,7 @@ void DC_Motor_Encoder() {
   } else {
     Count_pulses++;
   }
-  Serial.println(Count_pulses);
+//  Serial.println(Count_pulses);
 }
 
 void intToBytes(int value) {
@@ -94,7 +94,7 @@ void runmotor(){
 void sendData(){
   int value = Count_pulses;
   intToBytes(value);
-  Serial.println("data sent");
+//  Serial.println("data sent");
 }
 
 void receiveData(int byteCount){
@@ -106,11 +106,12 @@ void receiveData(int byteCount){
     }
   }
   if(datar != ""){
-    float rpm = (datar.toFloat() / (2 * 3.14159 * wheel_radius)) * 60;
-    Serial.print("Received: ");
-    Serial.print(datar.toFloat());
-    Serial.print(" RPM: ");
-    Serial.println(rpm);
+    float rpm = (datar.toFloat() / (3.14159 * wheel_radius)) * 60;
+//    Serial.print("Received: ");
+//    Serial.print(datar.toFloat());
+//    Serial.print(" RPM: ");
+//    Serial.println(rpm);
+    setrpm = rpm;
   }
   
 }

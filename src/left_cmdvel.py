@@ -24,7 +24,8 @@ def cmdvelcallback(data):
     angular_z = data.angular.z
     left_wheel_velocity = (2 * linear_x - angular_z * wheel_separation) / 2
     send_data(left_wheel_velocity)
-    print("data sent")
+    datar = (left_wheel_velocity / (3.14159 * wheel_radius)) * 60
+    print("data sent", datar)
 
 rospy.init_node('left_cmdvel')  # Initialize your ROS node
 rospy.Subscriber('cmd_vel', Twist, cmdvelcallback)  # Create a subscriber
