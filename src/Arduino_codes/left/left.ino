@@ -17,8 +17,8 @@ long previousMillis = 0;
 double rpm = 0;
 double setrpm = 0;
 double output = 0;
-double Kp = 0.6;//0.6
-double Ki = 25;//25
+double Kp = 0.7;//0.6
+double Ki = 18;//25
 double Kd = 0.01;//0.01
 
 PID pid(&rpm, &output, &setrpm, Kp, Ki, Kd, DIRECT);
@@ -29,7 +29,7 @@ void setup() {
   pinMode(Motor_pinA, OUTPUT);
   pinMode(Motor_pinB, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(Encoder_output_B), DC_Motor_Encoder, RISING);
-  pid.SetSampleTime(10);
+  pid.SetSampleTime(2);
   pid.SetOutputLimits(-255, 255);
   pid.SetMode(AUTOMATIC);
   Wire.begin(SLAVE_ADDRESS);
@@ -43,10 +43,10 @@ void loop() {
   runmotor();
 
   currentMillis = millis();
-  if (currentMillis - previousMillis > 25) {
+  if (currentMillis - previousMillis > 50) {
     previousMillis = currentMillis;
     int count = Count_pulses - Count_pulses_prev;
-    rpm = (double)(count * 60.0 * 40.0) / 150.0;
+    rpm = (double)((double)count * 60.0 * 20.0) / 150.0;
     // velocity = (PI * 0.07 * rpm) / 60.0;
     Count_pulses_prev = Count_pulses;
     Serial.println(rpm);

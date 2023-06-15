@@ -1,0 +1,7 @@
+<launch>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+  <include file="$(find autonav_description)/launch/encoderticks.launch" />
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find autonav_description)/rviz/autonav.rviz"/>
+  <include file="$(find autonav_description)/launch/navigation.launch" />
+</launch>

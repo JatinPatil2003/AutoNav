@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find autonav_description)/launch/i2c.launch" />
+    <include file="$(find autonav_description)/launch/x4.launch" />  
+</launch>

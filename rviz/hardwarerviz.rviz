@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Map1
       Splitter Ratio: 0.5
     Tree Height: 579
   - Class: rviz/Selection
@@ -123,7 +124,7 @@ Visualization Manager:
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.019999999552965164
-      Style: Flat Squares
+      Style: Points
       Topic: /scan
       Unreliable: false
       Use Fixed Frame: true
@@ -167,7 +168,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.554835796356201
+      Distance: 37.17070770263672
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
