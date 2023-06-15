@@ -34,6 +34,8 @@ while not rospy.is_shutdown():
         right_ticks = int(strdata[1:])
         print("right: ",right_ticks)
         pub.publish(right_ticks)
+        time.sleep(0.05)
         rate.sleep()
-    except OSError or ValueError:
+    except:
+        print("Hello OSError - right.py")
         continue
