@@ -29,13 +29,14 @@ while not rospy.is_shutdown():
         byte = bus.read_byte(address)
         data = bus.read_i2c_block_data(address, 0, byte+1)
         strdata = ""
-        for i in data:
+        for i in data[1:]:
             strdata += chr(i)
-        left_ticks = int(strdata[1:])
+        left_ticks = int(strdata)
         print("left: ",left_ticks)
         pub.publish(left_ticks)
-        time.sleep(0.05)
+        time.sleep(0.1)
         rate.sleep()
-    except:
-        print("Hello Error - left.py")
+    except Exception as e:
+        print("Hello Error - left.py", e)
+        time.sleep(1)
         continue

@@ -27,8 +27,10 @@ def cmdvelcallback(data):
         send_data(left_wheel_velocity)
         datar = (left_wheel_velocity / (3.14159 * wheel_radius)) * 60
         print("data sent", datar)
-    except:
-        print("cmdvel Error - left_cmdvel.py")
+    except Exception as e:
+        print("cmdvel Error - left_cmdvel.py", e)
+        time.sleep(0.75)
+        pass
 
 rospy.init_node('left_cmdvel')  # Initialize your ROS node
 rospy.Subscriber('cmd_vel', Twist, cmdvelcallback)  # Create a subscriber
