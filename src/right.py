@@ -38,5 +38,5 @@ while not rospy.is_shutdown():
         rate.sleep()
     except Exception as e:
         print("Hello OSError - right.py", e)
-        time.sleep(1)
+        time.sleep(0.75)
         continue
