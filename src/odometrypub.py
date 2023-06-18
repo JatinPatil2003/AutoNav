@@ -34,7 +34,7 @@ class OdometryCalculator:
         self.right_ticks = msg.data
     
     def calculate_odometry(self):
-        rate = rospy.Rate(10)  # Update rate (10 Hz)
+        rate = rospy.Rate(7.5)  # Update rate (10 Hz)
         
         while not rospy.is_shutdown():
             delta_left = self.left_ticks - self.last_left_ticks
@@ -58,9 +58,8 @@ class OdometryCalculator:
             rate.sleep()
     
     def publish_odometry(self):
-        current_time = rospy.Time.now()
         odom = Odometry()
-        odom.header.stamp = current_time
+        odom.header.stamp = rospy.Time.now()
         odom.header.frame_id = "odom"
         odom.child_frame_id = "base_link"
         

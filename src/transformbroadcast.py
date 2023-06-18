@@ -6,11 +6,10 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import TransformStamped
 
 def odom_callback(msg):
-    current_time = rospy.Time.now()
 
     # Create a TransformStamped message
     odom_to_base_link = TransformStamped()
-    odom_to_base_link.header.stamp = current_time
+    odom_to_base_link.header.stamp = rospy.Time.now()
     odom_to_base_link.header.frame_id = 'odom'
     odom_to_base_link.child_frame_id = 'base_link'
 
