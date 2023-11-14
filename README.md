@@ -2,7 +2,7 @@
 <h1 align="center">
 <!-- <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" width="100" /> -->
 
-![main](https://github.com/JatinPatil2003/AutoNav/images/AutoNavv85.png)
+![main](https://github.com/JatinPatil2003/AutoNav/images/AutoNavv85.png?raw=true)
 
 <br>AUTONAV</h1>
 <h3>◦ HTTPStatus Exception: 404</h3>
