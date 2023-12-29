@@ -31,14 +31,14 @@
     <inertia ixx="3.8e-05" iyy="5e-06" izz="3.8e-05" ixy="0.0" iyz="-0.0" ixz="0.0"/>
   </inertial>
   <visual>
-    <origin xyz="-0.15 0.0 -0.082" rpy="0 0 0"/>
+    <origin xyz="-0.175 0.0 -0.082" rpy="0 0 0"/>
     <geometry>
       <mesh filename="package://autonav_description/meshes/depth_camera_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="paint_enamel_glossy_grey"/>
   </visual>
   <collision>
-    <origin xyz="-0.15 0.0 -0.082" rpy="0 0 0"/>
+    <origin xyz="-0.175 0.0 -0.082" rpy="0 0 0"/>
     <geometry>
       <mesh filename="package://autonav_description/meshes/depth_camera_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
@@ -94,14 +94,14 @@
     <inertia ixx="0.000489" iyy="0.000861" izz="0.000987" ixy="-0.0" iyz="0.0" ixz="-0.000148"/>
   </inertial>
   <visual>
-    <origin xyz="-0.063 -0.025 -0.1515" rpy="0 0 0"/>
+    <origin xyz="-0.0955 -0.0 -0.196" rpy="0 0 0"/>
     <geometry>
       <mesh filename="package://autonav_description/meshes/lidar_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="steel_satin"/>
   </visual>
   <collision>
-    <origin xyz="-0.063 -0.025 -0.1515" rpy="0 0 0"/>
+    <origin xyz="-0.0955 -0.0 -0.196" rpy="0 0 0"/>
     <geometry>
       <mesh filename="package://autonav_description/meshes/lidar_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
@@ -129,33 +129,33 @@
   </collision>
 </link>
 
-<joint name="Rigid 16" type="fixed">
-  <origin xyz="0.15 0.0 0.082" rpy="0 0 0"/>
+<joint name="base2depth" type="fixed">
+  <origin xyz="0.175 0.0 0.082" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="depth_camera_1"/>
 </joint>
 
-<joint name="Revolute 17" type="continuous">
+<joint name="base2right" type="continuous">
   <origin xyz="-0.00075 -0.105044 0.04" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="right_wheel_1"/>
   <axis xyz="-0.0 -1.0 0.0"/>
 </joint>
 
-<joint name="Revolute 18" type="continuous">
+<joint name="base2left" type="continuous">
   <origin xyz="-0.00075 0.105 0.04" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="left_wheel_1"/>
   <axis xyz="0.0 1.0 -0.0"/>
 </joint>
 
-<joint name="Rigid 19" type="fixed">
-  <origin xyz="0.063 0.025 0.1515" rpy="0 0 0"/>
+<joint name="base2lidar" type="fixed">
+  <origin xyz="0.0955 0.0 0.196" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="lidar_1"/>
 </joint>
 
-<joint name="Rigid 20" type="fixed">
+<joint name="base2imu" type="fixed">
   <origin xyz="0.0675 0.05 0.0835" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="imu_1"/>
