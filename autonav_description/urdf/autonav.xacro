@@ -1,0 +1,164 @@
+<?xml version="1.0" ?>
+<robot name="autonav" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find autonav_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find autonav_description)/urdf/autonav.trans" />
+<link name="base_link">
+  <inertial>
+    <origin xyz="0.025038817853430716 -1.1633430423217113e-05 0.0538872479683688" rpy="0 0 0"/>
+    <mass value="1.6848865813052847"/>
+    <inertia ixx="0.009471" iyy="0.00762" izz="0.010632" ixy="-3e-06" iyz="-0.0" ixz="-0.00066"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="powder_coat_grey"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="depth_camera_1">
+  <inertial>
+    <origin xyz="0.013571033223507722 -1.5421816108169115e-15 -1.8457457784393227e-15" rpy="0 0 0"/>
+    <mass value="0.05224581939729058"/>
+    <inertia ixx="3.8e-05" iyy="5e-06" izz="3.8e-05" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.15 0.0 -0.082" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/depth_camera_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="paint_enamel_glossy_grey"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.15 0.0 -0.082" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/depth_camera_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="right_wheel_1">
+  <inertial>
+    <origin xyz="-3.3364538596768883e-08 -0.017500170586145114 1.5158223017064376e-08" rpy="0 0 0"/>
+    <mass value="0.1635143859009559"/>
+    <inertia ixx="8.2e-05" iyy="0.000131" izz="8.2e-05" ixy="-0.0" iyz="-0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.00075 0.105044 -0.04" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/right_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="rubber_soft"/>
+  </visual>
+  <collision>
+    <origin xyz="0.00075 0.105044 -0.04" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/right_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="left_wheel_1">
+  <inertial>
+    <origin xyz="-1.4750377623972896e-09 0.017500000000000668 2.8030050856775457e-08" rpy="0 0 0"/>
+    <mass value="0.1635143859009559"/>
+    <inertia ixx="8.2e-05" iyy="0.000131" izz="8.2e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.00075 -0.105 -0.04" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/left_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="rubber_soft"/>
+  </visual>
+  <collision>
+    <origin xyz="0.00075 -0.105 -0.04" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/left_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="lidar_1">
+  <inertial>
+    <origin xyz="0.026705900429681448 -0.024999999999999415 0.03770114222279286" rpy="0 0 0"/>
+    <mass value="1.1515616542314233"/>
+    <inertia ixx="0.000489" iyy="0.000861" izz="0.000987" ixy="-0.0" iyz="0.0" ixz="-0.000148"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.063 -0.025 -0.1515" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/lidar_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="steel_satin"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.063 -0.025 -0.1515" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/lidar_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="imu_1">
+  <inertial>
+    <origin xyz="0.008350000000000996 0.009799999999999857 0.002299999999998234" rpy="0 0 0"/>
+    <mass value="0.0036264697230680163"/>
+    <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0.0" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.0675 -0.05 -0.0835" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/imu_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="plastic_matte_red"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.0675 -0.05 -0.0835" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://autonav_description/meshes/imu_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="Rigid 16" type="fixed">
+  <origin xyz="0.15 0.0 0.082" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="depth_camera_1"/>
+</joint>
+
+<joint name="Revolute 17" type="continuous">
+  <origin xyz="-0.00075 -0.105044 0.04" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="right_wheel_1"/>
+  <axis xyz="-0.0 -1.0 0.0"/>
+</joint>
+
+<joint name="Revolute 18" type="continuous">
+  <origin xyz="-0.00075 0.105 0.04" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="left_wheel_1"/>
+  <axis xyz="0.0 1.0 -0.0"/>
+</joint>
+
+<joint name="Rigid 19" type="fixed">
+  <origin xyz="0.063 0.025 0.1515" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="lidar_1"/>
+</joint>
+
+<joint name="Rigid 20" type="fixed">
+  <origin xyz="0.0675 0.05 0.0835" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="imu_1"/>
+</joint>
+
+</robot>

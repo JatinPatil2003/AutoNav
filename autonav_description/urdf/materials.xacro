@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<robot name="autonav" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+<material name="silver_default">
+  <color rgba="0.700 0.700 0.700 1.000"/>
+</material>
+<material name="rubber_soft">
+  <color rgba="0.15294117647058825 0.15294117647058825 0.15294117647058825 1.0"/>
+</material>
+<material name="steel_satin">
+  <color rgba="0.6274509803921569 0.6274509803921569 0.6274509803921569 1.0"/>
+</material>
+<material name="plastic_matte_red">
+  <color rgba="0.7686274509803922 0.20784313725490197 0.15294117647058825 1.0"/>
+</material>
+<material name="paint_enamel_glossy_grey">
+  <color rgba="0.7019607843137254 0.7019607843137254 0.7019607843137254 0.0"/>
+</material>
+<material name="powder_coat_grey">
+  <color rgba="0.7019607843137254 0.7019607843137254 0.7019607843137254 0.0"/>
+</material>
+
+</robot>
