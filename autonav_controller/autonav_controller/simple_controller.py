@@ -34,9 +34,9 @@ class SimpleController(Node):
         self.theta_ = 0.0
 
         self.wheel_cmd_pub_ = self.create_publisher(Float64MultiArray, "simple_velocity_controller/commands", 10)
-        self.vel_sub_ = self.create_subscription(TwistStamped, "bumperbot_controller/cmd_vel", self.velCallback, 10)
+        self.vel_sub_ = self.create_subscription(TwistStamped, "autonav_controller/cmd_vel", self.velCallback, 10)
         self.joint_sub_ = self.create_subscription(JointState,"joint_states", self.jointCallback, 10)        
-        self.odom_pub_ = self.create_publisher(Odometry, "bumperbot_controller/odom", 10)
+        self.odom_pub_ = self.create_publisher(Odometry, "autonav_controller/odom", 10)
 
         self.speed_conversion_ = np.array([[self.wheel_radius_/2, self.wheel_radius_/2],
                                            [self.wheel_radius_/self.wheel_separation_, -self.wheel_radius_/self.wheel_separation_]])
@@ -71,6 +71,7 @@ class SimpleController(Node):
         wheel_speed_msg.data = [wheel_speed[1, 0], wheel_speed[0, 0]]
 
         self.wheel_cmd_pub_.publish(wheel_speed_msg)
+        self.get_logger().info("Velocity published")
 
     
     def jointCallback(self, msg):

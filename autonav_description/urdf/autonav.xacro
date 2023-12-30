@@ -5,6 +5,8 @@
 <xacro:include filename="$(find autonav_description)/urdf/autonav_gazebo.xacro" />
 <xacro:include filename="$(find autonav_description)/urdf/autonav_ros2_control.xacro" />
 
+<link name="base_footprint"/>
+
 <link name="base_link">
   <inertial>
     <origin xyz="0.025038817853430716 -1.1633430423217113e-05 0.0538872479683688" rpy="0 0 0"/>
@@ -19,12 +21,24 @@
     <material name="powder_coat_grey"/>
   </visual>
   <collision>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <!-- <origin xyz="0 0 0" rpy="0 0 0"/>
     <geometry>
       <mesh filename="package://autonav_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry> -->
+    <origin xyz="0.04 0 0.005" rpy="0 0 0"/>
+    <geometry>
+      <!-- <mesh filename="package://cube_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/> -->
+      <box size="0.20 0.18 0.01" />
     </geometry>
   </collision>
 </link>
+
+<joint name="footprint2baselink" type="fixed">
+  <parent link="base_footprint"/>
+  <child link="base_link"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <axis xyz="0 0 0"/>
+</joint>
 
 <link name="depth_camera_1">
   <inertial>
@@ -138,10 +152,10 @@
 </joint>
 
 <joint name="base2right" type="continuous">
-  <origin xyz="-0.00075 -0.105044 0.04" rpy="0 0 0"/>
+  <origin xyz="-0.00075 -0.105 0.04" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="right_wheel_1"/>
-  <axis xyz="-0.0 -1.0 0.0"/>
+  <axis xyz="-0.0 1.0 0.0"/>
 </joint>
 
 <joint name="base2left" type="continuous">
