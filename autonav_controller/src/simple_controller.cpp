@@ -2,17 +2,10 @@
 #include <Eigen/Geometry>
 #include <tf2/LinearMath/Quaternion.h>
 
-
 using std::placeholders::_1;
 
-
-SimpleController::SimpleController(const std::string& name)
-                                  : Node(name)
-                                  , left_wheel_prev_pos_(0.0)
-                                  , right_wheel_prev_pos_(0.0)
-                                  , x_(0.0)
-                                  , y_(0.0)
-                                  , theta_(0.0)
+SimpleController::SimpleController(const std::string &name)
+    : Node(name), left_wheel_prev_pos_(0.0), right_wheel_prev_pos_(0.0), x_(0.0), y_(0.0), theta_(0.0)
 {
     declare_parameter("wheel_radius", 0.033);
     declare_parameter("wheel_separation", 0.17);
@@ -21,12 +14,13 @@ SimpleController::SimpleController(const std::string& name)
     RCLCPP_INFO_STREAM(get_logger(), "Using wheel radius " << wheel_radius_);
     RCLCPP_INFO_STREAM(get_logger(), "Using wheel separation " << wheel_separation_);
     wheel_cmd_pub_ = create_publisher<std_msgs::msg::Float64MultiArray>("/simple_velocity_controller/commands", 10);
-    vel_sub_ = create_subscription<geometry_msgs::msg::TwistStamped>("/bumperbot_controller/cmd_vel", 10, std::bind(&SimpleController::velCallback, this, _1));
+    vel_sub_ = create_subscription<geometry_msgs::msg::TwistStamped>("/autonav_controller/cmd_vel", 10, std::bind(&SimpleController::velCallback, this, _1));
     joint_sub_ = create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&SimpleController::jointCallback, this, _1));
-    odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("/bumperbot_controller/odom", 10);
+    odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("/autonav_controller/odom", 10);
 
-    speed_conversion_ << wheel_radius_/2, wheel_radius_/2, wheel_radius_/wheel_separation_, -wheel_radius_/wheel_separation_;
-    RCLCPP_INFO_STREAM(get_logger(), "The conversion matrix is \n" << speed_conversion_);
+    speed_conversion_ << wheel_radius_ / 2, wheel_radius_ / 2, wheel_radius_ / wheel_separation_, -wheel_radius_ / wheel_separation_;
+    RCLCPP_INFO_STREAM(get_logger(), "The conversion matrix is \n"
+                                         << speed_conversion_);
 
     // Fill the Odometry message with invariant parameters
     odom_msg_.header.frame_id = "odom";
@@ -43,7 +37,6 @@ SimpleController::SimpleController(const std::string& name)
     prev_time_ = get_clock()->now();
 }
 
-
 void SimpleController::velCallback(const geometry_msgs::msg::TwistStamped &msg)
 {
     // Implements the differential kinematic model
@@ -53,10 +46,9 @@ void SimpleController::velCallback(const geometry_msgs::msg::TwistStamped &msg)
     std_msgs::msg::Float64MultiArray wheel_speed_msg;
     wheel_speed_msg.data.push_back(wheel_speed.coeff(1));
     wheel_speed_msg.data.push_back(wheel_speed.coeff(0));
-    
+
     wheel_cmd_pub_->publish(wheel_speed_msg);
 }
-
 
 void SimpleController::jointCallback(const sensor_msgs::msg::JointState &state)
 {
@@ -114,12 +106,11 @@ void SimpleController::jointCallback(const sensor_msgs::msg::JointState &state)
     transform_broadcaster_->sendTransform(transform_stamped_);
 }
 
-
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-  rclcpp::init(argc, argv);
-  auto node = std::make_shared<SimpleController>("simple_controller");
-  rclcpp::spin(node);
-  rclcpp::shutdown();
-  return 0;
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<SimpleController>("simple_controller");
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
 }
