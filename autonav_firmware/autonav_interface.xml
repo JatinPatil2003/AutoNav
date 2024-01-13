@@ -1,0 +1,10 @@
+<library path="autonav_firmware">
+    <class name="autonav_firmware/AutonavInterface"
+      type="autonav_firmware::AutonavInterface"
+      base_class_type="hardware_interface::SystemInterface"
+    >
+      <description>
+        Autonav Hardware Interface
+      </description>
+    </class>
+  </library>

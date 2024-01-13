@@ -44,7 +44,7 @@ install(TARGETS
 )
 
 install(PROGRAMS
-  ${PROJECT_NAME}/simple_controller.py
+  ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME}
 )
 
