@@ -5,7 +5,7 @@
 
         <!-- ros2_control Gazebo -->
         <hardware>
-            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+            <plugin>autonav_firmware/AutonavInterface</plugin>
         </hardware>
         
         <!-- ros2_control Common Interfaces -->

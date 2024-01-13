@@ -1,24 +1,24 @@
 <?xml version="1.0" ?>
 <robot name="autonav" xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-<transmission name="Revolute 17_tran">
+<transmission name="base2right_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Revolute 17">
-    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <joint name="base2right">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Revolute 17_actr">
-    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <actuator name="base2right_actr">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Revolute 18_tran">
+<transmission name="base2left">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Revolute 18">
-    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <joint name="base2left">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Revolute 18_actr">
-    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  <actuator name="base2left_actr">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>

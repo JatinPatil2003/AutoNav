@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(autonav_controller)
+project(autonav_firmware)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,42 +10,57 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(Eigen3 REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(PkgConfig)
 
-include_directories(include)
-include_directories(${EIGEN3_INCLUDE_DIR})
-
-install(DIRECTORY launch config
-  DESTINATION share/${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED 
+  src/autonav_interface.cpp
 )
 
-add_executable(simple_controller src/simple_controller.cpp)
-ament_target_dependencies(simple_controller rclcpp geometry_msgs std_msgs sensor_msgs nav_msgs tf2_ros tf2 ${Eigen_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME}
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+)
 
-ament_python_install_package(${PROJECT_NAME})
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION lib
+)
 
 install(
   DIRECTORY include
   DESTINATION include
 )
 
-install(TARGETS
-  simple_controller
-  DESTINATION lib/${PROJECT_NAME}
+include_directories(
+  include
 )
 
-install(PROGRAMS
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+pluginlib_export_plugin_description_file(hardware_interface autonav_interface.xml)
+
+ament_export_include_directories(
+  include
+)
+
+ament_export_libraries(
   ${PROJECT_NAME}
-  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
 )
 
 if(BUILD_TESTING)
