@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  autonav:
+    image: autonav:latest
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup autonav_bringup.launch.py"
+    # depends_on:
+    #   - bridge
+    #   - ros1
+    network_mode: "host"
+    # volumes:
+    #   - "~/CUB_E/ros2/src:/colcon_ws/src"
+    # deploy:
+    #   restart_policy:
+    #     condition: on-failure
+    # devices:
+    #   - "/dev/bno055:/dev/bno055"
+    #   - "/dev/ydlidar_g2:/dev/ydlidar_g2"
+    # stdin_open: true
+    tty: true
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY} 
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - $HOME/.Xauthority:/root/.Xauthority
+
+  rviz:
+    container_name: rviz
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
+
+  micro_ros:
+    image: microros/micro-ros-agent:humble
+    command: serial --dev /dev/ttyesp32
+    privileged: true
+    network_mode: host
+    volumes:
+      - /dev/ttyUSB0:/dev/ttyesp32
+    # tty: true

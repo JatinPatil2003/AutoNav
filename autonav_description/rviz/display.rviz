@@ -65,6 +65,10 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         base_link:
           Alpha: 1
           Show Axes: false
@@ -108,6 +112,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        base_footprint:
+          Value: true
         base_link:
           Value: true
         depth_camera_1:
@@ -118,6 +124,8 @@ Visualization Manager:
           Value: true
         lidar_1:
           Value: true
+        odom:
+          Value: true
         right_wheel_1:
           Value: true
       Marker Scale: 0.30000001192092896
@@ -126,23 +134,26 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        base_link:
-          depth_camera_1:
-            {}
-          imu_1:
-            {}
-          left_wheel_1:
-            {}
-          lidar_1:
-            {}
-          right_wheel_1:
-            {}
+        base_footprint:
+          base_link:
+            depth_camera_1:
+              {}
+            imu_1:
+              {}
+            left_wheel_1:
+              {}
+            lidar_1:
+              {}
+            right_wheel_1:
+              {}
+        odom:
+          {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -185,7 +196,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.7469682693481445
+      Distance: 1.632352590560913
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -200,10 +211,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5703983306884766
+      Pitch: 0.6997971534729004
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.9303978085517883
+      Yaw: 3.155397415161133
     Saved: ~
 Window Geometry:
   Displays:
