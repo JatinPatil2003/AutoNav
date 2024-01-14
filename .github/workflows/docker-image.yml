@@ -1,4 +1,4 @@
-name: AutoNa_CI
+name: AutoNav_CI
 
 on:
   # push:
