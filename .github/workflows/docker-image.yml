@@ -1,0 +1,33 @@
+name: AutoNa_CI
+
+on:
+  # push:
+  #   branches: [ "ros2" ]
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up QEMU
+      run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      if: runner.os != 'Linux'
+
+    - name: Login to Docker Hub
+      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+    - name: Build and push AutoNav
+      env:
+        DOCKER_CLI_AARCH64_IMAGE: docker.io/docker/cli:24.0.6-dind-aarch64
+      run: |
+        docker buildx build \
+          --push --platform=linux/arm64,linux/amd64 \
+          -t jatinvpatil/autonav:latest \
+          --file autonav.Dockerfile \
+          .
