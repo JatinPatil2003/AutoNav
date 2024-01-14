@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int64MultiArray, Int32, Float64MultiArray
 import time
-import tkinter as tk
 import threading
 import numpy as np
 
@@ -71,9 +70,9 @@ class MotorFeedbackListener(Node):
             self.last_left_counts = left_counts
             self.last_right_counts = right_counts
 
-            self.get_logger().info(
-                f'{round(self.left_motor_rpm, 1)}, {round(self.right_motor_rpm, 1)}'
-            )
+            # self.get_logger().info(
+            #     f'{round(self.left_motor_rpm, 1)}, {round(self.right_motor_rpm, 1)}'
+            # )
     
     def cmd_callback(self):
         left = 0

@@ -15,7 +15,9 @@ controller_manager:
 autonav_controller:
   ros__parameters:
     type        : diff_drive_controller/DiffDriveController
+
     use_stamped_vel: false
+
     left_wheel_names  : ['base2left']
     right_wheel_names : ['base2right']
 
@@ -35,7 +37,7 @@ autonav_controller:
     position_feedback: true
 
     # Velocity commands timeout [s], default 0.5
-    cmd_vel_timeout: 0.5
+    cmd_vel_timeout: 0.1
 
     # Base frame_id
     base_frame_id: base_footprint #default: base_link
@@ -54,19 +56,21 @@ autonav_controller:
     linear:
       x:
         has_velocity_limits    : true
-        max_velocity           : 1.0  # m/s
-        min_velocity           : -0.5 # m/s
+        max_velocity           : 0.3  # m/s
+        min_velocity           : -0.3 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 0.8  # m/s^2
-        min_acceleration       : -0.4 # m/s^2
+        max_acceleration       : 0.6  # m/s^2
+        min_acceleration       : -0.6 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 5.0  # m/s^3
     angular:
       z:
         has_velocity_limits    : true
-        max_velocity           : 1.7  # rad/s
+        max_velocity           : 1.5  # rad/s
+        min_velocity           : -1.5 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 1.5  # rad/s^2
+        max_acceleration       : 3.0  # rad/s^2
+        min_acceleration       : -3.0 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3
 
