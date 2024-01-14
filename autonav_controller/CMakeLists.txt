@@ -16,35 +16,20 @@ find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
-find_package(Eigen3 REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-
-include_directories(include)
-include_directories(${EIGEN3_INCLUDE_DIR})
 
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
-add_executable(simple_controller src/simple_controller.cpp)
-ament_target_dependencies(simple_controller rclcpp geometry_msgs std_msgs sensor_msgs nav_msgs tf2_ros tf2 ${Eigen_LIBRARIES})
-
 ament_python_install_package(${PROJECT_NAME})
 
-install(
-  DIRECTORY include
-  DESTINATION include
-)
-
-install(TARGETS
-  simple_controller
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 install(PROGRAMS
-  ${PROJECT_NAME}
+  ${PROJECT_NAME}/odom_logger.py 
+  ${PROJECT_NAME}/pid_controller.py 
+  ${PROJECT_NAME}/tune_pid.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
