@@ -198,11 +198,16 @@ def main(args=None):
         motor_feedback_listener.set_left_motor_rpm(left)
         motor_feedback_listener.set_right_motor_rpm(right)
         
-        rclpy.spin_once(motor_feedback_listener)
-    rclpy.spin(motor_feedback_listener)
-    motor_feedback_listener.destroy_node()
-    rclpy.shutdown()
-
+        try:
+            rclpy.spin_once(motor_feedback_listener)
+        except:
+            break
+    
+    try:
+        motor_feedback_listener.destroy_node()
+        rclpy.shutdown()
+    except:
+        pass
 
 if __name__ == "__main__":
     main()
