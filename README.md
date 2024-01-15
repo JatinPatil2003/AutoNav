@@ -13,6 +13,9 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 <img src="https://img.shields.io/badge/Python-3776AB.svg?style=apps&logo=Python&logoColor=white" alt="Python" />
 <img src="https://img.shields.io/badge/C%2B%2B-00599C.svg?style=apps&logo=c%2B%2B&logoColor=white" alt="C++" />
 <img src="https://img.shields.io/badge/CMake-064F8C.svg?style=apps&logo=CMake&logoColor=white" alt="CMake" />
+
+[![AutoNav_CI](https://github.com/JatinPatil2003/AutoNav/actions/workflows/AutoNav_CI.yml/badge.svg)](https://github.com/JatinPatil2003/AutoNav/actions/workflows/AutoNav_CI.yml)
+
 </p>
 <img src="https://img.shields.io/github/license/JatinPatil2003/AutoNav?style=apps&color=5D6D7E" alt="GitHub license" />
 <img src="https://img.shields.io/github/last-commit/JatinPatil2003/AutoNav?style=apps&color=5D6D7E" alt="git-last-commit" />
