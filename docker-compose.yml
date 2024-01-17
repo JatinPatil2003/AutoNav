@@ -9,7 +9,7 @@ services:
     #   - ros1
     network_mode: "host"
     # volumes:
-    #   - "~/CUB_E/ros2/src:/colcon_ws/src"
+    #   - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
     # deploy:
     #   restart_policy:
     #     condition: on-failure
@@ -26,6 +26,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - $HOME/.Xauthority:/root/.Xauthority
+      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
 
   rviz:
     container_name: rviz

@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     # ros-humble-nav* \
     # ros-humble-slam-toolbox* \
-    # ros-humble-robot-localization* \
+    ros-humble-robot-localization* \
     ros-humble-xacro 
     # ros-humble-rmw-cyclonedds-cpp \
     # ros-humble-demo-nodes-py* \
@@ -40,6 +40,8 @@ COPY /autonav_description /colcon_ws/src/autonav_description
 COPY /autonav_firmware /colcon_ws/src/autonav_firmware
 
 COPY /autonav_bringup /colcon_ws/src/autonav_bringup
+
+COPY /autonav_localization /colcon_ws/src/autonav_localization
 
 WORKDIR /colcon_ws
 
