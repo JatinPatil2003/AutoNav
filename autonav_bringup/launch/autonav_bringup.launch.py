@@ -20,6 +20,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     autonav_description_dir = get_package_share_directory("autonav_description")
+    autonav_localization_dir = get_package_share_directory("autonav_localization")
     pkg_bno055 = get_package_share_directory('bno055')
     pkg_ydlidar = get_package_share_directory('ydlidar_ros2_driver')
 
@@ -125,6 +126,12 @@ def generate_launch_description():
         output="screen",
     )
 
+    ekf = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+        os.path.join(autonav_localization_dir, 'launch', 'ekf.launch.py'),
+        )
+    )
+
     return LaunchDescription(
         [
             use_rviz_arg,
@@ -136,5 +143,6 @@ def generate_launch_description():
             pid_controller,
             imu,
             lidar,
+            ekf,
         ]
     )
