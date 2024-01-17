@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     # ros-humble-nav* \
     # ros-humble-slam-toolbox* \
+    ros-humble-example-interfaces* \
     ros-humble-robot-localization* \
     ros-humble-xacro 
     # ros-humble-rmw-cyclonedds-cpp \
