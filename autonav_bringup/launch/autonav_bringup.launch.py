@@ -2,7 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction
+from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -15,10 +15,13 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessStart
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
     autonav_description_dir = get_package_share_directory("autonav_description")
+    pkg_bno055 = get_package_share_directory('bno055')
+    pkg_ydlidar = get_package_share_directory('ydlidar_ros2_driver')
 
     use_rviz_arg = DeclareLaunchArgument(
         "rviz",
@@ -55,6 +58,18 @@ def generate_launch_description():
         output="screen",
         arguments=["-d", os.path.join(autonav_description_dir, "rviz", "display.rviz")],
         condition=IfCondition(rviz),
+    )
+
+    imu = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+        os.path.join(pkg_bno055, 'launch', 'bno055.launch.py'),
+        )
+    ) 
+  
+    lidar = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+        os.path.join(pkg_ydlidar, 'launch', 'ydlidar_launch.py'),
+        )
     )
 
     controller_params_file = os.path.join(
@@ -119,5 +134,7 @@ def generate_launch_description():
             delayed_diff_drive_spawner,
             delayed_joint_broad_spawner,
             pid_controller,
+            imu,
+            lidar,
         ]
     )

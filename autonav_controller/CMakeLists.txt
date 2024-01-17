@@ -30,6 +30,7 @@ install(PROGRAMS
   ${PROJECT_NAME}/odom_logger.py 
   ${PROJECT_NAME}/pid_controller.py 
   ${PROJECT_NAME}/tune_pid.py
+  ${PROJECT_NAME}/control.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
