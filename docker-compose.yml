@@ -14,8 +14,8 @@ services:
     #   restart_policy:
     #     condition: on-failure
     devices:
-      - "/dev/ttyUSB2:/dev/bno055"
-      - "/dev/ttyUSB2:/dev/lidar_x4"
+      - "/dev/ttyUSB0:/dev/bno055"
+      - "/dev/ttyUSB1:/dev/lidar_x4"
     # stdin_open: true
     tty: true
     ipc: host
