@@ -43,6 +43,10 @@ COPY /autonav_bringup /colcon_ws/src/autonav_bringup
 
 COPY /autonav_localization /colcon_ws/src/autonav_localization
 
+COPY /bno055 /colcon_ws/src/bno055
+
+COPY /ydlidar_ros2_driver /colcon_ws/src/ydlidar_ros2_driver
+
 WORKDIR /colcon_ws
 
 RUN /bin/bash -c 'source /opt/ros/humble/setup.bash \
