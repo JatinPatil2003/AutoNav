@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && python3 -m pip install -U \
     smbus \
-    pyserial \
+    pyserial==3.4 \
     pynput
 
 RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
