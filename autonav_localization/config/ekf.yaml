@@ -41,7 +41,7 @@ ekf_filter_node:
       
 
       # IMU Configuration
-      imu0: bno055/imu
+      imu0: bno055/imu_raw
       # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
       # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
       # want to use its Z position value, then set the entire vector to false, except for the third entry. The order of the
@@ -51,7 +51,7 @@ ekf_filter_node:
       # if unspecified, effectively making this parameter required for each sensor.
       imu0_config: [false, false, false,
                     false, false, true,
-                    false, false, false,
+                    true, true, false,
                     false, false, true,
                     false,  false, false]
 
@@ -72,8 +72,8 @@ ekf_filter_node:
       # do not provide some of the state variables estimated by the filter. For example, a TwistWithCovarianceStamped message
       # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
       # if unspecified, effectively making this parameter required for each sensor.
-      odom0_config: [false, false, false,
-                     false, false, false,
+      odom0_config: [true, true, false,
+                     false, false, true,
                      true,  true,  false,
                      false, false, true,
                      false, false, false]
