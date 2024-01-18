@@ -17,15 +17,15 @@ services:
       - "/dev/bno055:/dev/bno055"
       - "/dev/lidar:/dev/lidar_x4"
     # stdin_open: true
-    tty: true
-    ipc: host
-    privileged: true
-    environment:
-      - DISPLAY=${DISPLAY} 
-      - QT_X11_NO_MITSHM=1
+    # tty: true
+    # ipc: host
+    # privileged: true
+    # environment:
+    #   - DISPLAY=${DISPLAY} 
+    #   - QT_X11_NO_MITSHM=1
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - $HOME/.Xauthority:/root/.Xauthority
+      # - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # - $HOME/.Xauthority:/root/.Xauthority
       - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
 
   rviz:
