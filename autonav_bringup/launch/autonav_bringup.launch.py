@@ -143,6 +143,6 @@ def generate_launch_description():
             pid_controller,
             imu,
             lidar,
-            # ekf,
+            ekf,
         ]
     )
