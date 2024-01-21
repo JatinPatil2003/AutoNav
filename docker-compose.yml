@@ -4,34 +4,12 @@ services:
   autonav:
     image: jatinvpatil/autonav:latest
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
-    # depends_on:
-    #   - bridge
-    #   - ros1
     network_mode: "host"
-    # volumes:
-    #   - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
-    # deploy:
-    #   restart_policy:
-    #     condition: on-failure
     devices:
       - "/dev/bno055:/dev/bno055"
       - "/dev/lidar:/dev/lidar_x4"
-    # stdin_open: true
-    # tty: true
-    # ipc: host
-    # privileged: true
-    # environment:
-    #   - DISPLAY=${DISPLAY} 
-    #   - QT_X11_NO_MITSHM=1
     volumes:
-      # - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      # - $HOME/.Xauthority:/root/.Xauthority
       - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
-
-  rviz:
-    container_name: rviz
-    extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
 
   micro_ros:
     image: microros/micro-ros-agent:humble
@@ -40,4 +18,85 @@ services:
     network_mode: host
     volumes:
       - /dev/esp32:/dev/ttyesp32
-    # tty: true
+
+  navigation:
+    container_name: navigation
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation navigation.launch.py"
+    stdin_open: true
+    tty: true
+    network_mode: "host"
+    ipc: host
+    privileged: true
+
+  slam:
+    container_name: slam
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation slam.launch.py"
+
+  cartographer:
+    container_name: cartographer
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation cartographer.launch.py"
+
+  save_map:
+    container_name: save_map
+    extends: autonav
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch cube_navigation save_map.launch.py"
+    stdin_open: true
+    tty: true
+    network_mode: "host"
+    ipc: host
+    privileged: true
+
+  rviz:
+    container_name: rviz
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY} 
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - $HOME/.Xauthority:/root/.Xauthority
+
+  rviz_slam:
+    container_name: rviz_slam
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True"
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY} 
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - $HOME/.Xauthority:/root/.Xauthority
+
+  rviz_navigation:
+    container_name: rviz_navigation
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True"
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY} 
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - $HOME/.Xauthority:/root/.Xauthority
+
+  rviz_cartographer:
+    container_name: rviz_cartographer
+    extends: autonav
+    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True"
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY} 
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - $HOME/.Xauthority:/root/.Xauthority
