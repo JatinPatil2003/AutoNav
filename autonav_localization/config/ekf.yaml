@@ -3,7 +3,7 @@ ekf_filter_node:
       # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
       # computation until it receives at least one message from one of the inputs. It will then run continuously at the
       # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
-      frequency: 30.0
+      frequency: 10.0
 
       # ekf_localization_node and ukf_localization_node both use a 3D omnidirectional motion model. If this parameter is
       # set to true, no 3D information will be used in your state estimate. Use this if you are operating in a planar

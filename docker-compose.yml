@@ -33,18 +33,18 @@ services:
     container_name: slam
     network_mode: "host"
     extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation slam.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation slam.launch.py"
 
   cartographer:
     container_name: cartographer
     network_mode: "host"
     extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation cartographer.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation cartographer.launch.py"
 
   save_map:
     container_name: save_map
     extends: autonav
-    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch cube_navigation save_map.launch.py"
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation save_map.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"
