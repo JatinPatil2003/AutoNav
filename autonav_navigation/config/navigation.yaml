@@ -198,8 +198,8 @@ local_costmap:
       robot_base_frame: base_footprint
       use_sim_time: False
       rolling_window: true
-      width: 2.5
-      height: 2.5
+      width: 3
+      height: 3
       resolution: 0.02
       # robot_radius: 0.275
       footprint: "[[-0.10, -0.14], [-0.10, 0.14], [0.10, 0.14], [0.10, -0.14]]"
