@@ -22,7 +22,7 @@ services:
   navigation:
     container_name: navigation
     extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation navigation.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"
@@ -31,11 +31,13 @@ services:
 
   slam:
     container_name: slam
+    network_mode: "host"
     extends: autonav
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation slam.launch.py"
 
   cartographer:
     container_name: cartographer
+    network_mode: "host"
     extends: autonav
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation cartographer.launch.py"
 
@@ -51,6 +53,7 @@ services:
 
   rviz:
     container_name: rviz
+    network_mode: "host"
     extends: autonav
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
     ipc: host
@@ -64,6 +67,7 @@ services:
 
   rviz_slam:
     container_name: rviz_slam
+    network_mode: "host"
     extends: autonav
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True"
     ipc: host
@@ -77,6 +81,7 @@ services:
 
   rviz_navigation:
     container_name: rviz_navigation
+    network_mode: "host"
     extends: autonav
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True"
     ipc: host
@@ -90,6 +95,7 @@ services:
 
   rviz_cartographer:
     container_name: rviz_cartographer
+    network_mode: "host"
     extends: autonav
     command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True"
     ipc: host
