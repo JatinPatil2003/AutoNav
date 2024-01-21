@@ -44,7 +44,7 @@ services:
   save_map:
     container_name: save_map
     extends: autonav
-    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation save_map.launch.py"
+    command: bash -c "source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation save_map.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"

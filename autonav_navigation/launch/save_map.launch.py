@@ -15,7 +15,7 @@ def generate_launch_description():
 
     map_directory_arg = DeclareLaunchArgument(
         'map_directory',
-        default_value=f'~/colcon_ws/src/autonav_navigation/maps/{MAP_NAME}',
+        default_value=f'/colcon_ws/src/autonav_navigation/maps/{MAP_NAME}',
         description='Directory to save the map file.')
 
     # Retrieve the launch argument values
