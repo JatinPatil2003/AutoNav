@@ -132,6 +132,12 @@ def generate_launch_description():
         output="screen",
     )
 
+    velocity_republisher = Node(
+        package="autonav_controller",
+        executable="cmd_vel_republisher.py",
+        output="screen",
+    )
+
     ekf = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
         os.path.join(autonav_localization_dir, 'launch', 'ekf.launch.py'),
@@ -151,5 +157,6 @@ def generate_launch_description():
             lidar,
             ekf,
             lidar_republisher,
+            velocity_republisher,
         ]
     )

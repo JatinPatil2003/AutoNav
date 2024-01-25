@@ -32,6 +32,7 @@ install(PROGRAMS
   ${PROJECT_NAME}/tune_pid.py
   ${PROJECT_NAME}/control.py
   ${PROJECT_NAME}/lidar_republisher.py
+  ${PROJECT_NAME}/cmd_vel_republisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
