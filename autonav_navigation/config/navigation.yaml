@@ -16,9 +16,9 @@ amcl:
     laser_max_range: 100.0
     laser_min_range: -1.0
     laser_model_type: "likelihood_field"
-    max_beams: 60
-    max_particles: 2000
-    min_particles: 500
+    max_beams: 100
+    max_particles: 10000
+    min_particles: 2000
     odom_frame_id: "odom"
     pf_err: 0.05
     pf_z: 0.99
@@ -29,9 +29,9 @@ amcl:
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 1.0
-    update_min_a: 0.2
-    update_min_d: 0.25
+    transform_tolerance: 0.5
+    update_min_a: 0.03
+    update_min_d: 0.03
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
@@ -126,17 +126,17 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.05
-      yaw_goal_tolerance: 0.15
+      xy_goal_tolerance: 0.1
+      yaw_goal_tolerance: 0.3
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
-      min_vel_x: -0.3
+      min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.0
+      max_vel_x: 0.2
       max_vel_y: 0.0
-      max_vel_theta: 1.2
+      max_vel_theta: 0.8
       min_speed_xy: 0.0
       max_speed_xy: 0.8
       min_speed_theta: 0.0
@@ -151,7 +151,7 @@ controller_server:
       vx_samples: 20
       vy_samples: 5
       vtheta_samples: 20
-      sim_time: 1.2
+      sim_time: 2.2
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.1
@@ -176,10 +176,10 @@ velocity_smoother:
     smoothing_frequency: 10.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 0.8]
-    min_velocity: [0.0, 0.0, -0.8]
-    max_accel: [0.3, 0.0, 1.6]
-    max_decel: [-0.3, 0.0, 1.6]
+    max_velocity: [0.25, 0.0, 1.1]
+    min_velocity: [-0.25, 0.0, -1.1]
+    max_accel: [0.5, 0.0, 2.2]
+    max_decel: [-0.5, 0.0, -2.2]
     odom_topic: /odometry/filtered
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -198,16 +198,16 @@ local_costmap:
       robot_base_frame: base_footprint
       use_sim_time: False
       rolling_window: true
-      width: 1
-      height: 1
+      width: 2
+      height: 2
       resolution: 0.02
       # robot_radius: 0.275
       footprint: "[[-0.10, -0.14], [-0.10, 0.14], [0.10, 0.14], [0.10, -0.14]]"
       plugins: ["voxel2d_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.0
-        inflation_radius: 0.2
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.3
       voxel2d_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -238,7 +238,7 @@ global_costmap:
   global_costmap:
     ros__parameters:
       update_frequency: 5.0
-      publish_frequency: 4.0
+      publish_frequency: 2.0
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: False
@@ -262,8 +262,8 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.0
-        inflation_radius: 0.2
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.25
       always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
