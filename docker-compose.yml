@@ -3,7 +3,7 @@ version: '3.8'
 services:
   autonav:
     image: jatinvpatil/autonav:latest
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
     network_mode: "host"
     devices:
       - "/dev/bno055:/dev/bno055"
@@ -22,7 +22,7 @@ services:
   navigation:
     container_name: navigation
     extends: autonav
-    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && colcon build --symlink-install --pacakges-select autonav_navigation && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"
@@ -33,18 +33,18 @@ services:
     container_name: slam
     network_mode: "host"
     extends: autonav
-    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation slam.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation slam.launch.py"
 
   cartographer:
     container_name: cartographer
     network_mode: "host"
     extends: autonav
-    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash &&ros2 launch autonav_navigation cartographer.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation cartographer.launch.py"
 
   save_map:
     container_name: save_map
     extends: autonav
-    command: bash -c "source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation save_map.launch.py"
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation save_map.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"
@@ -54,8 +54,8 @@ services:
   rviz:
     container_name: rviz
     network_mode: "host"
-    extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
+    image: jatinvpatil/autonav:latest
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
     ipc: host
     privileged: true
     environment:
@@ -68,41 +68,19 @@ services:
   rviz_slam:
     container_name: rviz_slam
     network_mode: "host"
-    extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True"
-    ipc: host
-    privileged: true
-    environment:
-      - DISPLAY=${DISPLAY} 
-      - QT_X11_NO_MITSHM=1
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - $HOME/.Xauthority:/root/.Xauthority
+    extends: rviz
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True"
+
 
   rviz_navigation:
     container_name: rviz_navigation
     network_mode: "host"
-    extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True"
-    ipc: host
-    privileged: true
-    environment:
-      - DISPLAY=${DISPLAY} 
-      - QT_X11_NO_MITSHM=1
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - $HOME/.Xauthority:/root/.Xauthority
+    extends: rviz
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True"
+
 
   rviz_cartographer:
     container_name: rviz_cartographer
     network_mode: "host"
-    extends: autonav
-    command: bash -c "source /opt/ros/humble/setup.bash && source /colcon_ws/install/setup.bash &&ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True"
-    ipc: host
-    privileged: true
-    environment:
-      - DISPLAY=${DISPLAY} 
-      - QT_X11_NO_MITSHM=1
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - $HOME/.Xauthority:/root/.Xauthority
+    extends: rviz
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True"
