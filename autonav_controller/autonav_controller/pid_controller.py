@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int64MultiArray, Int32, Float64MultiArray
 import time
-import threading
 import numpy as np
 
 
