@@ -22,7 +22,7 @@ services:
   navigation:
     container_name: navigation
     extends: autonav
-    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && colcon build --symlink-install --pacakges-select autonav_navigation && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && colcon build --symlink-install --packages-select autonav_navigation && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"
