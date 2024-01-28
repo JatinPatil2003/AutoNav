@@ -30,7 +30,6 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 - [📍 Overview](#-overview)
 - [📦 Features](#-features)
 - [📂 Repository Structure](#-repository-structure)
-- [⚙️ Modules](#️-modules)
 - [🚀 Getting Started](#-getting-started)
   - [🔧 Installation](#-installation)
   - [🤖 Running AutoNav](#-running-autonav)
@@ -46,7 +45,7 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 
 ## 📍 Overview
 
-**AutoNav** is an advanced autonomous mobile robot designed to navigate through rooms independently. This project showcases the integration of cutting-edge technologies in robotics, including the **Robot Operating System (ROS)**, **Simultaneous Localization and Mapping (SLAM)**, and the **ROS Navigation Stack**.
+**AutoNav** is an advanced autonomous mobile robot designed to navigate through rooms independently. This project showcases the integration of cutting-edge technologies in robotics, including the **Robot Operating System (ROS)**, **Simultaneous Localization and Mapping (SLAM)**, **Sensor Fusion** and the **ROS Navigation Stack**.
 
 **AutoNav** is a testament to the possibilities in autonomous robotic systems, aiming to pave the way for future innovations in this field. This project is suitable for enthusiasts and professionals alike, seeking to explore and expand in the realm of autonomous robotics.
 
@@ -59,19 +58,14 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
    Utilizes SLAM and ROS Navstack for intelligent pathfinding and obstacle avoidance in various environments.
    ```
 
- - **Advanced Perception:** 
-   ```
-   Employs a depth camera for accurate environmental perception and dynamic 3D mapping.
-   ```
-
  - **Sensor Fusion:** 
    ```
    Integrates Inertial Measurement Unit (IMU) sensors for enhanced movement precision and stability.
    ```
 
- - **ROS Integration:** 
+ - **Hardware Integration:** 
    ```
-   Built on ROS, providing a robust and flexible framework for robot software development.
+   Designed to work seamlessly with a range of robotic hardware, enabling easy integration of sensors, actuators, and other essential components for autonomous navigation.
    ```
 
 
@@ -82,221 +76,129 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 
 ```sh
 └── AutoNav/
-    ├── CMakeLists.txt
-    ├── config/
-    │   ├── common_costmap.yaml
-    │   ├── dwa_planner.yaml
-    │   ├── global_costmap.yaml
-    │   ├── local_costmap.yaml
-    │   └── move_base.yaml
-    ├── launch/
-    │   ├── amcl.launch
-    │   ├── autonav.launch
-    │   ├── controller.launch
-    │   ├── controller.yaml
-    │   ├── display.launch
-    │   ├── encoderticks.launch
-    │   ├── gazebo.launch
-    │   ├── i2c.launch
-    │   ├── laptop.launch
-    │   ├── mapping.launch
-    │   ├── move_base.launch
-    │   ├── navigation.launch
-    │   ├── robot.launch
-    │   ├── trial.launch
-    │   ├── urdf.rviz
-    │   └── x4.launch
-    ├── maps/
-    │   ├── L412.pgm
-    │   ├── L412.yaml
-    │   ├── house_map.pgm
-    │   ├── house_map.yaml
-    │   ├── myworldmap.pgm
-    │   └── myworldmap.yaml
-    ├── meshes/
-    │   ├── base_link.stl
-    │   ├── lwheel_v1_1.stl
-    │   ├── root.stl
-    │   ├── rwheel_v1_1.stl
-    │   └── ydlidar_x4_v2_1.stl
-    ├── rviz/
-    │   ├── autonav.rviz
-    │   ├── hardwarerviz.rviz
-    │   ├── laserrviz.rviz
-    │   ├── navigation.rviz
-    │   └── odomrviz.rviz
-    ├── src/
-    │   ├── Arduino_codes/
-    │   │   ├── left/
-    │   │   ├── leftwheelpub/
-    │   │   ├── right/
-    │   │   ├── rightwheelpub/
-    │   │   └── trial/
-    │   ├── i2c.py
-    │   ├── left.py
-    │   ├── left_cmdvel.py
-    │   ├── leftwheelsub.py
-    │   ├── odometrypub.py
-    │   ├── right.py
-    │   ├── right_cmdvel.py
-    │   ├── rightwheelsub.py
-    │   └── transformbroadcast.py
-    ├── urdf/
-    │   ├── autonav.gazebo
-    │   ├── autonav.trans
-    │   ├── autonav.xacro
-    │   └── materials.xacro
-    └── worlds/
-        ├── house.world
-        └── myworld.world
-
+    ├── .github
+    │   └── workflows
+    │       └── AutoNav_CI.yml
+    ├── autonav.Dockerfile
+    ├── autonav_bringup
+    │   ├── CMakeLists.txt
+    │   └── launch
+    │       ├── autonav_bringup.launch.py
+    │       ├── view_rviz.launch.py
+    │       ├── view_rviz_cartographer.launch.py
+    │       ├── view_rviz_navigation.launch.py
+    │       └── view_rviz_slam.launch.py
+    ├── autonav_controller
+    │   ├── CMakeLists.txt
+    │   ├── autonav_controller
+    │   │   ├── cmd_vel_republisher.py
+    │   │   ├── control.py
+    │   │   ├── lidar_republisher.py
+    │   │   ├── odom_logger.py
+    │   │   ├── pid_controller.py
+    │   │   └── tune_pid.py
+    │   ├── config
+    │   │   └── autonav_controllers.yaml
+    │   └── launch
+    │       ├── autonav_bringup.launch.py
+    │       └── controller.launch.py
+    ├── autonav_description
+    │   ├── CMakeLists.txt
+    │   ├── launch
+    │   │   ├── autonav_bringup.launch.py
+    │   │   ├── display.launch.py
+    │   │   ├── gazebo.launch.py
+    │   │   └── robot_description.launch.py
+    │   ├── meshes
+    │   │   ├── base_link.stl
+    │   │   ├── depth_camera_1.stl
+    │   │   ├── imu_1.stl
+    │   │   ├── left_wheel_1.stl
+    │   │   ├── lidar_1.stl
+    │   │   └── right_wheel_1.stl
+    │   ├── rviz
+    │   │   └── display.rviz
+    │   └── urdf
+    │       ├── autonav.trans
+    │       ├── autonav.xacro
+    │       ├── autonav_gazebo.xacro
+    │       ├── autonav_ros2_control.xacro
+    │       └── materials.xacro
+    ├── autonav_firmware
+    │   ├── CMakeLists.txt
+    │   ├── firmware
+    │   │   └── esp32_uros
+    │   ├── include
+    │   │   └── autonav_firmware
+    │   ├── launch
+    │   │   └── autonav_bringup.launch.py
+    │   └── src
+    │       ├── autonav_interface.cpp
+    │       └── autonav_interface_backup.cpp
+    ├── autonav_localization
+    │   ├── CMakeLists.txt
+    │   ├── config
+    │   │   └── ekf.yaml
+    │   └── launch
+    │       └── ekf.launch.py
+    ├── autonav_navigation
+    │   ├── CMakeLists.txt
+    │   ├── config
+    │   │   ├── cartographer.lua
+    │   │   ├── navigation.yaml
+    │   │   └── slam.yaml
+    │   ├── launch
+    │   │   ├── cartographer.launch.py
+    │   │   ├── navigation.launch.py
+    │   │   ├── save_map.launch.py
+    │   │   └── slam.launch.py
+    │   ├── maps
+    │   │   ├── L1012.pgm
+    │   │   ├── L1012.yaml
+    │   │   ├── L1012_test.pgm
+    │   │   ├── L1012_test.yaml
+    │   │   ├── world.pgm
+    │   │   └── world.yaml
+    │   └── rviz
+    │       ├── cartographer.rviz
+    │       ├── navigation.rviz
+    │       └── slam.rviz
+    ├── bno055
+    │   ├── .github
+    │   │   └── workflows
+    │   ├── CHANGELOG.rst
+    │   ├── LEGACY_LICENSE
+    │   ├── bno055
+    │   │   ├── bno055.py
+    │   │   ├── connectors
+    │   │   ├── error_handling
+    │   │   ├── params
+    │   │   ├── registers.py
+    │   │   └── sensor
+    │   ├── launch
+    │   │   └── bno055.launch.py
+    │   ├── requirements.txt
+    │   ├── resource
+    │   │   └── bno055
+    │   └── setup.py
+    ├── docker-compose.yml
+    └── ydlidar_ros2_driver
+        ├── CMakeLists.txt
+        ├── LICENSE.txt
+        ├── config
+        │   └── ydlidar.rviz
+        ├── launch
+        │   ├── ydlidar.py
+        │   ├── ydlidar_launch.py
+        │   └── ydlidar_launch_view.py
+        ├── params
+        │   └── X4.yaml
+        ├── src
+        │   ├── ydlidar_ros2_driver_client.cpp
+        │   └── ydlidar_ros2_driver_node.cpp
+        └── startup
+            └── initenv.sh
 ```
-
----
-
-
-## ⚙️ Modules
-
-<details closed><summary>Root</summary>
-
-| File                                                                                 | Summary                   |
-| ---                                                                                  | ---                       |
-| [CMakeLists.txt](https://github.com/JatinPatil2003/AutoNav/blob/main/CMakeLists.txt) | This CMakeLists.txt file is for configuring the build environment of the "autonav_description" ROS package, focusing on dependencies, ROS message generation, dynamic reconfigure parameters, and basic build and installation settings. |
-
-</details>
-
-<details closed><summary>Urdf</summary>
-
-| File                                                                                        | Summary                   |
-| ---                                                                                         | ---                       |
-| [autonav.gazebo](https://github.com/JatinPatil2003/AutoNav/blob/main/urdf/autonav.gazebo)   | This XML file configures a Gazebo simulation for the "autonav" robot, defining its physical properties, sensors (like the Hokuyo lidar), and plugins for ROS integration and control. |
-| [autonav.xacro](https://github.com/JatinPatil2003/AutoNav/blob/main/urdf/autonav.xacro)     | This XML file defines the URDF (Unified Robot Description Format) for the "autonav" robot, detailing its physical components, links, joints, materials, and geometrical properties for simulation and visualization. |
-| [materials.xacro](https://github.com/JatinPatil2003/AutoNav/blob/main/urdf/materials.xacro) | This XML snippet defines a set of custom materials with specified RGBA color values for the "autonav" robot, including silver, iron cast, nylon white, and ABS white materials for use in its visualization and simulation. |
-| [autonav.trans](https://github.com/JatinPatil2003/AutoNav/blob/main/urdf/autonav.trans)     | This XML file defines the transmission configurations for the "autonav" robot, specifically for two joints named "Revolute 2" and "Revolute 3". Each transmission uses a simple interface for effort-based control, linking the joints to their respective actuators with a mechanical reduction ratio of 1. |
-
-</details>
-
-<details closed><summary>Worlds</summary>
-
-| File                                                                                      | Summary                   |
-| ---                                                                                       | ---                       |
-| [myworld.world](https://github.com/JatinPatil2003/AutoNav/blob/main/worlds/myworld.world) | The XML-like content appears to be a simulation world description, possibly for a robotics simulation platform like Gazebo or a similar simulator. This format, known as SDF (Simulation Description Format), is used to describe objects, models, environments, physics properties, and other simulation parameters. |
-| [house.world](https://github.com/JatinPatil2003/AutoNav/blob/main/worlds/house.world)     | This SDF (Simulation Description Format) file sets up a simulation environment in Gazebo. It includes a global light source (sun), a ground plane, and a turtlebot3_house model. The physics are configured with specific parameters like update rate, step size, and solver settings. Additionally, it defines the scene's ambient and background lighting and enables shadows. Finally, it configures a user camera with a specific pose and an orbit view controller for the GUI. |
-
-</details>
-
-<details closed><summary>Maps</summary>
-
-| File                                                                                        | Summary                   |
-| ---                                                                                         | ---                       |
-| [myworldmap.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/maps/myworldmap.yaml) | Map based on Gazebo custom world|
-| [L412.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/maps/L412.yaml)             | Map based on Hostel room |
-| [house_map.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/maps/house_map.yaml)   | Map based on TurtleBot3 house world |
-
-</details>
-
-<details closed><summary>Rviz</summary>
-
-| File                                                                                            | Summary                   |
-| ---                                                                                             | ---                       |
-| [autonav.rviz](https://github.com/JatinPatil2003/AutoNav/blob/main/rviz/autonav.rviz)           | Main rviz config file for autonav |
-| [hardwarerviz.rviz](https://github.com/JatinPatil2003/AutoNav/blob/main/rviz/hardwarerviz.rviz) | rviz config file for hardware testing |
-| [laserrviz.rviz](https://github.com/JatinPatil2003/AutoNav/blob/main/rviz/laserrviz.rviz)       | rviz config file for visualization of laser data |
-| [navigation.rviz](https://github.com/JatinPatil2003/AutoNav/blob/main/rviz/navigation.rviz)     | rviz config file for navigation |
-| [odomrviz.rviz](https://github.com/JatinPatil2003/AutoNav/blob/main/rviz/odomrviz.rviz)         | rviz config file for testing odometry |
-
-</details>
-
-<details closed><summary>Src</summary>
-
-| File                                                                                                   | Summary                   |
-| ---                                                                                                    | ---                       |
-| [right_cmdvel.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/right_cmdvel.py)             | Python script for publishing right wheel velocity |
-| [odometrypub.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/odometrypub.py)               | Python script for publishing Odometry |
-| [left.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/left.py)                             | Python script for publishing left motor encoder counts |
-| [right.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/right.py)                           | Python script for publishing right motor encoder counts |
-| [leftwheelsub.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/leftwheelsub.py)             | Python script for testing left wheel counts |
-| [i2c.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/i2c.py)                               | HTTPStatus Exception: 404 |
-| [rightwheelsub.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/rightwheelsub.py)           | Python script for testing right wheel counts |
-| [transformbroadcast.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/transformbroadcast.py) | Python script for publishing transform between odom from and base_link |
-| [left_cmdvel.py](https://github.com/JatinPatil2003/AutoNav/blob/main/src/left_cmdvel.py)               | Python script for publishing left wheel velocity |
-
-</details>
-
-<details closed><summary>Trial</summary>
-
-| File                                                                                               | Summary                   |
-| ---                                                                                                | ---                       |
-| [trial.ino](https://github.com/JatinPatil2003/AutoNav/blob/main/src/Arduino_codes/trial/trial.ino) | Arduino script for testin I2C communication |
-
-</details>
-
-<details closed><summary>Leftwheelpub</summary>
-
-| File                                                                                                                    | Summary                   |
-| ---                                                                                                                     | ---                       |
-| [leftwheelpub.ino](https://github.com/JatinPatil2003/AutoNav/blob/main/src/Arduino_codes/leftwheelpub/leftwheelpub.ino) | Arduino script for handling left motor with rosserial |
-
-</details>
-
-<details closed><summary>Right</summary>
-
-| File                                                                                               | Summary                   |
-| ---                                                                                                | ---                       |
-| [right.ino](https://github.com/JatinPatil2003/AutoNav/blob/main/src/Arduino_codes/right/right.ino) | Arduino script for handling right motor using I2C |
-
-</details>
-
-<details closed><summary>Rightwheelpub</summary>
-
-| File                                                                                                                       | Summary                   |
-| ---                                                                                                                        | ---                       |
-| [rightwheelpub.ino](https://github.com/JatinPatil2003/AutoNav/blob/main/src/Arduino_codes/rightwheelpub/rightwheelpub.ino) | Arduino script for handling right motor with rosserial |
-
-</details>
-
-<details closed><summary>Left</summary>
-
-| File                                                                                            | Summary                   |
-| ---                                                                                             | ---                       |
-| [left.ino](https://github.com/JatinPatil2003/AutoNav/blob/main/src/Arduino_codes/left/left.ino) | Arduino script for handling left motor using I2C |
-
-</details>
-
-<details closed><summary>Config</summary>
-
-| File                                                                                                  | Summary                   |
-| ---                                                                                                   | ---                       |
-| [move_base.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/config/move_base.yaml)           | File contains configuration for move_base |
-| [common_costmap.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/config/common_costmap.yaml) | File contains configuration for common costmap |
-| [dwa_planner.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/config/dwa_planner.yaml)       | File contains configuration for dwa planner |
-| [global_costmap.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/config/global_costmap.yaml) | File contains configuration for global costmap |
-| [local_costmap.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/config/local_costmap.yaml)   | File contains configuration for local costmap |
-
-</details>
-
-<details closed><summary>Launch</summary>
-
-| File                                                                                                  | Summary                   |
-| ---                                                                                                   | ---                       |
-| [x4.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/x4.launch)                     | Launch file for YDLidar X4 |
-| [mapping.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/mapping.launch)           | Launch file to start mapping |
-| [autonav.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/autonav.launch)           | Launch file to start navigation in simulation |
-| [controller.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/controller.launch)     | Launch file to launch controllers |
-| [robot.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/robot.launch)               | Launch file to bringup all necessary packages for Autonav in hardware on robot |
-| [encoderticks.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/encoderticks.launch) | Launch file brings up odometry node and transform publishing node |
-| [move_base.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/move_base.launch)       | Launch file to bringup move_base node with config files |
-| [gazebo.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/gazebo.launch)             | Lauch file bringups Autonav urdf in gazebo |
-| [trial.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/trial.launch)               | Launch file to bringup AMCL node |
-| [i2c.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/i2c.launch)                   | Launch file bringups all necessary nodes to start communiaction between Arduino and Raspberry-pi |
-| [controller.yaml](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/controller.yaml)         | Config file for controllers |
-| [laptop.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/laptop.launch)             | Launch file to bringup all necessary packages for Autonav on Master computer |
-| [amcl.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/amcl.launch)                 | launch file bringups amcl node with configs |
-| [navigation.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/navigation.launch)     | Launch file to bringup all nodes for navigation |
-| [display.launch](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/display.launch)           | Launch file to bringup AutoNav in RVIZ |
-| [urdf.rviz](https://github.com/JatinPatil2003/AutoNav/blob/main/launch/urdf.rviz)                     | RVIZ config file for displaying autonav in RVIZ |
-
-</details>
 
 ---
 
@@ -306,15 +208,16 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 
 Please ensure you have the following dependencies installed on your system:
 
-`- ℹ️ ROS-1 Noetic-Desktop-full [On Master Computer]`
+`- ℹ️ Docker `
 
-`- ℹ️ ROS-1 Noetic-Desktop [On Robot Computer]`
+[Installation Link](https://docs.docker.com/engine/install/ubuntu/)
 
 
 ### 🔧 Installation
 
 1. Clone the AutoNav repository:
 ```sh
+mkdir ~/colcon_ws/src/ && cd ~/colcon_ws/src
 git clone https://github.com/JatinPatil2003/AutoNav.git
 ```
 
@@ -323,30 +226,46 @@ git clone https://github.com/JatinPatil2003/AutoNav.git
 cd AutoNav
 ```
 
-3. Install the dependencies:
+3. Pull Docker Images:
 ```sh
-► sudo apt install ros-noetic-navigation* ros-noetic-slam-gmapping* 
-► sudo apt install ros-noetic-teleop-twist-keyboard
-► pip install smbus
+docker compose pull autonav micro_ros
 ```
 
 ### 🤖 Running AutoNav
 
- - On Robot Computer
+ - For Robot Bringup
   
     ```bash
-    ► roslaunch autonav_description robot.launch
+    docker compose up micor_ros autonav
     ```
 
- - On Master Computer
+ - For Mapping
   
     ```bash
-    ► roslaunch autonav_description laptop.launch
+    docker compose up cartographer
+    ```
+
+ - For Saving Map
+  
+    ```bash
+    docker compose run save_map
+    ```
+
+ - For Navigation
+  
+    ```bash
+    docker compose run navigation
+    ```
+
+ - For rviz/rviz_cartographer/rviz_navigation
+  
+    ```bash
+    docker compose up {rviz/rviz_cartographer/rviz_navigation}
     ```
 
 ### 🧪 Tests
 ```sh
-► Give goal position using rviz form master computer
+► Give goal position using rviz form rviz docker conatiner
 ```
 
 ---
@@ -357,9 +276,7 @@ cd AutoNav
 > - [X] `ℹ️  Import urdf form fusion360`
 > - [X] `ℹ️  Implement Mapping and Navigation in Simulation`
 > - [X] `ℹ️  Implement Mapping and Naviagtion using Hardware`
-> - [ ] `ℹ️  Create python script to send goal pose`
-> - [ ] `ℹ️  Implement sensor fusion using IMU and Odometry`
-> - [ ] `ℹ️  Implement perception using depth camera and various algorithums`
+> - [X] `ℹ️  Implement sensor fusion using IMU and Odometry`
 > - [ ] `ℹ️  Implement 3D-Mapping using depth camera`
 
 ---
@@ -414,13 +331,17 @@ Once your PR is reviewed and approved, it will be merged into the main branch.
 ## 📄 License
 
 
-This project is protected under the **```MIT```** License. For more details, refer to the [LICENSE](https://github.com/JatinPatil2003/AutoNav/blob/master/LICENSE) file.
+This project is protected under the **```MIT```** License. For more details, refer to the [LICENSE](https://github.com/JatinPatil2003/AutoNav/blob/ros2/LICENSE) file.
 
 ---
 
 ## 👏 Acknowledgments
 
 - [Fusion360 to URDF Plugin](https://github.com/JatinPatil2003/Fusion2Urdf_plugin)
+
+- [Bno055 IMU Package](https://github.com/flynneva/bno055)
+
+- [YDLidar Package](https://github.com/YDLIDAR/ydlidar_ros2_driver)
 
 [**Return**](#Top)
 
