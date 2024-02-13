@@ -55,7 +55,7 @@ services:
     container_name: rviz
     network_mode: "host"
     image: jatinvpatil/autonav:latest
-    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz.launch.py rviz:=True"
     ipc: host
     privileged: true
     environment:
@@ -69,18 +69,18 @@ services:
     container_name: rviz_slam
     network_mode: "host"
     extends: rviz
-    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True"
 
 
   rviz_navigation:
     container_name: rviz_navigation
     network_mode: "host"
     extends: rviz
-    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True"
 
 
   rviz_cartographer:
     container_name: rviz_cartographer
     network_mode: "host"
     extends: rviz
-    command: bash -c "source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True"

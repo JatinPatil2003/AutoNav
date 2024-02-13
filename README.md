@@ -233,6 +233,13 @@ docker compose pull autonav micro_ros
 
 ### 🤖 Running AutoNav
 
+
+Make sure you are in Project directory
+
+```sh
+cd colcon_ws/src/AutoNav
+```
+
  - For Robot Bringup
   
     ```bash
@@ -257,9 +264,10 @@ docker compose pull autonav micro_ros
     docker compose run navigation
     ```
 
- - For rviz/rviz_cartographer/rviz_navigation
+ - For rviz/rviz_cartographer/rviz_navigation on Host Computer
   
     ```bash
+    xhost +local:
     docker compose up {rviz/rviz_cartographer/rviz_navigation}
     ```
 
