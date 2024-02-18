@@ -5,9 +5,11 @@
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
+#include <esp_system.h>
 
 #include <std_msgs/msg/int64_multi_array.h>
 #include <std_msgs/msg/int32.h>
+//  digitalWrite(LED_PIN, (msg->data == 0) ? LOW : HIGH);  
 
 rcl_subscription_t leftmotor_sub;
 rcl_subscription_t rightmotor_sub;
@@ -40,9 +42,14 @@ volatile int encodePulse_L = 0;
 volatile int encodePulse_R = 0;
 
 void error_loop(){
+  int loop_counter = 0;
   while(1){
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    loop_counter += 1;
     delay(100);
+    if(loop_counter >= 50){
+      esp_restart();
+    }
   }
 }
 
@@ -50,7 +57,6 @@ void rightsub_callback(const void * msgin)
 {  
   const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
   int pwm = msg->data;
-//  digitalWrite(LED_PIN, (msg->data == 0) ? LOW : HIGH);  
   if(pwm > 0){
     analogWrite(Motor_A_R, pwm);
     analogWrite(Motor_B_R, 0);
@@ -65,7 +71,6 @@ void leftsub_callback(const void * msgin)
 {  
   const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
   int pwm = msg->data;
-//  digitalWrite(LED_PIN, (msg->data == 0) ? LOW : HIGH);  
   if(pwm > 0){
     analogWrite(Motor_A_L, pwm);
     analogWrite(Motor_B_L, 0);
