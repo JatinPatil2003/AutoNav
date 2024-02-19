@@ -1,3 +1,5 @@
+
+
 <div align="center">
 <h1 align="center">
 
@@ -44,6 +46,10 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 
 
 ## 📍 Overview
+
+<div align="center">
+<img src="https://github.com/JatinPatil2003/AutoNav/assets/89979346/db543ca8-4509-44af-91e2-43d5aae10279" alt="image" width="50%" height="50%">
+</div>
 
 **AutoNav** is an advanced autonomous mobile robot designed to navigate through rooms independently. This project showcases the integration of cutting-edge technologies in robotics, including the **Robot Operating System (ROS)**, **Simultaneous Localization and Mapping (SLAM)**, **Sensor Fusion** and the **ROS Navigation Stack**.
 
@@ -252,6 +258,8 @@ cd colcon_ws/src/AutoNav
     docker compose up cartographer
     ```
 
+    https://github.com/JatinPatil2003/AutoNav/assets/89979346/1e70e5b4-4566-484d-8f96-549d4326ddfe
+
  - For Saving Map
   
     ```bash
@@ -263,6 +271,9 @@ cd colcon_ws/src/AutoNav
     ```bash
     docker compose run navigation
     ```
+    
+    https://github.com/JatinPatil2003/AutoNav/assets/89979346/8b9d2ae8-db69-4070-b972-aa64177b11e3
+
 
  - For rviz/rviz_cartographer/rviz_navigation on Host Computer
   
