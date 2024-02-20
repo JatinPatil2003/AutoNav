@@ -48,7 +48,9 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 ## 📍 Overview
 
 <div align="center">
-<img src="https://github.com/JatinPatil2003/AutoNav/assets/89979346/db543ca8-4509-44af-91e2-43d5aae10279" alt="image" width="50%" height="50%">
+  
+![9-removebg-preview](https://github.com/JatinPatil2003/AutoNav/assets/89979346/cc90858f-f488-4fa3-9c13-04c99cbd753a)
+
 </div>
 
 **AutoNav** is an advanced autonomous mobile robot designed to navigate through rooms independently. This project showcases the integration of cutting-edge technologies in robotics, including the **Robot Operating System (ROS)**, **Simultaneous Localization and Mapping (SLAM)**, **Sensor Fusion** and the **ROS Navigation Stack**.
@@ -60,19 +62,13 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
 ## 📦 Features
 
  - **Autonomous Navigation:** 
-   ```
-   Utilizes SLAM and ROS Navstack for intelligent pathfinding and obstacle avoidance in various environments.
-   ```
+   > Utilizes SLAM and ROS Navstack for intelligent pathfinding and obstacle avoidance in various environments.
 
  - **Sensor Fusion:** 
-   ```
-   Integrates Inertial Measurement Unit (IMU) sensors for enhanced movement precision and stability.
-   ```
+   >Integrates Inertial Measurement Unit (IMU) sensors for enhanced movement precision and stability.
 
  - **Hardware Integration:** 
-   ```
-   Designed to work seamlessly with a range of robotic hardware, enabling easy integration of sensors, actuators, and other essential components for autonomous navigation.
-   ```
+   > Designed to work seamlessly with a range of robotic hardware, enabling easy integration of sensors, actuators, and other essential components for autonomous navigation.
 
 
 ---
