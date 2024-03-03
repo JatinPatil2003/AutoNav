@@ -3,7 +3,6 @@
 
 <xacro:include filename="$(find autonav_description)/urdf/materials.xacro" />
 <xacro:include filename="$(find autonav_description)/urdf/autonav_gazebo.xacro" />
-<xacro:include filename="$(find autonav_description)/urdf/autonav_ros2_control.xacro" />
 
 <link name="base_footprint"/>
 
@@ -18,7 +17,7 @@
     <geometry>
       <mesh filename="package://autonav_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
     </geometry>
-    <material name="powder_coat_grey"/>
+    <material name="black"/>
   </visual>
   <collision>
     <!-- <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -60,6 +59,15 @@
     </geometry>
   </collision>
 </link>
+
+<link name="camera_link_1"/>
+
+<joint name="camera2camera_1" type="fixed">
+  <parent link="camera_link"/>
+  <child link="camera_link_1"/>
+  <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  <axis xyz="0 0 0"/>
+</joint>
 
 <link name="right_wheel_1">
   <inertial>
@@ -114,7 +122,7 @@
     <geometry>
       <mesh filename="package://autonav_description/meshes/lidar_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
-    <material name="steel_satin"/>
+    <material name="blue"/>
   </visual>
   <collision>
     <origin xyz="-0.0955 -0.0 -0.196" rpy="0 0 0"/>
