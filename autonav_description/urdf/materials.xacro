@@ -19,5 +19,11 @@
 <material name="powder_coat_grey">
   <color rgba="0.7019607843137254 0.7019607843137254 0.7019607843137254 1.0"/>
 </material>
+<material name="blue">
+  <color rgba="0.1 0.1 0.7 1.0"/>
+</material>
+<material name="black">
+  <color rgba="0.4 0.35 0.38 1.0"/>
+</material>
 
 </robot>
