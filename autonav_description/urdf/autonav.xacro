@@ -40,7 +40,7 @@
   <axis xyz="0 0 0"/>
 </joint>
 
-<link name="depth_camera_1">
+<link name="camera_link">
   <inertial>
     <origin xyz="0.013571033223507722 -1.5421816108169115e-15 -1.8457457784393227e-15" rpy="0 0 0"/>
     <mass value="0.05224581939729058"/>
@@ -148,7 +148,7 @@
 <joint name="base2depth" type="fixed">
   <origin xyz="0.175 0.0 0.082" rpy="0 0 0"/>
   <parent link="base_link"/>
-  <child link="depth_camera_1"/>
+  <child link="camera_link"/>
 </joint>
 
 <joint name="base2right" type="continuous">
