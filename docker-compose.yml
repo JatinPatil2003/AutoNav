@@ -65,6 +65,23 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - $HOME/.Xauthority:/root/.Xauthority
 
+  control:
+    container_name: control
+    network_mode: "host"
+    image: jatinvpatil/autonav:latest
+    command: bash -c "source /colcon_ws/install/setup.bash && ros2 run autonav_controller control.py"
+    stdin_open: true
+    tty: true
+    volumes:
+      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - $HOME/.Xauthority:/root/.Xauthority
+    environment:
+      - DISPLAY=${DISPLAY} 
+      - QT_X11_NO_MITSHM=1
+    ipc: host
+    privileged: true
+
   rviz_slam:
     container_name: rviz_slam
     network_mode: "host"
