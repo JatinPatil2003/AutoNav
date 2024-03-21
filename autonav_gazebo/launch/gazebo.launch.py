@@ -6,6 +6,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     SetEnvironmentVariable,
+    TimerAction,
 )
 from launch.substitutions import (
     Command,
@@ -81,12 +82,14 @@ def generate_launch_description():
         output="screen",
     )
 
+    delayed_spawner = TimerAction(period=5.0, actions=[spawn_robot])
+
     return LaunchDescription(
         [
             env_var,
             start_gazebo_server,
             start_gazebo_client,
             robot_state_publisher_node,
-            spawn_robot,
+            delayed_spawner,
         ]
     )

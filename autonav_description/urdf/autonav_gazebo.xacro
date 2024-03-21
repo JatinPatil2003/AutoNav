@@ -190,7 +190,7 @@
         </image>
         <clip>
           <near>0.05</near>
-          <far>10</far>
+          <far>50</far>
         </clip>
       </camera>
       <plugin name="depth_camera_controller" filename="libgazebo_ros_camera.so">
@@ -204,7 +204,7 @@
         <updateRate>0.0</updateRate>
         <frame_name>camera_link_1</frame_name>
         <pointCloudCutoff>0.1</pointCloudCutoff>
-        <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+        <pointCloudCutoffMax>50.0</pointCloudCutoffMax>
         <distortionK1>0</distortionK1>
         <distortionK2>0</distortionK2>
         <distortionK3>0</distortionK3>
