@@ -1,11 +1,3 @@
-<!--
-  Example launch file for octomap_server mapping:
-  Listens to incoming PointCloud2 data and incrementally builds an octomap.
-  The data is sent out in different representations.
-
-  Copy this file into your workspace and adjust as needed, see
-  www.ros.org/wiki/octomap_server for details
--->
 <launch>
 	<node pkg="octomap_server" exec="octomap_server_node" name="octomap_server">
 		<param name="resolution" value="0.02" />
@@ -19,4 +11,7 @@
 		<!-- data source to integrate (PointCloud2) -->
 		<remap from="cloud_in" to="/camera/points" />
 	</node>
+
+	<!-- <node pkg="rviz2" exec="rviz2" name="rviz2_octomap" output="screen" args="-d $(find-pkg-share autonav_3d_mapping)/rviz/octomap_rviz.rviz"/> -->
+
 </launch>
