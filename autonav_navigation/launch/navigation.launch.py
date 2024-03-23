@@ -9,9 +9,9 @@ from launch.conditions import IfCondition
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
-MAP_NAME='L1012' #change to the name of your own map here
+MAP_NAME='gazebo_world' #change to the name of your own map here
 
-MAP_NAME=input("Map name: ")
+# MAP_NAME=input("Map name: ")
 
 def generate_launch_description():
 
@@ -34,13 +34,13 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             name='sim', 
-            default_value='false',
+            default_value='true',
             description='Enable use_sime_time to true'
         ),
 
         DeclareLaunchArgument(
             name='rviz', 
-            default_value='false',
+            default_value='true',
             description='Run rviz'
         ),
 
