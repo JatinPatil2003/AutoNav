@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     ros-humble-xacro \
     ros-humble-rmw-cyclonedds-cpp \
     ros-humble-cartographer* \
-    ros-humble-rviz2*
+    ros-humble-rviz2* \
+    ros-humble-cv-bridge
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
@@ -37,6 +38,8 @@ COPY /autonav_bringup /colcon_ws/src/autonav_bringup
 COPY /autonav_localization /colcon_ws/src/autonav_localization
 
 COPY /autonav_navigation /colcon_ws/src/autonav_navigation
+
+COPY /autonav_perception /colcon_ws/src/autonav_perception
 
 COPY /bno055 /colcon_ws/src/bno055
 
