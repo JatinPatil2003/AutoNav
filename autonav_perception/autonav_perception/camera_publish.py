@@ -1,28 +1,31 @@
 #!/usr/bin/env python3
-
 import rclpy
+import rclpy.clock
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 import cv2
 from cv_bridge import CvBridge
+import numpy as np
 
 class ImagePublisher(Node):
     def __init__(self):
         super().__init__('image_publisher')
-        self.publisher_ = self.create_publisher(Image, '/camera', 10)
-        timer_period = 0.1  
+        self.publisher_ = self.create_publisher(CompressedImage, '/camera', 10)
+        timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.publish_image)
         self.bridge = CvBridge()
-        self.capture = cv2.VideoCapture(0) 
+        self.capture = cv2.VideoCapture(0)
 
-        self.fixed_width = 720
-        self.fixed_height = 480
+        self.fixed_width = 360
+        self.fixed_height = 240
 
     def publish_image(self):
         ret, frame = self.capture.read()
         if ret:
             frame_resized = cv2.resize(frame, (self.fixed_width, self.fixed_height))
-            ros_image = self.bridge.cv2_to_imgmsg(frame_resized, encoding="bgr8")
+            ros_image = self.bridge.cv2_to_compressed_imgmsg(frame_resized)
+            ros_image.header.stamp = self.get_clock().now().to_msg()  # Set the timestamp
+            ros_image.format = "jpeg"
             self.publisher_.publish(ros_image)
 
 def main(args=None):
