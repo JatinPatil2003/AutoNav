@@ -16,8 +16,8 @@ class ImagePublisher(Node):
         self.bridge = CvBridge()
         self.capture = cv2.VideoCapture(0)
 
-        self.fixed_width = 360
-        self.fixed_height = 240
+        self.fixed_width = 720
+        self.fixed_height = 480
 
     def publish_image(self):
         ret, frame = self.capture.read()
