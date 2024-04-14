@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   autonav:
@@ -94,7 +94,7 @@ services:
       - "/dev/media2:/dev/media2"
       - "/dev/media3:/dev/media3"
       - "/dev/video1:/dev/video1"
-      - "/dev/video2:/dev/video2"
+      - "/dev/video0:/dev/video0"
     volumes:
       - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
 
