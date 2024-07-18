@@ -38,12 +38,12 @@ public:
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
-  rclcpp::Subscription<std_msgs::msg::Int64MultiArray>::SharedPtr feedback_subscription_;
+  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr feedback_subscription_;
   // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr left_cmd_publisher_;
   // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr right_cmd_publisher_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr cmd_publisher_;
   
-  void processFeedback(const std_msgs::msg::Int64MultiArray::SharedPtr msg);
+  void processFeedback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
   double hw_start_sec_;
   double hw_stop_sec_;
   std::vector<double> hw_commands_;

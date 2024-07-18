@@ -16,15 +16,15 @@ namespace autonav_firmware
 {
 AutonavInterface::AutonavInterface() : node_(std::make_shared<rclcpp::Node>("autonav_interface_node"))
 {
-  feedback_subscription_ = node_->create_subscription<std_msgs::msg::Int64MultiArray>(
+  feedback_subscription_ = node_->create_subscription<std_msgs::msg::Float64MultiArray>(
     "/motor/feedback", 10,
-    [this](const std_msgs::msg::Int64MultiArray::SharedPtr msg) {
+    [this](const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
       this->processFeedback(msg);
     });
 
   // left_cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64>("/motor/left_cmd", 10);
   // right_cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64>("/motor/right_cmd", 10);
-  cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>("/motor/cmd", 10);
+  cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>("/motor/command", 10);
 }
 
 AutonavInterface::~AutonavInterface()
@@ -107,11 +107,11 @@ hardware_interface::CallbackReturn AutonavInterface::on_deactivate(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-void AutonavInterface::processFeedback(const std_msgs::msg::Int64MultiArray::SharedPtr msg)
+void AutonavInterface::processFeedback(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
 {
   if (msg->data.size() >= 2) {
-    hw_positions_[1] = (msg->data[0] * 3.14159265359 * 2) / 151.0;  // base2left
-    hw_positions_[0] = (msg->data[1] * 3.14159265359 * 2) / 151.0;  // base2right
+    hw_positions_[1] = msg->data[0];  // base2left
+    hw_positions_[0] = msg->data[1];  // base2right
     // RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "position successfully readed!");
   }
 }
@@ -119,20 +119,6 @@ void AutonavInterface::processFeedback(const std_msgs::msg::Int64MultiArray::Sha
 hardware_interface::return_type AutonavInterface::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  // for (std::size_t i = 0; i < hw_velocities_.size(); i++)
-  // {
-  //   // Simulate DiffBot wheels's movement as a first-order system
-  //   // Update the joint status: this is a revolute joint without any limit.
-  //   // Simply integrates
-  //   hw_positions_[i] = hw_positions_[i] + period.seconds() * hw_velocities_[i];
-
-  //   RCLCPP_INFO(
-  //     rclcpp::get_logger("AutonavInterface"),
-  //     "Got position state %.5f and velocity state %.5f for '%s'!", hw_positions_[i],
-  //     hw_velocities_[i], info_.joints[i].name.c_str());
-  // }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
   rclcpp::spin_some(node_);
   return hardware_interface::return_type::OK;
 }
@@ -140,35 +126,10 @@ hardware_interface::return_type AutonavInterface::read(
 hardware_interface::return_type autonav_firmware ::AutonavInterface::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  // RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Writing...");
-
-  // for (auto i = 0u; i < hw_commands_.size(); i++)
-  // {
-  //   // Simulate sending commands to the hardware
-  //   RCLCPP_INFO(
-  //     rclcpp::get_logger("AutonavInterface"), "Got command %.5f for '%s'!", hw_commands_[i],
-  //     info_.joints[i].name.c_str());
-
-  //   hw_velocities_[i] = hw_commands_[i];
-  // }
-  // RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Joints successfully written!");
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
-  // auto left_cmd_msg = std::make_shared<std_msgs::msg::Float64>();
-  // left_cmd_msg->data = hw_commands_[0];  // base2left command
-  // left_cmd_publisher_->publish(*left_cmd_msg);
-
-  // auto right_cmd_msg = std::make_shared<std_msgs::msg::Float64>();
-  // right_cmd_msg->data = hw_commands_[1];  // base2right command
-  // right_cmd_publisher_->publish(*right_cmd_msg);
-
   auto cmd_msg = std::make_shared<std_msgs::msg::Float64MultiArray>();
   cmd_msg->data.push_back(hw_commands_[1]);  // base2left command
   cmd_msg->data.push_back(hw_commands_[0]);  // base2right command
   cmd_publisher_->publish(*cmd_msg);
-
-  // RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Velocity successfully written!");
 
   return hardware_interface::return_type::OK;
 }

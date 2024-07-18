@@ -49,7 +49,7 @@ autonav_controller:
     publish_wheel_data: true
 
     # Publish to TF directly or not
-    enable_odom_tf: false
+    enable_odom_tf: true
 
     # Velocity and acceleration limits
     # Whenever a min_* is unspecified, default to -max_*
@@ -59,8 +59,8 @@ autonav_controller:
         max_velocity           : 0.3  # m/s
         min_velocity           : -0.3 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 0.6  # m/s^2
-        min_acceleration       : -0.6 # m/s^2
+        max_acceleration       : 0.15  # m/s^2
+        min_acceleration       : -0.15 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 5.0  # m/s^3
     angular:
@@ -69,8 +69,8 @@ autonav_controller:
         max_velocity           : 1.5  # rad/s
         min_velocity           : -1.5 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 3.0  # rad/s^2
-        min_acceleration       : -3.0 # m/s^2
+        max_acceleration       : 0.8  # rad/s^2
+        min_acceleration       : -0.8 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3
 

@@ -15,6 +15,7 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(PkgConfig)
+find_package(serial REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED 
   src/autonav_interface.cpp
@@ -23,6 +24,7 @@ add_library(${PROJECT_NAME} SHARED
 ament_target_dependencies(${PROJECT_NAME}
   hardware_interface
   pluginlib
+  serial
   rclcpp
   rclcpp_lifecycle
 )
@@ -60,6 +62,7 @@ ament_export_dependencies(
   hardware_interface
   pluginlib
   rclcpp
+  serial
   rclcpp_lifecycle
 )
 
