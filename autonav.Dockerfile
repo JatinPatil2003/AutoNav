@@ -31,7 +31,8 @@ RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
 
 COPY /serial /serial
 
-RUN cd /serial \
+RUN source /opt/ros/humble/setup.sh \
+    && cd /serial \
     && mkdir build \
     && cd build \
     && cmake .. \
