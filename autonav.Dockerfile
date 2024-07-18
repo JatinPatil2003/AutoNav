@@ -3,7 +3,7 @@ FROM ros:humble
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get install -y \
-    ros-humble-nav* \
+    ros-humble-nav-bringup \
     ros-humble-ros2-control* \
     ros-humble-slam-toolbox* \
     ros-humble-example-interfaces* \
