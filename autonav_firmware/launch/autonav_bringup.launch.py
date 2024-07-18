@@ -22,7 +22,7 @@ def generate_launch_description():
 
     use_rviz_arg = DeclareLaunchArgument(
         "rviz",
-        default_value="False",
+        default_value="true",
     )
 
     rviz = LaunchConfiguration("rviz")
@@ -115,6 +115,6 @@ def generate_launch_description():
             delayed_controller_manager,
             delayed_diff_drive_spawner,
             delayed_joint_broad_spawner,
-            pid_controller,
+            # pid_controller,
         ]
     )

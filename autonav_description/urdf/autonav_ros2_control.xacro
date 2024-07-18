@@ -6,6 +6,7 @@
         <!-- ros2_control Gazebo -->
         <hardware>
             <plugin>autonav_firmware/AutonavInterface</plugin>
+            <param name="port">/dev/ttyUSB0</param>
         </hardware>
         
         <!-- ros2_control Common Interfaces -->

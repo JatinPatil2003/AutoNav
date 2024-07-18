@@ -7,44 +7,45 @@
 #include <rclc/executor.h>
 #include <esp_system.h>
 
-#include <std_msgs/msg/int64_multi_array.h>
-#include <std_msgs/msg/int32.h>
-//  digitalWrite(LED_PIN, (msg->data == 0) ? LOW : HIGH);  
+#include <std_msgs/msg/float64_multi_array.h>
 
-rcl_subscription_t leftmotor_sub;
-rcl_subscription_t rightmotor_sub;
+#include <AccelStepper.h>
+#include <AsyncTimer.h>
+
+rcl_subscription_t motorcommand_sub;
 rcl_publisher_t motorfeedback_pub;
-std_msgs__msg__Int64MultiArray encoderMsg;
-std_msgs__msg__Int32 leftMsg;
-std_msgs__msg__Int32 rightMsg;
+
+std_msgs__msg__Float64MultiArray feedbackMsg;
+std_msgs__msg__Float64MultiArray commandMsg;
+
+double data_array[2] = {0};
+
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t timer;
 
-#define LED_PIN 2
+#define dirPinLeft 4
+#define stepPinLeft 2
+#define enableLeft 5
 
-#define Encoder_output_A_L 25
-#define Encoder_output_B_L 26
-#define Encoder_output_A_R 32
-#define Encoder_output_B_R 33
-
-#define Motor_A_L 5
-#define Motor_B_L 18
-#define Motor_A_R 19
-#define Motor_B_R 21
+#define dirPinRight 18
+#define stepPinRight 19
+#define enableRight 23
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
-volatile int encodePulse_L = 0;
-volatile int encodePulse_R = 0;
+AccelStepper stepperLeft(AccelStepper::DRIVER, stepPinLeft, dirPinLeft);
+AccelStepper stepperRight(AccelStepper::DRIVER, stepPinRight, dirPinRight);
+
+AsyncTimer t;
+
 
 void error_loop(){
   int loop_counter = 0;
   while(1){
-    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
     loop_counter += 1;
     delay(100);
     if(loop_counter >= 50){
@@ -53,50 +54,42 @@ void error_loop(){
   }
 }
 
-void rightsub_callback(const void * msgin)
+void motorcomand_callback(const void * msgin)
 {  
-  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  int pwm = msg->data;
-  if(pwm > 0){
-    analogWrite(Motor_A_R, pwm);
-    analogWrite(Motor_B_R, 0);
-  }
-  else{
-    analogWrite(Motor_A_R, 0);
-    analogWrite(Motor_B_R, abs(pwm));
-  }
+  const std_msgs__msg__Float64MultiArray * msg = (const std_msgs__msg__Float64MultiArray *)msgin;
+   int speedLeft = (int)(msg->data.data[0] * 1600 / (M_PI * 2)); 
+   int speedRight = (int)(msg->data.data[1] * -1600 / (M_PI * 2));
+
+   stepperLeft.setSpeed(speedLeft);
+   stepperRight.setSpeed(speedRight);
+  
+//  stepperLeft.setSpeed(50); 
+//  stepperRight.setSpeed(-50); 
 }
 
-void leftsub_callback(const void * msgin)
-{  
-  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  int pwm = msg->data;
-  if(pwm > 0){
-    analogWrite(Motor_A_L, pwm);
-    analogWrite(Motor_B_L, 0);
-  }
-  else{
-    analogWrite(Motor_A_L, 0);
-    analogWrite(Motor_B_L, abs(pwm));
+void feedback_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
+{
+  RCLC_UNUSED(last_call_time);
+  if (timer != NULL) {
+    feedbackMsg.data.data = data_array;
+    RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &feedbackMsg, NULL));
   }
 }
 
 void setup() {
   set_microros_transports();
   
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+  pinMode(enableLeft, OUTPUT);
+  pinMode(enableRight, OUTPUT);
 
-  pinMode(Encoder_output_A_L, INPUT);
-  pinMode(Encoder_output_B_L, INPUT);
-  pinMode(Encoder_output_A_R, INPUT);
-  pinMode(Encoder_output_B_R, INPUT);
-  pinMode(Motor_A_L, OUTPUT);
-  pinMode(Motor_B_L, OUTPUT);
-  pinMode(Motor_A_R, OUTPUT);
-  pinMode(Motor_B_R, OUTPUT);
-  attachInterrupt(digitalPinToInterrupt(Encoder_output_B_L), ISR_L, RISING);
-  attachInterrupt(digitalPinToInterrupt(Encoder_output_B_R), ISR_R, RISING);
+  digitalWrite(enableLeft, LOW);
+  digitalWrite(enableRight, LOW);
+
+  stepperLeft.setMaxSpeed(7000);
+  stepperRight.setMaxSpeed(7000);
+
+  stepperLeft.setSpeed(0); // Start moving in reverse
+  stepperRight.setSpeed(-0);
   
   delay(2000);
 
@@ -109,68 +102,42 @@ void setup() {
   RCCHECK(rclc_publisher_init_default(
     &motorfeedback_pub,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int64MultiArray),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
     "motor/feedback"));
 
   RCCHECK(rclc_subscription_init_default(
-    &leftmotor_sub,
+    &motorcommand_sub,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-    "motor/left_cmd"));
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
+    "motor/command"));
 
-  RCCHECK(rclc_subscription_init_default(
-    &rightmotor_sub,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-    "motor/right_cmd"));
-  
-  const unsigned int timer_timeout = 100;
-  
-  RCCHECK(rclc_timer_init_default(
+  RCSOFTCHECK(rclc_timer_init_default(
     &timer,
     &support,
-    RCL_MS_TO_NS(timer_timeout),
-    timer_callback));
+    RCL_MS_TO_NS(0),  // Adjust the interval as needed
+    feedback_timer_callback));
+
+  commandMsg.data.capacity = 2;
+  commandMsg.data.size = 2;
+  commandMsg.data.data = (double*)malloc(commandMsg.data.capacity * sizeof(double));
+
+  feedbackMsg.data.data = data_array;
+  feedbackMsg.data.size = 2;
+  feedbackMsg.data.capacity = 2;
     
   RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
-  RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &rightmotor_sub, &rightMsg, &rightsub_callback, ON_NEW_DATA));
-  RCCHECK(rclc_executor_add_subscription(&executor, &leftmotor_sub, &leftMsg, &leftsub_callback, ON_NEW_DATA));
-}
+//  RCSOFTCHECK(rclc_executor_add_timer(&executor, &timer));
+  RCCHECK(rclc_executor_add_subscription(&executor, &motorcommand_sub, &commandMsg, &motorcomand_callback, ON_NEW_DATA));
 
-void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
-{  
-  RCLC_UNUSED(last_call_time);
-  if (timer != NULL) {
-    static int64_t data_array[2] = {0}; 
-    data_array[0] = encodePulse_L;
-    data_array[1] = encodePulse_R;
-
-    encoderMsg.data.data = data_array;
-    encoderMsg.data.size = 2;
-    encoderMsg.data.capacity = 2;
-    RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &encoderMsg, NULL));
-  }
-}
-
-void ISR_L() {
-  int b = digitalRead(Encoder_output_A_L);
-  if (b > 0) {
-    encodePulse_L--;
-  } else {
-    encodePulse_L++;
-  }
-}
-
-void ISR_R() {
-  int b = digitalRead(Encoder_output_A_R);
-  if (b > 0) {
-    encodePulse_R++;
-  } else {
-    encodePulse_R--;
-  }
+  t.setInterval([]() { RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &feedbackMsg, NULL)); }, 120);
 }
 
 void loop() {
-  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(50)));
+  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(0)));
+  stepperLeft.runSpeed();
+  stepperRight.runSpeed();
+  data_array[0] = (stepperLeft.currentPosition() / 1600.0) * M_PI * 2;
+  data_array[1] = (stepperRight.currentPosition() / -1600.0) * M_PI * 2;
+  feedbackMsg.data.data = data_array;
+  t.handle();
 }
