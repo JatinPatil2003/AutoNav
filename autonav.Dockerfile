@@ -1,5 +1,7 @@
 FROM ros:humble
 
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get update && apt-get install -y \
     ros-humble-nav* \
     ros-humble-ros2-control* \
@@ -27,6 +29,15 @@ RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
     && make \
     && make install
 
+COPY /serial /serial
+
+RUN cd /serial \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && make \
+    && make install
+
 COPY /autonav_controller /colcon_ws/src/autonav_controller
 
 COPY /autonav_description /colcon_ws/src/autonav_description
@@ -45,15 +56,22 @@ COPY /bno055 /colcon_ws/src/bno055
 
 COPY /ydlidar_ros2_driver /colcon_ws/src/ydlidar_ros2_driver
 
+COPY autonav_entrypoint.bash /autonav_entrypoint.bash
+
+RUN chmod +x /autonav_entrypoint.bash
+
 WORKDIR /colcon_ws
 
 RUN /bin/bash -c 'source /opt/ros/humble/setup.bash \
     && colcon build --symlink-install'
 
-RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
+# RUN source /opt/ros/humble/setup.sh \
+#     && colcon build --executor sequential \
+#     && rm -rf log/ build/ src/ \
+#     && apt-get autoremove -y \
+#     && apt-get autoclean -y \
+#     && rm -rf /var/lib/apt/lists/*
 
-RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+ENTRYPOINT ["/autonav_entrypoint.bash"]
 
-RUN echo "source /colcon_ws/install/setup.bash" >> ~/.bashrc
-
-CMD bash
+CMD ["bash"]
