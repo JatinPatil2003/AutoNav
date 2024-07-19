@@ -3,13 +3,16 @@ version: '3.8'
 services:
   autonav:
     image: jatinvpatil/autonav:latest
-    command: bash -c "source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_firmware autonav_bringup.launch.py"
+    command: >
+      ros2 launch autonav_firmware autonav_bringup.launch.py
+    # command: bash -c "source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_firmware autonav_bringup.launch.py"
     network_mode: "host"
-    devices:
-      - "/dev/bno055:/dev/bno055"
-      - "/dev/lidar:/dev/lidar_x4"
+    # devices:
+    #   - "/dev/bno055:/dev/bno055"
+    #   - "/dev/lidar:/dev/lidar_x4"
     volumes:
       - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
+    restart: unless-stopped
 
   micro_ros:
     image: microros/micro-ros-agent:humble
@@ -18,6 +21,7 @@ services:
     network_mode: host
     volumes:
       - /dev/esp32:/dev/ttyesp32
+    restart: unless-stopped
 
   navigation:
     container_name: navigation
