@@ -4,12 +4,12 @@ services:
   autonav:
     image: jatinvpatil/autonav:latest
     command: >
-      ros2 launch autonav_firmware autonav_bringup.launch.py
+      ros2 launch autonav_bringup autonav_bringup.launch.py
     # command: bash -c "source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_firmware autonav_bringup.launch.py"
     network_mode: "host"
-    # devices:
-    #   - "/dev/bno055:/dev/bno055"
-    #   - "/dev/lidar:/dev/lidar_x4"
+    devices:
+      - "/dev/bno055:/dev/bno055"
+      - "/dev/lidar:/dev/lidar_x4"
     volumes:
       - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
     restart: unless-stopped
