@@ -66,34 +66,35 @@ void motorcomand_callback(const void * msgin)
 
 void feedback_callback(void * pvParameters)
 {
-  allocator = rcl_get_default_allocator();
-
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-
-  RCCHECK(rclc_node_init_default(&node, "esp32_node", "", &support));
-
-  RCCHECK(rclc_publisher_init_default(
-    &motorfeedback_pub,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
-    "motor/feedback"));
-
-  RCCHECK(rclc_subscription_init_default(
-    &motorcommand_sub,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
-    "motor/command"));
-    
-  commandMsg.data.capacity = 2;
-  commandMsg.data.size = 2;
-  commandMsg.data.data = (double*)malloc(commandMsg.data.capacity * sizeof(double));
-
-  feedbackMsg.data.data = data_array;
-  feedbackMsg.data.size = 2;
-  feedbackMsg.data.capacity = 2;
-
-  RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
-  RCCHECK(rclc_executor_add_subscription(&executor, &motorcommand_sub, &commandMsg, &motorcomand_callback, ON_NEW_DATA));
+//  allocator = rcl_get_default_allocator();
+//
+//  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+//
+//  RCCHECK(rclc_node_init_default(&node, "esp32_node", "", &support));
+//
+//  RCCHECK(rclc_publisher_init_default(
+//    &motorfeedback_pub,
+//    &node,
+//    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
+//    "motor/feedback"));
+//
+//  RCCHECK(rclc_subscription_init_default(
+//    &motorcommand_sub,
+//    &node,
+//    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
+//    "motor/command"));
+//    
+//  commandMsg.data.capacity = 2;
+//  commandMsg.data.size = 2;
+////  commandMsg.data.data = (double*)malloc(commandMsg.data.capacity * sizeof(double));
+//  commandMsg.data.data = data_array;
+//
+//  feedbackMsg.data.data = data_array;
+//  feedbackMsg.data.size = 2;
+//  feedbackMsg.data.capacity = 2;
+//
+//  RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
+//  RCCHECK(rclc_executor_add_subscription(&executor, &motorcommand_sub, &commandMsg, &motorcomand_callback, ON_NEW_DATA));
   
   for(;;){
     RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(0)));
@@ -101,6 +102,7 @@ void feedback_callback(void * pvParameters)
     data_array[1] = (stepperRight.currentPosition() / -1600.0) * M_PI * 2;
     feedbackMsg.data.data = data_array;
     RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &feedbackMsg, NULL));
+//    delay(100);
   }
 }
 
@@ -108,6 +110,12 @@ void stepperrun_callback(void * pvParameters) {
   for(;;){
     stepperLeft.runSpeed();
     stepperRight.runSpeed();
+//    RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(0)));
+//    data_array[0] = (stepperLeft.currentPosition() / 1600.0) * M_PI * 2;
+//    data_array[1] = (stepperRight.currentPosition() / -1600.0) * M_PI * 2;
+//    feedbackMsg.data.data = data_array;
+//    RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &feedbackMsg, NULL));
+//    delay(50);
   }
 }
 
@@ -128,25 +136,67 @@ void setup() {
   
   delay(2000);
 
-  xTaskCreatePinnedToCore(
-                    feedback_callback,   /* Task function. */
-                    "Publisher",     /* name of task. */
-                    8192,       /* Stack size of task */
-                    NULL,        /* parameter of the task */
-                    1,           /* priority of the task */
-                    &Publisher,      /* Task handle to keep track of created task */
-                    0);           /* pin task to core 0 */ 
+  
+
+  allocator = rcl_get_default_allocator();
+
+  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+
+  RCCHECK(rclc_node_init_default(&node, "esp32_node", "", &support));
+
+  RCCHECK(rclc_publisher_init_default(
+    &motorfeedback_pub,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
+    "motor/feedback"));
+
+  RCCHECK(rclc_subscription_init_default(
+    &motorcommand_sub,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray),
+    "motor/command"));
+    
+  commandMsg.data.capacity = 2;
+  commandMsg.data.size = 2;
+//  commandMsg.data.data = (double*)malloc(commandMsg.data.capacity * sizeof(double));
+  commandMsg.data.data = data_array;
+
+  feedbackMsg.data.data = data_array;
+  feedbackMsg.data.size = 2;
+  feedbackMsg.data.capacity = 2;
+
+  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+  RCCHECK(rclc_executor_add_subscription(&executor, &motorcommand_sub, &commandMsg, &motorcomand_callback, ON_NEW_DATA));
+
+//  xTaskCreatePinnedToCore(
+//                    feedback_callback,   /* Task function. */
+//                    "Publisher",     /* name of task. */
+//                    50000,       /* Stack size of task */
+//                    NULL,        /* parameter of the task */
+//                    1,           /* priority of the task */
+//                    &Publisher,      /* Task handle to keep track of created task */
+//                    1);           /* pin task to core 0 */ 
 
   xTaskCreatePinnedToCore(
                     stepperrun_callback,   /* Task function. */
                     "Loop",     /* name of task. */
-                    8192,       /* Stack size of task */
+                    50000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
-                    1,           /* priority of the task */
+                    0,           /* priority of the task */
                     &Loop,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
+                    0);          /* pin task to core 1 */
 }
 
 void loop() {
   // Empty loop
+  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(0)));
+    data_array[0] = (stepperLeft.currentPosition() / 1600.0) * M_PI * 2;
+    data_array[1] = (stepperRight.currentPosition() / -1600.0) * M_PI * 2;
+    feedbackMsg.data.data = data_array;
+    RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &feedbackMsg, NULL));
+//    delay(50);
+
+//  stepperLeft.runSpeed();
+//    stepperRight.runSpeed();
+
 }

@@ -22,6 +22,18 @@ services:
     volumes:
       - /dev/esp32:/dev/ttyesp32
     restart: unless-stopped
+  
+  joystick_controller:
+    image: jatinvpatil/autonav:joystick
+    container_name: joystick_controller
+    command: >
+      ros2 launch autonav_controller joystick_teleop.launch.py
+    network_mode: "host"
+    devices:
+      - "/dev/input/:/dev/input/"
+    #   - "/dev/lidar:/dev/lidar_x4"
+    volumes:
+      - /dev/input/:/dev/input/
 
   navigation:
     container_name: navigation
