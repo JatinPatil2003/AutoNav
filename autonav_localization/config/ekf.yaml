@@ -3,7 +3,7 @@ ekf_filter_node:
       # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
       # computation until it receives at least one message from one of the inputs. It will then run continuously at the
       # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
-      frequency: 10.0
+      frequency: 30.0
 
       # ekf_localization_node and ukf_localization_node both use a 3D omnidirectional motion model. If this parameter is
       # set to true, no 3D information will be used in your state estimate. Use this if you are operating in a planar
@@ -12,7 +12,7 @@ ekf_filter_node:
       two_d_mode: true
 
       # Whether to broadcast the transformation over the /tf topic. Defaults to true if unspecified.
-      publish_tf: false
+      publish_tf: true
 
       # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and
       # earth. base_link is the coordinate frame that is affixed to the robot. Both odom and map are world-fixed frames.
@@ -53,7 +53,7 @@ ekf_filter_node:
                     false, false, true,
                     false, false, false,
                     false, false, true,
-                    false,  false, false]
+                    true,  false, false]
 
       imu0_differential: false
       imu0_pose_use_child_frame: false
@@ -102,7 +102,7 @@ ekf_filter_node:
                                  0.0,    0.0,    0.001,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.001,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.001,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                 0.0,    0.0,    0.0,    0.0,    0.0,    0.001,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                 0.0,    0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.001,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.001,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.001,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
