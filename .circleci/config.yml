@@ -51,4 +51,3 @@ workflows:
   build-master:
     jobs:
       - build
-
