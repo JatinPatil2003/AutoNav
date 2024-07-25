@@ -34,14 +34,18 @@ jobs:
             DOCKER_CLI_AARCH64_IMAGE: docker.io/docker/cli:24.0.6-dind-aarch64
           command: |
             docker buildx build \
-              --push --platform=linux/arm64,linux/amd64 \
+              --platform=linux/arm64,linux/amd64 \
               -t $IMAGE_NAME:latest \
               -f autonav.Dockerfile \
               .
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            docker push $IMAGE_NAME:latest
 
 workflows:
   version: 2
   build-master:
     jobs:
       - build
-      
+
