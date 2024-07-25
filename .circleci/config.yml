@@ -13,7 +13,6 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.7
           docker_layer_caching: true
       - run:
           name: Set up QEMU
@@ -42,7 +41,4 @@ workflows:
   version: 2
   build-master:
     jobs:
-      - build:
-          filters:
-            branches:
-              only: main
+      - build
