@@ -1,0 +1,54 @@
+version: 2.1
+
+executors:
+  docker-publisher:
+    docker:
+      - image: jdrouet/docker-with-buildx:stable
+
+jobs:
+  build:
+    executor: docker-publisher
+    environment:
+      IMAGE_NAME: jatinvpatil/autonav
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Set up QEMU
+          command: |
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - run:
+          name: Set up Docker Buildx
+          command: |
+            docker buildx create --name mybuilder
+            docker buildx use mybuilder
+            docker buildx inspect --bootstrap
+      - run:
+          name: Login to Docker Hub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
+          name: Build and push AutoNav
+          environment:
+            DOCKER_CLI_AARCH64_IMAGE: docker.io/docker/cli:24.0.6-dind-aarch64
+          command: |
+            docker buildx build \
+              --platform=linux/arm64,linux/amd64 \
+              --cache-from type=registry,ref=$IMAGE_NAME:cache \
+              --cache-to type=registry,ref=$IMAGE_NAME:cache,mode=max \
+              --push \
+              -t $IMAGE_NAME:latest \
+              -f autonav.Dockerfile \
+              .
+      # - run:
+      #     name: Publish Docker Image to Docker Hub
+      #     command: |
+      #       docker push $IMAGE_NAME:latest
+
+workflows:
+  version: 2
+  build-master:
+    jobs:
+      - build
+
