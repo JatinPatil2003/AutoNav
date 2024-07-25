@@ -1,0 +1,6 @@
+ACTION=="add", SUBSYSTEM=="input", ATTRS{name}=="QIXIONG" RUN+="/home/jatin/AutoNav/autonav_utils/joystick_connect.sh"
+ACTION=="remove", SUBSYSTEM=="input", ATTRS{name}=="QIXIONG", RUN+="/home/jatin/AutoNav/autonav_utils/joystick_disconnect.sh"
+
+ACTION=="add", SUBSYSTEM=="input", ATTRS{name}=="QIXIONG PC Gamepad" RUN+="/home/jatin/AutoNav/autonav_utils/joystick_connect.sh"
+ACTION=="remove", SUBSYSTEM=="input", ATTRS{name}=="QIXIONG PC Gamepad", RUN+="/home/jatin/AutoNav/autonav_utils/joystick_disconnect.sh"
+
