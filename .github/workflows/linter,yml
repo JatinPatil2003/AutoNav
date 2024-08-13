@@ -19,5 +19,5 @@ jobs:
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: ${{ matrix.linter }}
-        distribution: humble
+        distribution: rolling
         package-name: "*"
