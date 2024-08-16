@@ -6,6 +6,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
 
+
 class ImageSubscriber(Node):
 
     def __init__(self):
