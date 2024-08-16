@@ -15,16 +15,16 @@
 #ifndef AUTONAV_FIRMWARE__AUTONAV_INTERFACE_HPP_
 #define AUTONAV_FIRMWARE__AUTONAV_INTERFACE_HPP_
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "hardware_interface/system_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "std_msgs/msg/int64_multi_array.hpp"
-
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace autonav_firmware
 {
