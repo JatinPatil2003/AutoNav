@@ -14,7 +14,8 @@
 
 namespace autonav_firmware
 {
-AutonavInterface::AutonavInterface() : node_(std::make_shared<rclcpp::Node>("autonav_interface_node"))
+AutonavInterface::AutonavInterface()
+  : node_(std::make_shared<rclcpp::Node>("autonav_interface_node"))
 {
   feedback_subscription_ = node_->create_subscription<std_msgs::msg::Float64MultiArray>(
     "/motor/feedback", 10,
@@ -51,8 +52,7 @@ hardware_interface::CallbackReturn AutonavInterface::on_init(
 std::vector<hardware_interface::StateInterface> AutonavInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (auto i = 0u; i < info_.joints.size(); i++)
-  {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -65,8 +65,7 @@ std::vector<hardware_interface::StateInterface> AutonavInterface::export_state_i
 std::vector<hardware_interface::CommandInterface> AutonavInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  for (auto i = 0u; i < info_.joints.size(); i++)
-  {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
   }
@@ -81,10 +80,8 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Activating ...please wait...");
 
   // set some default values
-  for (auto i = 0u; i < hw_positions_.size(); i++)
-  {
-    if (std::isnan(hw_positions_[i]))
-    {
+  for (auto i = 0u; i < hw_positions_.size(); i++) {
+    if (std::isnan(hw_positions_[i])) {
       hw_positions_[i] = 0;
       hw_velocities_[i] = 0;
       hw_commands_[i] = 0;
@@ -123,7 +120,7 @@ hardware_interface::return_type AutonavInterface::read(
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type autonav_firmware ::AutonavInterface::write(
+hardware_interface::return_type autonav_firmware::AutonavInterface::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   auto cmd_msg = std::make_shared<std_msgs::msg::Float64MultiArray>();
@@ -137,5 +134,5 @@ hardware_interface::return_type autonav_firmware ::AutonavInterface::write(
 }  // namespace autonav_firmware
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(
-  autonav_firmware::AutonavInterface, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(autonav_firmware::AutonavInterface,
+  hardware_interface::SystemInterface)

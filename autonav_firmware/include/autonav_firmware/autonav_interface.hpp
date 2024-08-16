@@ -30,11 +30,15 @@ public:
   virtual CallbackReturn on_deactivate(const rclcpp_lifecycle::State &) override;
 
   // Implementing hardware_interface::SystemInterface
-  virtual CallbackReturn on_init(const hardware_interface::HardwareInfo &hardware_info) override;
+  virtual CallbackReturn on_init(const hardware_interface::HardwareInfo & hardware_info) override;
   virtual std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
   virtual std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
-  virtual hardware_interface::return_type read(const rclcpp::Time &, const rclcpp::Duration &) override;
-  virtual hardware_interface::return_type write(const rclcpp::Time &, const rclcpp::Duration &) override;
+  virtual hardware_interface::return_type read(
+    const rclcpp::Time &,
+    const rclcpp::Duration &) override;
+  virtual hardware_interface::return_type write(
+    const rclcpp::Time &,
+    const rclcpp::Duration &) override;
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
@@ -42,7 +46,7 @@ private:
   // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr left_cmd_publisher_;
   // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr right_cmd_publisher_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr cmd_publisher_;
-  
+
   void processFeedback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
   double hw_start_sec_;
   double hw_stop_sec_;
@@ -51,6 +55,5 @@ private:
   std::vector<double> hw_velocities_;
 };
 }  // namespace autonav_firmware
-
 
 #endif  // AUTONAV_INTERFACE_HPP
