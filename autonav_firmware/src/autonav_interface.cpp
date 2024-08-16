@@ -15,7 +15,7 @@
 namespace autonav_firmware
 {
 AutonavInterface::AutonavInterface()
-  : node_(std::make_shared<rclcpp::Node>("autonav_interface_node"))
+: node_(std::make_shared<rclcpp::Node>("autonav_interface_node"))
 {
   feedback_subscription_ = node_->create_subscription<std_msgs::msg::Float64MultiArray>(
     "/motor/feedback", 10,

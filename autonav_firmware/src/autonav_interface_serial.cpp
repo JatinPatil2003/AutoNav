@@ -13,26 +13,25 @@ AutonavInterface::~AutonavInterface()
   if (esp_.isOpen()) {
     try {
       esp_.close();
-    }
-    catch (...) {
+    } catch (...) {
       RCLCPP_FATAL_STREAM(rclcpp::get_logger("AutonavInterface"), "Something went wrong while closing connection with port " << port_);
     }
   }
 }
 
 hardware_interface::CallbackReturn AutonavInterface::on_init(
-    const hardware_interface::HardwareInfo &info)
+  const hardware_interface::HardwareInfo &info)
 {
   if (
     hardware_interface::SystemInterface::on_init(info) !=
     hardware_interface::CallbackReturn::SUCCESS)
+  {
     return hardware_interface::CallbackReturn::ERROR;
-
+  }
 
   try {
     port_ = info_.hardware_parameters.at("port");
-  }
-  catch (const std::out_of_range &e) {
+  } catch (const std::out_of_range &e) {
     RCLCPP_FATAL(rclcpp::get_logger("AutonavInterface"), "No Serial Port provided! Aborting");
     return CallbackReturn::FAILURE;
   }
@@ -69,7 +68,7 @@ std::vector<hardware_interface::CommandInterface> AutonavInterface::export_comma
 }
 
 hardware_interface::CallbackReturn AutonavInterface::on_activate(
-    const rclcpp_lifecycle::State & /*previous_state*/)
+  const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Activating ...please wait...");
 
@@ -86,8 +85,7 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
     esp_.setPort(port_);
     esp_.setBaudrate(115200);
     esp_.open();
-  }
-  catch (...) {
+  } catch (...) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("AutonavInterface"),
                         "Something went wrong while interacting with port " << port_);
     return CallbackReturn::FAILURE;
@@ -99,16 +97,16 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
 }
 
 hardware_interface::CallbackReturn AutonavInterface::on_deactivate(
-    const rclcpp_lifecycle::State & /*previous_state*/)
+  const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Deactivating ...please wait...");
 
   if (esp_.isOpen()) {
     try {
       esp_.close();
-    }
-    catch (...) {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("AutonavInterface"), "Something went wrong while closing connection with port " << port_);
+    } catch (...) {
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("AutonavInterface"),
+        "Something went wrong while closing connection with port " << port_);
     }
   }
 
@@ -118,7 +116,7 @@ hardware_interface::CallbackReturn AutonavInterface::on_deactivate(
 }
 
 hardware_interface::return_type AutonavInterface::read(
-    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   std::string message;
   esp_.readline(message);
@@ -134,8 +132,8 @@ hardware_interface::return_type AutonavInterface::read(
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type autonav_firmware ::AutonavInterface::write(
-    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+hardware_interface::return_type autonav_firmware::AutonavInterface::write(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   std::stringstream ss;
   auto leftCmd = hw_commands_[1] * 1600.0 / (2 * M_PI);
@@ -143,9 +141,9 @@ hardware_interface::return_type autonav_firmware ::AutonavInterface::write(
   ss << leftCmd << "," << rightCmd << "\n";
   try {
     esp_.write(ss.str());
-  }
-  catch (...) {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("BumperbotInterface"), "Something went wrong while sending the message " << ss.str() << " to the port " << port_);
+  } catch (...) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("BumperbotInterface"),
+      "Something went wrong while sending the message " << ss.str() << " to the port " << port_);
     return hardware_interface::return_type::ERROR;
   }
 
@@ -157,3 +155,4 @@ hardware_interface::return_type autonav_firmware ::AutonavInterface::write(
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(autonav_firmware::AutonavInterface,
   hardware_interface::SystemInterface)
+  
