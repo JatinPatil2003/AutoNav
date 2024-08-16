@@ -1,3 +1,17 @@
+// Copyright (c) 2024 Jatin Patil
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cmath>
 
 #include "autonav_firmware/autonav_interface.hpp"
@@ -153,7 +167,7 @@ hardware_interface::return_type autonav_firmware::AutonavInterface::write(
   return hardware_interface::return_type::OK;
 }
 
-} // namespace autonav_firmware
+}  // namespace autonav_firmware
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(autonav_firmware::AutonavInterface,

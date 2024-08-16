@@ -15,10 +15,9 @@
 #ifndef AUTONAV_FIRMWARE__AUTONAV_INTERFACE_SERIAL_HPP_
 #define AUTONAV_FIRMWARE__AUTONAV_INTERFACE_SERIAL_HPP_
 
+#include <serial/serial.h>
 #include <string>
 #include <vector>
-
-#include <serial/serial.h>
 
 #include "hardware_interface/system_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
