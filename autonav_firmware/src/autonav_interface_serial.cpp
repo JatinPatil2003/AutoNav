@@ -1,6 +1,8 @@
+#include <cmath>
+
 #include "autonav_firmware/autonav_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include <cmath>
+
 
 namespace autonav_firmware
 {
