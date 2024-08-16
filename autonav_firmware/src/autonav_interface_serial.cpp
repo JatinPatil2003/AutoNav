@@ -14,13 +14,14 @@ AutonavInterface::~AutonavInterface()
     try {
       esp_.close();
     } catch (...) {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("AutonavInterface"), "Something went wrong while closing connection with port " << port_);
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("AutonavInterface"),
+        "Something went wrong while closing connection with port " << port_);
     }
   }
 }
 
 hardware_interface::CallbackReturn AutonavInterface::on_init(
-  const hardware_interface::HardwareInfo &info)
+  const hardware_interface::HardwareInfo & info)
 {
   if (
     hardware_interface::SystemInterface::on_init(info) !=
@@ -31,7 +32,7 @@ hardware_interface::CallbackReturn AutonavInterface::on_init(
 
   try {
     port_ = info_.hardware_parameters.at("port");
-  } catch (const std::out_of_range &e) {
+  } catch (const std::out_of_range & e) {
     RCLCPP_FATAL(rclcpp::get_logger("AutonavInterface"), "No Serial Port provided! Aborting");
     return CallbackReturn::FAILURE;
   }
@@ -155,4 +156,3 @@ hardware_interface::return_type autonav_firmware::AutonavInterface::write(
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(autonav_firmware::AutonavInterface,
   hardware_interface::SystemInterface)
-  
