@@ -20,4 +20,4 @@ jobs:
       with:
         linter: ${{ matrix.linter }}
         distribution: rolling
-        package-name: "*"
+        package-name: "autonav_bringup autonav_controller autonav_description autonav_firmware autonav_localization autonav_navigation autonav_perception autonav_utils"
