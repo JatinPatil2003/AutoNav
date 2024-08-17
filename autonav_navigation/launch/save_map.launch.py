@@ -1,10 +1,9 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
 
+MAP_NAME = input('Enter map file name:')
 
-MAP_NAME = input("Enter map file name:")
 
 def generate_launch_description():
     # Declare a launch argument for the map file name and directory
@@ -18,13 +17,11 @@ def generate_launch_description():
         default_value=f'/colcon_ws/src/autonav_navigation/maps/{MAP_NAME}',
         description='Directory to save the map file.')
 
-    # Retrieve the launch argument values
-    map_file_name = LaunchConfiguration('map_file_name')
     map_directory = LaunchConfiguration('map_directory')
 
     # Define the map_saver_cli node execution
     map_saver_cli = ExecuteProcess(
-        cmd=['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f', 
+        cmd=['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f',
              map_directory],
         shell=True
     )
