@@ -2,11 +2,11 @@
 
 import threading
 import time
+import tkinter as tk
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32, Int64MultiArray
-import tkinter as tk
 
 kp = 0
 ki = 0
