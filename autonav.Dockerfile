@@ -39,6 +39,14 @@ RUN source /opt/ros/humble/setup.sh \
     && make \
     && make install
 
+RUN apt-get update && apt-get install -y \
+    ros-humble-tf-transformations \
+    uvicorn
+
+RUN python3 -m pip install -U \
+    fastapi \
+    pymongo 
+
 COPY /autonav_controller /colcon_ws/src/autonav_controller
 
 COPY /autonav_description /colcon_ws/src/autonav_description
@@ -56,6 +64,8 @@ COPY /autonav_perception /colcon_ws/src/autonav_perception
 COPY /bno055 /colcon_ws/src/bno055
 
 COPY /ydlidar_ros2_driver /colcon_ws/src/ydlidar_ros2_driver
+
+COPY /WebServer /WebServer
 
 COPY autonav_entrypoint.bash /autonav_entrypoint.bash
 
@@ -75,4 +85,8 @@ RUN /bin/bash -c 'source /opt/ros/humble/setup.bash \
 
 ENTRYPOINT ["/autonav_entrypoint.bash"]
 
-CMD ["bash"]
+WORKDIR /WebServer
+
+EXPOSE 8000
+
+CMD ["uvicorn", "index:app", "--host", "0.0.0.0", "--port", "8000"]
