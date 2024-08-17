@@ -16,20 +16,8 @@ def generate_launch_description():
         [FindPackageShare('autonav_navigation'), 'config', 'slam.yaml']
     )
 
-    navigation_launch_path = PathJoinSubstitution(
-        [FindPackageShare('nav2_bringup'), 'launch', 'navigation_launch.py']
-    )
-
-    nav2_config_path = PathJoinSubstitution(
-        [FindPackageShare('autonav_navigation'), 'config', 'navigation.yaml']
-    )
-
     rviz_config_path = PathJoinSubstitution(
         [FindPackageShare('autonav_navigation'), 'rviz', 'slam.rviz']
-    )
-
-    default_map_path = PathJoinSubstitution(
-        [FindPackageShare('autonav_navigation'), 'maps', 'L1012.yaml']
     )
 
     return LaunchDescription([
@@ -43,21 +31,6 @@ def generate_launch_description():
             name='rviz',
             default_value='false',
             description='Run rviz'
-        ),
-
-        DeclareLaunchArgument(
-            name='map',
-            default_value=default_map_path,
-            description='Navigation map path'
-        ),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(navigation_launch_path),
-            launch_arguments={
-                'map': LaunchConfiguration('map'),
-                'use_sim_time': LaunchConfiguration('sim'),
-                'params_file': nav2_config_path
-            }.items()
         ),
 
         IncludeLaunchDescription(
