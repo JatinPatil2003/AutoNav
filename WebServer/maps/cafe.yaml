@@ -1,0 +1,10 @@
+free_thresh: 0.25
+image: cafe.pgm
+mode: trinary
+negate: 0
+occupied_thresh: 0.65
+origin:
+- -10.3
+- -6.35
+- 0
+resolution: 0.05

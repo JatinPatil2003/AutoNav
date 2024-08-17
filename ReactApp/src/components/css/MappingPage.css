@@ -1,0 +1,78 @@
+.mapping-container {
+  display: flex;
+  height: 100vh;
+}
+
+.mapping-left {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #f0f0f0;
+}
+
+.mapping-left-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mapping-left-top h1 {
+  margin-bottom: 20px;
+  font-size: 2em;
+  color: #333;
+}
+
+.mapping-left-top input {
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 1em;
+  width: 80%;
+  max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.mapping-left-top button {
+  margin: 5px;
+  padding: 15px 50px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.mapping-left-top button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.mapping-left-top button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.joystick-control {
+  align-self: center;
+  margin-bottom: 20%;
+}
+
+.mapping-right {
+  flex: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  padding: 20px;
+}
+
+.mapping-map {
+  width: 100%;
+  height: 100%;
+  background-color: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
