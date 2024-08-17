@@ -21,7 +21,7 @@ class VelocityRelay(Node):
 
     def listener_callback(self, msg):
         self.publisher.publish(msg)
-        # self.get_logger().info('Relaying velocity command: "%s"' % msg)
+        # self.get_logger().info('Relaying velocity command: '%s'' % msg)
 
 def main(args=None):
     rclpy.init(args=args)

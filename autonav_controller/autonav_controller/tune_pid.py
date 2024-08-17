@@ -14,15 +14,15 @@ setpoint = 0
 
 class MotorFeedbackListener(Node):
     def __init__(self):
-        super().__init__("motor_controller")
+        super().__init__('motor_controller')
         self.subscription = self.create_subscription(
-            Int64MultiArray, "/motor/feedback", self.callback, 10
+            Int64MultiArray, '/motor/feedback', self.callback, 10
         )
         self.left_pub = self.create_publisher(
-            Int32, "/motor/left_cmd", 10
+            Int32, '/motor/left_cmd', 10
         )
         self.right_pub = self.create_publisher(
-            Int32, "/motor/right_cmd", 10
+            Int32, '/motor/right_cmd', 10
         )
         self.timer = self.create_timer(
             0.2, self.cmd_callback
@@ -160,42 +160,42 @@ class PIDController:
 class PIDGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("PID Controller GUI")
+        self.master.title('PID Controller GUI')
 
         self.default_kp = 0.71
         self.default_ki = 0.352
         self.default_kd = 0.0857
         self.default_setpoint = 30.0
 
-        self.kp_label = tk.Label(master, text="Enter Kp:")
+        self.kp_label = tk.Label(master, text='Enter Kp:')
         self.kp_label.pack()
 
         self.kp_entry = tk.Entry(master)
         self.kp_entry.insert(tk.END, str(self.default_kp))
         self.kp_entry.pack()
 
-        self.ki_label = tk.Label(master, text="Enter Ki:")
+        self.ki_label = tk.Label(master, text='Enter Ki:')
         self.ki_label.pack()
 
         self.ki_entry = tk.Entry(master)
         self.ki_entry.insert(tk.END, str(self.default_ki))
         self.ki_entry.pack()
 
-        self.kd_label = tk.Label(master, text="Enter Kd:")
+        self.kd_label = tk.Label(master, text='Enter Kd:')
         self.kd_label.pack()
 
         self.kd_entry = tk.Entry(master)
         self.kd_entry.insert(tk.END, str(self.default_kd))
         self.kd_entry.pack()
 
-        self.setpoint_label = tk.Label(master, text="Enter Setpoint:")
+        self.setpoint_label = tk.Label(master, text='Enter Setpoint:')
         self.setpoint_label.pack()
 
         self.setpoint_entry = tk.Entry(master)
         self.setpoint_entry.insert(tk.END, str(self.default_setpoint))
         self.setpoint_entry.pack()
 
-        self.set_button = tk.Button(master, text="Set", command=self.print_values)
+        self.set_button = tk.Button(master, text='Set', command=self.print_values)
         self.set_button.pack()
 
     def print_values(self):
@@ -208,9 +208,9 @@ class PIDGUI:
             left_pid.set_const(kp, ki, kd, setpoint)
             right_pid.set_const(kp, ki, kd, setpoint)
 
-            print(f"Kp: {kp}, Ki: {ki}, Kd: {kd}, Setpoint: {setpoint}")
+            print(f'Kp: {kp}, Ki: {ki}, Kd: {kd}, Setpoint: {setpoint}')
         except ValueError:
-            print("Invalid input. Please enter numeric values.")
+            print('Invalid input. Please enter numeric values.')
 
 left_pid = None
 right_pid = None
@@ -244,5 +244,5 @@ def run_gui():
     pid_gui = PIDGUI(root)
     root.mainloop()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

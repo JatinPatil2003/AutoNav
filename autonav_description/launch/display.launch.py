@@ -36,10 +36,6 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
-    joint_state_publisher_gui_node = Node(
-        package='joint_state_publisher_gui', executable='joint_state_publisher_gui'
-    )
-
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -48,7 +44,8 @@ def generate_launch_description():
         arguments=['-d', os.path.join(autonav_description_dir, 'rviz', 'display.rviz')],
     )
 
-    controller_params_file = os.path.join(get_package_share_directory('autonav_controller'),'config','autonav_controllers.yaml')
+    controller_params_file = os.path.join(get_package_share_directory(
+        'autonav_controller'), 'config', 'autonav_controllers.yaml')
 
     controller_manager = Node(
         package='controller_manager',

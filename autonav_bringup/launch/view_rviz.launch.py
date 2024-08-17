@@ -18,21 +18,21 @@ from launch.conditions import IfCondition
 
 
 def generate_launch_description():
-    autonav_description_dir = get_package_share_directory("autonav_description")
+    autonav_description_dir = get_package_share_directory('autonav_description')
 
     use_rviz_arg = DeclareLaunchArgument(
-        "rviz",
-        default_value="True",
+        'rviz',
+        default_value='True',
     )
 
-    rviz = LaunchConfiguration("rviz")
+    rviz = LaunchConfiguration('rviz')
 
     rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="screen",
-        arguments=["-d", os.path.join(autonav_description_dir, "rviz", "display.rviz")],
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', os.path.join(autonav_description_dir, 'rviz', 'display.rviz')],
         condition=IfCondition(rviz),
     )
 

@@ -9,18 +9,18 @@ import numpy as np
 
 class MotorFeedbackListener(Node):
     def __init__(self):
-        super().__init__("motor_controller")
+        super().__init__('motor_controller')
         self.feedback_sub = self.create_subscription(
-            Int64MultiArray, "/motor/feedback", self.feedback_callback, 10
+            Int64MultiArray, '/motor/feedback', self.feedback_callback, 10
         )
         self.controller_cmd_sub = self.create_subscription(
-            Float64MultiArray, "/motor/cmd", self.controller_cmd_callback, 10
+            Float64MultiArray, '/motor/cmd', self.controller_cmd_callback, 10
         )
         self.left_pub = self.create_publisher(
-            Int32, "/motor/left_cmd", 10
+            Int32, '/motor/left_cmd', 10
         )
         self.right_pub = self.create_publisher(
-            Int32, "/motor/right_cmd", 10
+            Int32, '/motor/right_cmd', 10
         )
         self.timer = self.create_timer(
             0.2, self.cmd_callback
@@ -207,5 +207,5 @@ def main(args=None):
     except:
         pass
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
