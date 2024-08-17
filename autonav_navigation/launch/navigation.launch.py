@@ -1,16 +1,14 @@
 #!/usr/bin/python3
 
+import os
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-
-MAP_NAME = 'L1012'  # change to the name of your own map here
-
-MAP_NAME = input('Map name: ')
 
 
 def generate_launch_description():
@@ -22,8 +20,10 @@ def generate_launch_description():
         [FindPackageShare('autonav_navigation'), 'rviz', 'navigation.rviz']
     )
 
+    MAP_NAME = LaunchConfiguration("map_name")
+
     default_map_path = PathJoinSubstitution(
-        [FindPackageShare('autonav_navigation'), 'maps', f'{MAP_NAME}.yaml']
+        [TextSubstitution(text=os.getcwd()), 'maps', MAP_NAME]
     )
 
     nav2_config_path = PathJoinSubstitution(
@@ -47,6 +47,12 @@ def generate_launch_description():
             name='map',
             default_value=default_map_path,
             description='Navigation map path'
+        ),
+
+        DeclareLaunchArgument(
+            name='map_name', 
+            default_value='map',
+            description='Navigation map name'
         ),
 
         IncludeLaunchDescription(

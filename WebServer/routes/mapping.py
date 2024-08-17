@@ -57,7 +57,7 @@ async def get_map():
     return None
 
 @router.post("/mapping/save_map")
-async def joy_control(map_name : MapName):
-    process = Popen(['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f', f'./maps/{map_name.name}'], preexec_fn=os.setsid)
+async def joy_control(map_name: MapName):
+    Popen(['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f', f'./maps/{map_name.name}'], preexec_fn=os.setsid)
     saveMap(map_name.name)
     return {'saved'}

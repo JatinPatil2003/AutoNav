@@ -19,7 +19,7 @@ process = None
 async def start_navigation(map_name: MapName):
     global process
     if not process:
-        process = Popen(['ros2', 'launch', 'autoserve_navigation', 'navigation.launch.py', f'map_name:={map_name.name}.yaml'], preexec_fn=os.setsid)
+        process = Popen(['ros2', 'launch', 'autonav_navigation', 'navigation.launch.py', f'map_name:={map_name.name}.yaml'], preexec_fn=os.setsid)
     # process = Popen(['pwd'], preexec_fn=os.setsid)
     return {'Started'}
 
