@@ -1,11 +1,12 @@
 #! /usr/bin/python3
 
+import threading
+import time
+
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int64MultiArray, Int32
-import time
+from std_msgs.msg import Int32, Int64MultiArray
 import tkinter as tk
-import threading
 
 kp = 0
 ki = 0
@@ -14,6 +15,7 @@ setpoint = 0
 
 
 class MotorFeedbackListener(Node):
+
     def __init__(self):
         super().__init__('motor_controller')
         self.subscription = self.create_subscription(
@@ -101,6 +103,7 @@ class MotorFeedbackListener(Node):
 
 
 class PIDController:
+
     def __init__(self, kp, ki, kd, setpoint, sample_time=10, proportional_on_error=True):
         self.kp = kp
         self.ki = ki
@@ -158,6 +161,7 @@ class PIDController:
 
 
 class PIDGUI:
+
     def __init__(self, master):
         self.master = master
         self.master.title('PID Controller GUI')

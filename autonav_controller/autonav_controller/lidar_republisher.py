@@ -6,6 +6,7 @@ from sensor_msgs.msg import LaserScan
 
 
 class LidarRelay(Node):
+
     def __init__(self):
         super().__init__('lidar_relay')
         self.subscription = self.create_subscription(

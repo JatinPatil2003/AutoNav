@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
 import tf_transformations
 
 
 class OdomLogger(Node):
+
     def __init__(self):
         super().__init__('odom_logger')
         self.subscription = self.create_subscription(

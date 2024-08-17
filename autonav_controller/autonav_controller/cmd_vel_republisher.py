@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+from geometry_msgs.msg import Twist
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
 
 
 class VelocityRelay(Node):
+
     def __init__(self):
         super().__init__('cmd_vel_republisher')
         self.subscription = self.create_subscription(
