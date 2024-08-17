@@ -1,0 +1,16 @@
+.robot-operations {
+  /* text-align: center;
+  margin: 20px;
+  background-color: #c9ceff; */
+
+  display: flex;
+  text-align: center;
+  flex-direction: column;
+  /* align-items: center; */
+  /* justify-content: center; */
+  height: 100vh;
+  background-color: #c9ceff; /* Light gray background   
+   */
+  font-family: Arial, sans-serif;
+}
+

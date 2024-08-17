@@ -1,0 +1,94 @@
+.map-pose-container {
+  display: flex;
+  height: 100vh;
+}
+
+.map-pose-left {
+  width: 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #f0f0f0;
+}
+
+.map-pose-left-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-pose-left input {
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 1em;
+  width: 80%;
+  max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.map-pose-left button {
+  margin: 5px;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.map-pose-left button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.map-pose-left button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+
+.map-pose-left select {
+  margin: 5px;
+  padding: 15px 40px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  align-self: center;
+}
+
+.select-items div,
+.select-selected {
+  color: #ffffff;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.map-pose-right {
+  width: 80%;
+  padding: 20px;
+  background-color: #ffffff;
+}
+
+.map-pose-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.map-pose-options button {
+  margin-bottom: 10px;
+  padding: 15px;
+  font-size: 1.2em;
+}
+
+.back-button {
+  align-self: flex-end;
+  padding: 15px;
+  font-size: 1.2em;
+}

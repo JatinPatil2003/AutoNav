@@ -1,0 +1,58 @@
+.robot-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #c9ceff; /* Light gray background   
+   */
+  font-family: Arial, sans-serif;
+}
+
+.button-container {
+  display: flex;
+  /* align-items: center; */
+  justify-content: space-between;
+  /* width: 400px;  */
+}
+
+.image-container {
+  display: flex;
+  justify-content: center;
+  width: 60%;
+  margin-top: 5%;
+  /* flex-grow: 1;  */
+}
+
+.img1{
+  width: 40%;
+  height: auto;
+  margin-right: 10%;
+}
+
+.img2{
+    width: 40%;
+    height: auto;
+}
+
+h1 {
+  margin-top: 10%;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 20px 40px;
+  margin: 15px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+button:hover {
+  opacity: 0.5; /* Adjust opacity as needed */
+  transition: opacity 0.5s ease-in-out; /* Smooth transition */
+}

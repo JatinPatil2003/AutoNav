@@ -1,0 +1,48 @@
+.navigation-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    height: 100vh;
+    background-color: #c9ceff;
+  }
+  
+  .map-selection {
+    margin-bottom: 20px;
+  }
+  
+  h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  /* select {
+    padding: 15px;
+    border: 0.2rem solid #0ed829;
+    border-radius: 10px;
+    color: #000000;
+    background-color: #0ed829;
+  } */
+
+  select {
+    /* appearance: none; Remove default browser styling */
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #4caf50;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1.2rem;
+  }
+  
+  /* Optional: Add a custom dropdown arrow */
+  /* select::after {
+    content: "\25BC";
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  } */
