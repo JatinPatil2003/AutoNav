@@ -1,30 +1,32 @@
 #! /usr/bin/python3
 
+import time
+
+import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int64MultiArray, Int32, Float64MultiArray
-import time
-import numpy as np
+from std_msgs.msg import Float64MultiArray, Int32, Int64MultiArray
 
 
 class MotorFeedbackListener(Node):
+
     def __init__(self):
-        super().__init__("motor_controller")
+        super().__init__('motor_controller')
         self.feedback_sub = self.create_subscription(
-            Int64MultiArray, "/motor/feedback", self.feedback_callback, 10
+            Int64MultiArray, '/motor/feedback', self.feedback_callback, 10
         )
         self.controller_cmd_sub = self.create_subscription(
-            Float64MultiArray, "/motor/cmd", self.controller_cmd_callback, 10
+            Float64MultiArray, '/motor/cmd', self.controller_cmd_callback, 10
         )
         self.left_pub = self.create_publisher(
-            Int32, "/motor/left_cmd", 10
+            Int32, '/motor/left_cmd', 10
         )
         self.right_pub = self.create_publisher(
-            Int32, "/motor/right_cmd", 10
+            Int32, '/motor/right_cmd', 10
         )
         self.timer = self.create_timer(
             0.2, self.cmd_callback
-        ) 
+        )
         self.last_time = time.time()
         self.last_left_counts = 0
         self.last_right_counts = 0
@@ -41,10 +43,7 @@ class MotorFeedbackListener(Node):
     def controller_cmd_callback(self, msg):
         self.right_motor_cmd = (msg.data[1] * 60.0) / (2 * np.pi)
         self.left_motor_cmd = (msg.data[0] * 60.0) / (2 * np.pi)
-        # self.get_logger().info(
-        #         f'Left`: {round(self.left_motor_cmd , 1)}, Right`: {round(self.right_motor_cmd , 1)}'
-        #     )
-        
+
     def get_right_motor_cmd(self):
         return self.right_motor_cmd
 
@@ -72,7 +71,7 @@ class MotorFeedbackListener(Node):
             # self.get_logger().info(
             #     f'{round(self.left_motor_rpm, 1)}, {round(self.right_motor_rpm, 1)}'
             # )
-    
+
     def cmd_callback(self):
         left = 0
         right = 0
@@ -93,13 +92,13 @@ class MotorFeedbackListener(Node):
         self.right_motor_cmd_msg.data = right
         self.left_pub.publish(self.left_motor_cmd_msg)
         self.right_pub.publish(self.right_motor_cmd_msg)
-    
+
     def get_left_motor_rpm(self):
         return self.left_motor_rpm
 
     def get_right_motor_rpm(self):
         return self.right_motor_rpm
-    
+
     def set_left_motor_rpm(self, cmd_pwm):
         self.cmd_left_motor_pwm = cmd_pwm
 
@@ -111,8 +110,10 @@ class MotorFeedbackListener(Node):
         rpm = (counts_delta / counts_per_revolution) / (elapsed_time / 60.0)
         return rpm
 
+
 class PIDController:
-    def __init__(self, kp, ki, kd, setpoint, sample_time=10, output_limits=None, proportional_on_error=True):
+
+    def __init__(self, kp, ki, kd, setpoint, sample_time=10, proportional_on_error=True):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -134,7 +135,6 @@ class PIDController:
 
     def compute(self, feedback):
         current_time = time.time()
-        elapsed_time = current_time - self.last_time
 
         input_val = feedback
         error = self.setpoint - input_val
@@ -179,6 +179,7 @@ ki = 0.06
 kd = 0.001
 setpoint = 0.0
 
+
 def main(args=None):
     global left_pid, right_pid
     rclpy.init(args=args)
@@ -195,17 +196,18 @@ def main(args=None):
         right = right_pid.compute(motor_feedback_listener.get_right_motor_rpm())
         motor_feedback_listener.set_left_motor_rpm(left)
         motor_feedback_listener.set_right_motor_rpm(right)
-        
+
         try:
             rclpy.spin_once(motor_feedback_listener)
-        except:
+        except Exception:
             break
-    
+
     try:
         motor_feedback_listener.destroy_node()
         rclpy.shutdown()
-    except:
+    except Exception:
         pass
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

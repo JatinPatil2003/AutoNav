@@ -43,11 +43,6 @@ include_directories(
   include
 )
 
-install(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
 pluginlib_export_plugin_description_file(hardware_interface autonav_interface.xml)
 
 ament_export_include_directories(
