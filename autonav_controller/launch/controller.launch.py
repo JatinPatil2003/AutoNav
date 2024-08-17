@@ -17,8 +17,8 @@ def generate_launch_description():
         package='controller_manager',
         executable='spawner',
         arguments=[
-            'autonav_controller', 
-            '--controller-manager', 
+            'autonav_controller',
+            '--controller-manager',
             '/controller_manager',
         ],
     )

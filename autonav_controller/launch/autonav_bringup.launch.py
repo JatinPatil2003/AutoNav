@@ -11,7 +11,6 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from launch_ros.parameter_descriptions import ParameterValue
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessStart
 from launch.conditions import IfCondition

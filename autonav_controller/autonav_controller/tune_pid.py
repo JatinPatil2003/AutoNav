@@ -12,6 +12,7 @@ ki = 0
 kd = 0
 setpoint = 0
 
+
 class MotorFeedbackListener(Node):
     def __init__(self):
         super().__init__('motor_controller')
@@ -26,10 +27,10 @@ class MotorFeedbackListener(Node):
         )
         self.timer = self.create_timer(
             0.2, self.cmd_callback
-        ) 
+        )
         self.last_time = time.time()
         self.last_left_counts = 0
-        self.last_right_counts = 0 
+        self.last_right_counts = 0
         self.total_counts_per_revolution = 151
         self.left_motor_rpm = 0
         self.right_motor_rpm = 0
@@ -59,7 +60,7 @@ class MotorFeedbackListener(Node):
             self.get_logger().info(
                 f'Left: {round(self.left_motor_rpm, 1)}, Right: {round(self.right_motor_rpm, 1)}'
             )
-    
+
     def cmd_callback(self):
         left = 0
         right = 0
@@ -86,7 +87,7 @@ class MotorFeedbackListener(Node):
 
     def get_right_motor_rpm(self):
         return self.right_motor_rpm
-    
+
     def set_left_motor_rpm(self, cmd_pwm):
         self.cmd_left_motor_rpm = cmd_pwm
 
@@ -98,8 +99,9 @@ class MotorFeedbackListener(Node):
         rpm = (counts_delta / counts_per_revolution) / (elapsed_time / 60.0)
         return rpm
 
+
 class PIDController:
-    def __init__(self, kp, ki, kd, setpoint, sample_time=10, output_limits=None, proportional_on_error=True):
+    def __init__(self, kp, ki, kd, setpoint, sample_time=10, proportional_on_error=True):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -121,7 +123,6 @@ class PIDController:
 
     def compute(self, feedback):
         current_time = time.time()
-        elapsed_time = current_time - self.last_time
 
         input_val = feedback
         error = self.setpoint - input_val
@@ -154,7 +155,6 @@ class PIDController:
         self.last_time = current_time
 
         return output
-
 
 
 class PIDGUI:
@@ -200,7 +200,6 @@ class PIDGUI:
 
     def print_values(self):
         try:
-            
             kp = float(self.kp_entry.get())
             ki = float(self.ki_entry.get())
             kd = float(self.kd_entry.get())
@@ -212,12 +211,14 @@ class PIDGUI:
         except ValueError:
             print('Invalid input. Please enter numeric values.')
 
+
 left_pid = None
 right_pid = None
 kp = 0
 ki = 0
 kd = 0
 setpoint = 0
+
 
 def main(args=None):
     global left_pid, right_pid
@@ -232,17 +233,18 @@ def main(args=None):
         right = right_pid.compute(motor_feedback_listener.get_right_motor_rpm())
         motor_feedback_listener.set_left_motor_rpm(left)
         motor_feedback_listener.set_right_motor_rpm(right)
-        
         # print(kp, ki, kd, setpoint, left, right)
         rclpy.spin_once(motor_feedback_listener)
     rclpy.spin(motor_feedback_listener)
     motor_feedback_listener.destroy_node()
     rclpy.shutdown()
 
+
 def run_gui():
     root = tk.Tk()
-    pid_gui = PIDGUI(root)
+    PIDGUI(root)
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()

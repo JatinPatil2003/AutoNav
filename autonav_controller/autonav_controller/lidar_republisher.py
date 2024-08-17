@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 
+
 class LidarRelay(Node):
     def __init__(self):
         super().__init__('lidar_relay')
@@ -17,6 +18,7 @@ class LidarRelay(Node):
     def listener_callback(self, msg):
         self.publisher.publish(msg)
 
+
 def main(args=None):
     rclpy.init(args=args)
     lidar_relay = LidarRelay()
@@ -28,6 +30,7 @@ def main(args=None):
 
     lidar_relay.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

@@ -1,8 +1,16 @@
 import os
-from ament_index_python.packages import get_package_share_directory
 
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    TimerAction,
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+)
+from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessStart
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -11,11 +19,6 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from launch_ros.parameter_descriptions import ParameterValue
-from launch.actions import RegisterEventHandler
-from launch.event_handlers import OnProcessStart
-from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
@@ -63,13 +66,13 @@ def generate_launch_description():
 
     imu = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-        os.path.join(pkg_bno055, 'launch', 'bno055.launch.py'),
+            os.path.join(pkg_bno055, 'launch', 'bno055.launch.py'),
         )
-    ) 
-  
+    )
+
     lidar = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-        os.path.join(pkg_ydlidar, 'launch', 'ydlidar_launch.py'),
+            os.path.join(pkg_ydlidar, 'launch', 'ydlidar_launch.py'),
         )
     )
 
@@ -120,12 +123,6 @@ def generate_launch_description():
         )
     )
 
-    pid_controller = Node(
-        package='autonav_controller',
-        executable='pid_controller.py',
-        output='screen',
-    )
-
     lidar_republisher = Node(
         package='autonav_controller',
         executable='lidar_republisher.py',
@@ -140,7 +137,7 @@ def generate_launch_description():
 
     ekf = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-        os.path.join(autonav_localization_dir, 'launch', 'ekf.launch.py'),
+            os.path.join(autonav_localization_dir, 'launch', 'ekf.launch.py'),
         )
     )
 
@@ -152,7 +149,6 @@ def generate_launch_description():
             delayed_controller_manager,
             delayed_diff_drive_spawner,
             delayed_joint_broad_spawner,
-            # pid_controller,
             imu,
             lidar,
             ekf,
