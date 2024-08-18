@@ -42,4 +42,4 @@ jobs:
             docker stop react || true
             docker rm react || true
             docker pull ${{ secrets.DOCKER_USERNAME }}/autonav:react
-            docker run -d --name react -p 80:80 -p 5747:5747 ${{ secrets.DOCKER_USERNAME }}/autonav:react
+            docker run -d --name react -p 80:80 ${{ secrets.DOCKER_USERNAME }}/autonav:react
