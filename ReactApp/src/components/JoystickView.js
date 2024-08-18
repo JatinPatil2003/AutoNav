@@ -36,7 +36,7 @@ function JoystickControl({ onControl}) {
       move={handleMove}
       stop={handleStop}
       start={handleStart}
-      minDistance={70}
+      minDistance={10}
     />
   );
 }

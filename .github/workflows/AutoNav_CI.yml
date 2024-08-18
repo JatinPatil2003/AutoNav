@@ -6,32 +6,40 @@ on:
   workflow_dispatch:
 
 jobs:
-
-  build:
-
+  CI_Pipeline:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Check out the repo
+        uses: actions/checkout@v3
+        
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3.1.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Set up QEMU
-      run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      if: runner.os != 'Linux'
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: .
+          file: react.Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/autonav:react
 
-    - name: Set up Docker Buildx
-      run: |
-        docker buildx create --use
-
-    - name: Login to Docker Hub
-      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-    - name: Build and push AutoNav
-      env:
-        DOCKER_CLI_AARCH64_IMAGE: docker.io/docker/cli:24.0.6-dind-aarch64
-      run: |
-        docker buildx build \
-          --push --platform=linux/arm64,linux/amd64 \
-          -t jatinvpatil/autonav:latest \
-          --file autonav.Dockerfile \
-          .
+  CD_Pipeline:
+    name: Pull Docker image to EC2 and Run
+    runs-on: ubuntu-latest
+    needs: CI_Pipeline
+    steps:
+      - name: Deploy to EC2 instance
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            docker stop react || true
+            docker rm react || true
+            docker pull ${{ secrets.DOCKER_USERNAME }}/autonav:react
+            docker run -d --name react -p 80:80 -p 5747:5747 ${{ secrets.DOCKER_USERNAME }}/autonav:react

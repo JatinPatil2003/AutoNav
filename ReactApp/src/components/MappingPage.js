@@ -65,7 +65,7 @@ function MappingPage({ onBack }) {
 
     setvelocity();
 
-    const intervalId = setInterval(setvelocity, 500);
+    const intervalId = setInterval(setvelocity, 200);
 
     return () => clearInterval(intervalId);
   }, []);
