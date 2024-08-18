@@ -29,6 +29,14 @@ RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
     && make \
     && make install
 
+RUN apt-get update && apt-get install -y \
+    ros-humble-tf-transformations \
+    uvicorn
+
+RUN python3 -m pip install -U \
+    fastapi \
+    pymongo 
+
 COPY /serial /serial
 
 RUN source /opt/ros/humble/setup.sh \
@@ -38,15 +46,7 @@ RUN source /opt/ros/humble/setup.sh \
     && cmake .. \
     && make \
     && make install
-
-RUN apt-get update && apt-get install -y \
-    ros-humble-tf-transformations \
-    uvicorn
-
-RUN python3 -m pip install -U \
-    fastapi \
-    pymongo 
-
+    
 COPY /autonav_controller /colcon_ws/src/autonav_controller
 
 COPY /autonav_description /colcon_ws/src/autonav_description

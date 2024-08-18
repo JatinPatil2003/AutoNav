@@ -49,7 +49,7 @@ function MappingMap() {
 
     fetchRobotLocation();
 
-    const intervalId = setInterval(fetchRobotLocation, 200);
+    const intervalId = setInterval(fetchRobotLocation, 250);
 
     return () => clearInterval(intervalId);
   }, []);
