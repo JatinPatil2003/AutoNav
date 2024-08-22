@@ -45,22 +45,22 @@ function MappingPage({ onBack }) {
 
   useEffect(() => {
     const setvelocity = async () => {
-      try {
-        const response = await fetch("http://13.201.82.2:5747/joystick/control", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ linear: linearRef.current, angular: angularRef.current }),
-        });
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        console.log(data);
-      } catch (error) {
-        console.error("Error fetching robot location:", error);
-      }
+      // try {
+      //   const response = await fetch("http://13.201.82.2:5747/joystick/control", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({ linear: linearRef.current, angular: angularRef.current }),
+      //   });
+      //   if (!response.ok) {
+      //     throw new Error("Network response was not ok");
+      //   }
+      //   const data = await response.json();
+      //   console.log(data);
+      // } catch (error) {
+      //   console.error("Error fetching robot location:", error);
+      // }
     };
 
     setvelocity();
