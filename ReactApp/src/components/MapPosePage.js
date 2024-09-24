@@ -27,30 +27,30 @@ function MapPosePage({ mapName, onBack }) {
 
   useEffect(() => {
     const fetchRobotLocation = async () => {
-      // try {
-      //   const response = await fetch(
-      //     "http://13.201.82.2:5747/navigation/goal/feedback"
-      //   );
-      //   if (!response.ok) {
-      //     throw new Error("Network response was not ok");
-      //   }
-      //   const data = await response.json();
-      //   const roundedData = parseFloat(data).toFixed(2);
-      //   setRemainDist(roundedData);
-      //   // console.log(roundedData, changeNavStatus);
-      //   if (parseFloat(roundedData) === 0 && changeNavStatus) {
-      //     setNavStatus("Success");
-      //     setGoalPose(null);
-      //     setChangeNavStatus(false);
-      //     setNavStatusBool(false);
-      //   } else if (parseFloat(roundedData) !== 0) {
-      //     setChangeNavStatus(true);
-      //     setNavStatus("Running");
-      //     setOrientation(null);
-      //   }
-      // } catch (error) {
-      //   console.error("Error fetching robot location:", error);
-      // }
+      try {
+        const response = await fetch(
+          "http://13.201.82.2:5747/navigation/goal/feedback"
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        const roundedData = parseFloat(data).toFixed(2);
+        setRemainDist(roundedData);
+        // console.log(roundedData, changeNavStatus);
+        if (parseFloat(roundedData) === 0 && changeNavStatus) {
+          setNavStatus("Success");
+          setGoalPose(null);
+          setChangeNavStatus(false);
+          setNavStatusBool(false);
+        } else if (parseFloat(roundedData) !== 0) {
+          setChangeNavStatus(true);
+          setNavStatus("Running");
+          setOrientation(null);
+        }
+      } catch (error) {
+        console.error("Error fetching robot location:", error);
+      }
     };
 
     fetchRobotLocation();

@@ -21,18 +21,18 @@ const MapView = ({
 
   useEffect(() => {
     const fetchMapData = async () => {
-      // try {
-      //   const response = await fetch(
-      //     "http://13.201.82.2:5747/navigation/current/map"
-      //   );
-      //   if (!response.ok) {
-      //     throw new Error("Network response was not ok");
-      //   }
-      //   const data = await response.json();
-      //   setMapData(data);
-      // } catch (error) {
-      //   console.error("Error fetching map data:", error);
-      // }
+      try {
+        const response = await fetch(
+          "http://13.201.82.2:5747/navigation/current/map"
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setMapData(data);
+      } catch (error) {
+        console.error("Error fetching map data:", error);
+      }
     };
 
     fetchMapData();
