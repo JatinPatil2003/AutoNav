@@ -151,7 +151,7 @@ def generate_launch_description():
             delayed_joint_broad_spawner,
             imu,
             lidar,
-            # ekf,
+            ekf,
             lidar_republisher,
             velocity_republisher,
         ]

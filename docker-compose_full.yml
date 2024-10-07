@@ -11,7 +11,7 @@ services:
       - "/dev/bno055:/dev/bno055"
       - "/dev/lidar:/dev/lidar_x4"
     volumes:
-      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
+      - "~/AutoNav:/colcon_ws/src"
     restart: unless-stopped
 
   micro_ros:
@@ -89,7 +89,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
+      - "~/AutoNav:/colcon_ws/src"
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - $HOME/.Xauthority:/root/.Xauthority
     environment:
@@ -112,7 +112,7 @@ services:
       - "/dev/video1:/dev/video1"
       - "/dev/video0:/dev/video0"
     volumes:
-      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
+      - "~/AutoNav:/colcon_ws/src"
 
   camera_view:
     container_name: camera_view
@@ -120,7 +120,7 @@ services:
     image: jatinvpatil/autonav:latest
     command: bash -c "source /colcon_ws/install/setup.bash && ros2 run autonav_perception camera_subscribe.py"
     volumes:
-      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
+      - "~/AutoNav:/colcon_ws/src"
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - $HOME/.Xauthority:/root/.Xauthority
     environment:
