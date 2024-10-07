@@ -8,7 +8,7 @@ function RobotControl() {
   const [robotStatus, setRobotStatus] = useState("stopped");
 
   useEffect(() => {
-    fetch("http://13.201.82.2:5747/robot/status")
+    fetch("http://3.109.213.102:5747/robot/status")
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "started") {
@@ -18,13 +18,13 @@ function RobotControl() {
   }, []);
 
   const handleStart = () => {
-    fetch("http://13.201.82.2:5747/robot/start")
+    fetch("http://3.109.213.102:5747/robot/start")
       .then((response) => response.json())
       .then(() => setRobotStatus("started"));
   };
 
   const handleStop = () => {
-    fetch("http://13.201.82.2:5747/robot/stop")
+    fetch("http://3.109.213.102:5747/robot/stop")
       .then((response) => response.json())
       .then(() => setRobotStatus("stopped"));
   };

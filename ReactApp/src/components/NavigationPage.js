@@ -10,14 +10,14 @@ function NavigationPage({ onBack }) {
   const [stopButton, setStopButton] = useState(true);
 
   useEffect(() => {
-    fetch("http://13.201.82.2:5747/navigation/list/maps")
+    fetch("http://3.109.213.102:5747/navigation/list/maps")
       .then((response) => response.json())
       .then((data) => setMaps(data));
   }, []);
 
   const handleUseMap = (map) => {
     if (map) {
-      fetch("http://13.201.82.2:5747/navigation/use_map", {
+      fetch("http://3.109.213.102:5747/navigation/use_map", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,14 +30,14 @@ function NavigationPage({ onBack }) {
   };
 
   const handleStopNavigation = () => {
-    fetch("http://13.201.82.2:5747/navigation/stop")
+    fetch("http://3.109.213.102:5747/navigation/stop")
       .then((response) => response.json())
       .then(() => setSelectedMap(""))
       .then(() => setStopButton(true));
   };
 
   const handleStartNavigation = () => {
-    fetch("http://13.201.82.2:5747/navigation/start", {
+    fetch("http://3.109.213.102:5747/navigation/start", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

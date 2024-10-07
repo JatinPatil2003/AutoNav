@@ -23,7 +23,7 @@ const MapView = ({
     const fetchMapData = async () => {
       try {
         const response = await fetch(
-          "http://13.201.82.2:5747/navigation/current/map"
+          "http://3.109.213.102:5747/navigation/current/map"
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -46,7 +46,7 @@ const MapView = ({
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          "http://13.201.82.2:5747/navigation/current/location"
+          "http://3.109.213.102:5747/navigation/current/location"
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

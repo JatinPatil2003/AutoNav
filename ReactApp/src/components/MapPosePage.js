@@ -17,7 +17,7 @@ function MapPosePage({ mapName, onBack }) {
 
   useEffect(() => {
     fetch(
-      `http://13.201.82.2:5747/navigation/list/pose/${encodeURIComponent(
+      `http://3.109.213.102:5747/navigation/list/pose/${encodeURIComponent(
         mapName
       )}`
     )
@@ -29,7 +29,7 @@ function MapPosePage({ mapName, onBack }) {
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          "http://13.201.82.2:5747/navigation/goal/feedback"
+          "http://3.109.213.102:5747/navigation/goal/feedback"
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -61,7 +61,7 @@ function MapPosePage({ mapName, onBack }) {
   }, [changeNavStatus]);
 
   const handleAddPose = () => {
-    fetch("http://13.201.82.2:5747/navigation/new/pose", {
+    fetch("http://3.109.213.102:5747/navigation/new/pose", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +80,7 @@ function MapPosePage({ mapName, onBack }) {
 
   const handleNavigationGoalStart = async () => {
     const response_navigation = await fetch(
-      "http://13.201.82.2:5747/navigation/goal/start",
+      "http://3.109.213.102:5747/navigation/goal/start",
       {
         method: "POST",
         headers: {
@@ -97,7 +97,7 @@ function MapPosePage({ mapName, onBack }) {
 
   const handleNavigationGoalStop = async () => {
     const response_cancel = await fetch(
-      "http://13.201.82.2:5747/navigation/goal/cancel",
+      "http://3.109.213.102:5747/navigation/goal/cancel",
       {
         method: "GET",
         headers: {
@@ -120,7 +120,7 @@ function MapPosePage({ mapName, onBack }) {
   };
 
   const handleGoalPoseDetails = async (pose) => {
-    const response = await fetch("http://13.201.82.2:5747/navigation/pose", {
+    const response = await fetch("http://3.109.213.102:5747/navigation/pose", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -142,7 +142,7 @@ function MapPosePage({ mapName, onBack }) {
   };
 
   const handleSetInitialPose = () => {
-    fetch("http://13.201.82.2:5747/navigation/initial_pose", {
+    fetch("http://3.109.213.102:5747/navigation/initial_pose", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

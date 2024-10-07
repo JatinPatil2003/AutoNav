@@ -11,13 +11,13 @@ function MappingPage({ onBack }) {
   const angularRef = useRef(angular);
 
   const handleStopMapping = () => {
-    fetch("http://13.201.82.2:5747/mapping/stop")
+    fetch("http://3.109.213.102:5747/mapping/stop")
       .then((response) => response.json())
       .then(() => onBack());
   };
 
   const handleSaveMap = () => {
-    fetch("http://13.201.82.2:5747/mapping/save_map", {
+    fetch("http://3.109.213.102:5747/mapping/save_map", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,7 +28,7 @@ function MappingPage({ onBack }) {
 
   const handleStartMapping = async () => {
     const response = await fetch(
-      "http://13.201.82.2:5747/mapping/start"
+      "http://3.109.213.102:5747/mapping/start"
     );
     console.log(response.json());
   };
@@ -46,7 +46,7 @@ function MappingPage({ onBack }) {
   useEffect(() => {
     const setvelocity = async () => {
       try {
-        const response = await fetch("http://13.201.82.2:5747/joystick/control", {
+        const response = await fetch("http://3.109.213.102:5747/joystick/control", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

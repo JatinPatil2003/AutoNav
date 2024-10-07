@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100 # Hz
+    update_rate: 20 # Hz
     use_sim_time: false
 
     autonav_controller:
@@ -21,7 +21,7 @@ autonav_controller:
     left_wheel_names  : ['base2left']
     right_wheel_names : ['base2right']
 
-    publish_rate: 10.0               # default: 50
+    publish_rate: 50.0               # default: 50
     pose_covariance_diagonal : [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
 
@@ -56,21 +56,21 @@ autonav_controller:
     linear:
       x:
         has_velocity_limits    : true
-        max_velocity           : 0.6  # m/s
-        min_velocity           : -0.6 # m/s
+        max_velocity           : 1.0  # m/s
+        min_velocity           : -1.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 0.6  # m/s^2
-        min_acceleration       : -0.6 # m/s^2
+        max_acceleration       : 1.5  # m/s^2
+        min_acceleration       : -1.5 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 5.0  # m/s^3
     angular:
       z:
         has_velocity_limits    : true
-        max_velocity           : 1.5  # rad/s
-        min_velocity           : -1.5 # m/s
+        max_velocity           : 2.0  # rad/s
+        min_velocity           : -2.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 1.5  # rad/s^2
-        min_acceleration       : -1.5 # m/s^2
+        max_acceleration       : 3.5  # rad/s^2
+        min_acceleration       : -3.5 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3
 
