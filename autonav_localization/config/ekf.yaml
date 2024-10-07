@@ -58,6 +58,8 @@ ekf_filter_node:
       imu0_differential: false
       imu0_pose_use_child_frame: false
 
+      imu0_remove_gravitational_acceleration: true
+
       # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
       # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
       # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
