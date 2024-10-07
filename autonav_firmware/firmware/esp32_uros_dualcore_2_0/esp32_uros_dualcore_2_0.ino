@@ -172,6 +172,8 @@ void loop() {
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
       if (state == WAITING_AGENT) {
         destroy_entities();
+        stepperLeft.setCurrentPosition(0);
+        stepperRight.setCurrentPosition(0);
       };
       break;
     case AGENT_CONNECTED:
@@ -182,6 +184,8 @@ void loop() {
       break;
     case AGENT_DISCONNECTED:
       destroy_entities();
+      stepperLeft.setCurrentPosition(0);
+      stepperRight.setCurrentPosition(0);
       state = WAITING_AGENT;
       break;
     default:
