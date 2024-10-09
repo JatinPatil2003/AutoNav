@@ -9,13 +9,13 @@ services:
     # network_mode: "host"
     devices:
       - "/dev/bno055:/dev/bno055"
-      - "/dev/lidar:/dev/lidar"
+      - "/dev/lidar:/dev/lidar_x4"
     ports:
-      - 27017:27017
+      # - 27017:27017
       - 8000:8000
     volumes:
-      - "~/colcon_ws/src/AutoNav:/colcon_ws/src"
-      - "~/colcon_ws/src/AutoNav/WebServer:/WebServer"
+      - "~/AutoNav:/colcon_ws/src"
+      - "~/AutoNav/WebServer:/WebServer"
     restart: unless-stopped
 
   micro_ros:
@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
   
   mongodb:
-    image: mongo:latest
+    image: mongo:4.4.18
     ports:
       - 27017:27017
     volumes:

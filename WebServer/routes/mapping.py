@@ -18,7 +18,7 @@ process = None
 def start_ros2_launch():
     global process
     if not process:
-        process = Popen(['ros2', 'launch', 'autoserve_mapping', 'slam.launch.py'], preexec_fn=os.setsid)
+        process = Popen(['ros2', 'launch', 'autonav_navigation', 'slam.launch.py'], preexec_fn=os.setsid)
 
 def stop_ros2_launch():
     global process
