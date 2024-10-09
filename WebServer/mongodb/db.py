@@ -11,7 +11,7 @@ from models.model import Goal
 MONGO_URI = "mongodb+srv://jatinpatil2003:iqEtcmVkve9wxP15@mydb.nk83zvt.mongodb.net/"
 
 # mongodb = MongoClient(MONGO_URI)
-mongodb = MongoClient('localhost', 27017)
+mongodb = MongoClient('mongodb', 27017)
 
 db = mongodb['autoserve']
 fs = gridfs.GridFS(db, collection='maps')
@@ -19,17 +19,19 @@ pose_collection = db['pose']
 
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
-maps_dir = os.path.join(os.getcwd(),'WebServer', 'maps')
+maps_dir = os.path.join(os.getcwd(), 'maps')
 
 print('done connection')
 
 def saveMap(file_name: str):
     pgm_file = maps_dir + '/' + file_name + '.pgm'
+    print(f"\n\n\n\n\n\n Execute Save Map \n\n\n\n\n")
     try:
         with open(pgm_file, 'rb') as file:
             data = file.read()
             fs.put(data, filename=f'{file_name}.pgm')
-    except:
+    except Exception as e:
+        print(f"\n\n\n\n\n\n{e}\n\n\n\n\n")
         return False
 
     yaml_file = maps_dir + '/' + file_name + '.yaml'
@@ -38,7 +40,8 @@ def saveMap(file_name: str):
             data = yaml.safe_load(file)
             yaml_str = yaml.dump(data)
             fs.put(yaml_str.encode('utf-8'), filename=f'{file_name}.yaml')
-    except:
+    except Exception as e:
+        print(f"\n\n\n\n\n\n{e}\n\n\n\n\n")
         return False
 
     os.remove(pgm_file)

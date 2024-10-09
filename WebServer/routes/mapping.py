@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from fastapi import Request
 
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, run
 import os
 import signal
 import psutil
@@ -58,6 +58,11 @@ async def get_map():
 
 @router.post("/mapping/save_map")
 async def joy_control(map_name: MapName):
-    Popen(['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f', f'./maps/{map_name.name}'], preexec_fn=os.setsid)
-    saveMap(map_name.name)
-    return {'saved'}
+    result = run(['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f', f'/WebServer/maps/{map_name.name}'], preexec_fn=os.setsid)
+
+    # Check if the command executed successfully
+    if result.returncode == 0:
+        saveMap(map_name.name)
+        return {'status': 'Map saved successfully'}
+    else:
+        return {'status': 'Failed to save map', 'error': result.returncode}
