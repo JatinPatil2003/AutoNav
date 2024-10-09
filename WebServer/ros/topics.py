@@ -14,6 +14,7 @@ map_msg = {}
 location_msg = {}
 pub = False
 twist_msg = Twist()
+prev_pub = None
 
 def map_callback(msg):
     # print('\n\n\n\n\n\n\nRunning Map Callback\n\n\n\n\n')
@@ -94,16 +95,26 @@ def set_joystick_velocity(velocity: Velocity):
     twist_msg.linear.x = velocity.linear
     twist_msg.angular.z = velocity.angular
     if velocity.linear == 0.0 and velocity.angular == 0.0:
-        pub = True
-    else:
         pub = False
+    else:
+        pub = True
     
 
 def set_pub_cmd_vel():
-    global twist_publisher, twist_msg
+    global twist_publisher, twist_msg, prev_pub
+    if prev_pub is not pub:
+        twist_msg.linear.x = 0.0
+        twist_msg.angular.z = 0.0
+        ros_node.get_logger().info(f"{twist_msg.linear.x}, {twist_msg.angular.z}")
+        twist_publisher.publish(twist_msg)
+        prev_pub = pub
+        return
+        
     if pub:
         ros_node.get_logger().info(f"Publishing {twist_msg.linear.x}, {twist_msg.angular.z}")
         twist_publisher.publish(twist_msg)
+    
+    prev_pub = pub
 
 ros_node.create_subscription(OccupancyGrid, 
                              '/map', map_callback, 10)
