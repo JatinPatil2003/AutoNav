@@ -1,8 +1,8 @@
 name: AutoNav_CI
 
 on:
-  # push:
-  #   branches: [ "ros2" ]
+  push:
+    branches: [ "autonav_web" ]
   workflow_dispatch:
 
 jobs:

@@ -14,7 +14,7 @@ robot_status = "stopped"
 async def start_robot():
     global process, robot_status
     if not process:
-        process = Popen(['ros2', 'launch', 'autoserve_gazebo', 'gazebo.launch.py'], preexec_fn=os.setsid)
+        process = Popen(['ros2', 'launch', 'autonav_bringup', 'autonav_bringup.launch.py'], preexec_fn=os.setsid)
     robot_status = "started"
     return {'status': robot_status}
 

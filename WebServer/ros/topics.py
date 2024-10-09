@@ -12,6 +12,8 @@ import rclpy
 
 map_msg = {}
 location_msg = {}
+pub = False
+twist_msg = Twist()
 
 def map_callback(msg):
     # print('\n\n\n\n\n\n\nRunning Map Callback\n\n\n\n\n')
@@ -88,18 +90,28 @@ def get_location_mapping_msg():
         return None
 
 def set_joystick_velocity(velocity: Velocity):
-    global twist_publisher
-    msg = Twist()
-    msg.linear.x = velocity.linear
-    msg.angular.z = velocity.angular
-    print(velocity.linear, velocity.angular)
-    twist_publisher.publish(msg)
+    global twist_msg, pub
+    twist_msg.linear.x = velocity.linear
+    twist_msg.angular.z = velocity.angular
+    if velocity.linear == 0.0 and velocity.angular == 0.0:
+        pub = True
+    else:
+        pub = False
+    
+
+def set_pub_cmd_vel():
+    global twist_publisher, twist_msg
+    if pub:
+        ros_node.get_logger().info(f"Publishing {twist_msg.linear.x}, {twist_msg.angular.z}")
+        twist_publisher.publish(twist_msg)
 
 ros_node.create_subscription(OccupancyGrid, 
                              '/map', map_callback, 10)
 
 ros_node.create_subscription(PoseWithCovarianceStamped,
                              '/amcl_pose', location_callback, 10)
+
+ros_node.create_timer(0.05, set_pub_cmd_vel)
 
 twist_publisher = ros_node.create_publisher(Twist, 'cmd_vel', 10)
 
