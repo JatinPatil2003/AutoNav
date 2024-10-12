@@ -20,7 +20,7 @@ def generate_launch_description():
         [FindPackageShare('autonav_navigation'), 'rviz', 'navigation.rviz']
     )
 
-    MAP_NAME = LaunchConfiguration("map_name")
+    MAP_NAME = LaunchConfiguration('map_name')
 
     default_map_path = PathJoinSubstitution(
         [TextSubstitution(text=os.getcwd()), 'maps', MAP_NAME]
@@ -50,7 +50,7 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
-            name='map_name', 
+            name='map_name',
             default_value='map',
             description='Navigation map name'
         ),
