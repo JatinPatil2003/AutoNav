@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - autonav_2.0
+      - autonav_web
   workflow_dispatch:
 
 jobs:
