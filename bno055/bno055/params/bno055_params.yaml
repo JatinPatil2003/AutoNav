@@ -38,7 +38,7 @@ bno055:
     calib_status_frequency: 0.1
     frame_id: "imu_1"
     operation_mode: 0x0C
-    placement_axis_remap: "P2"
+    placement_axis_remap: "P1"
     acc_factor: 100.0
     mag_factor: 16000000.0
     gyr_factor: 900.0
