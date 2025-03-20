@@ -55,7 +55,7 @@ ekf_filter_node:
                     false, false, true,
                     true,  false, false]
 
-      imu0_differential: true
+      imu0_differential: false
       imu0_pose_use_child_frame: false
 
       imu0_remove_gravitational_acceleration: false
@@ -88,7 +88,7 @@ ekf_filter_node:
       # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
       # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
       # for twist measurements has no effect.
-      odom0_differential: true
+      odom0_differential: false
       odom0_pose_use_child_frame: false
 
       # [ADVANCED] The process noise covariance matrix can be difficult to tune, and can vary for each application, so it is
@@ -104,7 +104,7 @@ ekf_filter_node:
                                  0.0,    0.0,    0.001,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.001,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.001,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                 0.0,    0.0,    0.0,    0.0,    0.0,    0.0001,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                 0.0,    0.0,    0.0,    0.0,    0.0,    0.00001, 0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.001,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.001,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.001,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
