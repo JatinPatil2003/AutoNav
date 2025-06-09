@@ -11,7 +11,7 @@ function MappingMap() {
     const fetchMapData = async () => {
       try {
         const response = await fetch(
-          "http://3.109.213.102:5747/mapping/current/map"
+          "http://52.66.235.90:5747/mapping/current/map"
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -34,7 +34,7 @@ function MappingMap() {
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          "http://3.109.213.102:5747/mapping/current/location"
+          "http://52.66.235.90:5747/mapping/current/location"
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
