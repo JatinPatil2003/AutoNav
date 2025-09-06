@@ -44,5 +44,5 @@ class Connector:
     def receive(self, reg_addr, length):
         return self.read(reg_addr, length)
 
-    def transmit(self, reg_addr, length, data: bytes):
-        return self.write(reg_addr, length, data)
+    def transmit(self, reg_addr, length, data: bytes, read: bool=True):
+        return self.write(reg_addr, length, data, read)

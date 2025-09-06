@@ -59,7 +59,7 @@ COPY /autonav_localization /colcon_ws/src/autonav_localization
 
 COPY /autonav_navigation /colcon_ws/src/autonav_navigation
 
-COPY /autonav_perception /colcon_ws/src/autonav_perception
+# COPY /autonav_perception /colcon_ws/src/autonav_perception
 
 COPY /bno055 /colcon_ws/src/bno055
 

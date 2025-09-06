@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 20 # Hz
+    update_rate: 50 # Hz
     use_sim_time: false
 
     autonav_controller:
@@ -21,11 +21,11 @@ autonav_controller:
     left_wheel_names  : ['base2left']
     right_wheel_names : ['base2right']
 
-    publish_rate: 50.0               # default: 50
+    publish_rate: 20.0               # default: 50
     pose_covariance_diagonal : [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
 
-    wheel_separation : 0.245
+    wheel_separation : 0.23
     wheel_radius : 0.04
 
     wheel_separation_multiplier: 1.0
@@ -37,7 +37,7 @@ autonav_controller:
     position_feedback: true
 
     # Velocity commands timeout [s], default 0.5
-    cmd_vel_timeout: 0.1
+    cmd_vel_timeout: 0.2
 
     # Base frame_id
     base_frame_id: base_footprint #default: base_link
@@ -59,8 +59,8 @@ autonav_controller:
         max_velocity           : 1.0  # m/s
         min_velocity           : -1.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 1.5  # m/s^2
-        min_acceleration       : -1.5 # m/s^2
+        max_acceleration       : 0.5  # m/s^2
+        min_acceleration       : -1.0 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 5.0  # m/s^3
     angular:
@@ -69,8 +69,8 @@ autonav_controller:
         max_velocity           : 2.0  # rad/s
         min_velocity           : -2.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 3.5  # rad/s^2
-        min_acceleration       : -3.5 # m/s^2
+        max_acceleration       : 1.5  # rad/s^2
+        min_acceleration       : -3.0 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3
 

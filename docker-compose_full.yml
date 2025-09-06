@@ -3,9 +3,9 @@ version: '3.8'
 services:
   autonav:
     image: jatinvpatil/autonav:latest
-    command: >
-      ros2 launch autonav_bringup autonav_bringup.launch.py
-    # command: bash -c "source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_firmware autonav_bringup.launch.py"
+    # command: >
+    #   ros2 launch autonav_bringup autonav_bringup.launch.py
+    command: bash -c "cd /colcon_ws/ && source /colcon_ws/install/setup.bash && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
     network_mode: "host"
     devices:
       - "/dev/bno055:/dev/bno055"
@@ -20,7 +20,7 @@ services:
     privileged: true
     network_mode: host
     volumes:
-      - /dev/esp32:/dev/ttyesp32
+      - /dev/ttyesp32:/dev/ttyesp32
     restart: unless-stopped
   
   joystick_controller:
@@ -38,7 +38,7 @@ services:
   navigation:
     container_name: navigation
     extends: autonav
-    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && colcon build --symlink-install --packages-select autonav_navigation && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
+    command: bash -c "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && cd /colcon_ws/src && colcon build --symlink-install --packages-select autonav_navigation && source /colcon_ws/install/setup.bash && ros2 launch autonav_navigation navigation.launch.py"
     stdin_open: true
     tty: true
     network_mode: "host"

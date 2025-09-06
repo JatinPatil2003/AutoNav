@@ -81,6 +81,11 @@ class SensorService:
         if not (self.con.transmit(registers.BNO055_OPR_MODE_ADDR, 1, bytes([registers.OPERATION_MODE_CONFIG]))):
             self.node.get_logger().warn('Unable to set IMU into config mode.')
 
+        if not (self.con.transmit(registers.BNO055_SYS_TRIGGER_ADDR, 1, bytes([0x20]), False)):
+            self.node.get_logger().warn('Unable to reset IMU.')
+        
+        sleep(0.25)
+
         if not (self.con.transmit(registers.BNO055_PWR_MODE_ADDR, 1, bytes([registers.POWER_MODE_NORMAL]))):
             self.node.get_logger().warn('Unable to set IMU normal power mode.')
 
@@ -155,6 +160,21 @@ class SensorService:
         # imu_raw_msg.header.seq = seq
 
         # TODO: make this an option to publish?
+
+        q = Quaternion()
+        # imu_msg.header.seq = seq
+        q.w = self.unpackBytesToFloat(buf[24], buf[25])
+        q.x = self.unpackBytesToFloat(buf[26], buf[27])
+        q.y = self.unpackBytesToFloat(buf[28], buf[29])
+        q.z = self.unpackBytesToFloat(buf[30], buf[31])
+        # TODO(flynneva): replace with standard normalize() function
+        # normalize
+        norm = sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w)
+        imu_raw_msg.orientation.x = q.x / norm
+        imu_raw_msg.orientation.y = q.y / norm
+        imu_raw_msg.orientation.z = q.z / norm
+        imu_raw_msg.orientation.w = q.w / norm
+
         imu_raw_msg.orientation_covariance = [
             self.param.variance_orientation.value[0], 0.0, 0.0,
             0.0, self.param.variance_orientation.value[1], 0.0,
