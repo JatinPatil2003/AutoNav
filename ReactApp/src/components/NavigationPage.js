@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import MapPosePage from "./MapPosePage";
 import "./css/NavigationPage.css";
+import { API_BASE_URL, API_BASE_PORT } from "./env";
 
 function NavigationPage({ onBack }) {
   const [maps, setMaps] = useState([]);
@@ -10,14 +11,14 @@ function NavigationPage({ onBack }) {
   const [stopButton, setStopButton] = useState(true);
 
   useEffect(() => {
-    fetch("http://52.66.235.90:5747/navigation/list/maps")
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/list/maps")
       .then((response) => response.json())
       .then((data) => setMaps(data));
   }, []);
 
   const handleUseMap = (map) => {
     if (map) {
-      fetch("http://52.66.235.90:5747/navigation/use_map", {
+      fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/use_map", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,14 +31,14 @@ function NavigationPage({ onBack }) {
   };
 
   const handleStopNavigation = () => {
-    fetch("http://52.66.235.90:5747/navigation/stop")
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/stop")
       .then((response) => response.json())
       .then(() => setSelectedMap(""))
       .then(() => setStopButton(true));
   };
 
   const handleStartNavigation = () => {
-    fetch("http://52.66.235.90:5747/navigation/start", {
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/start", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

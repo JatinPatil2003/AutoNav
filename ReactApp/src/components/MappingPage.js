@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import JoystickControl from "./JoystickView";
 import MappingMap from "./MappingMap";
 import "./css/MappingPage.css";
+import { API_BASE_URL, API_BASE_PORT } from "./env";
 
 function MappingPage({ onBack }) {
   const [mapName, setMapName] = useState("");
@@ -11,13 +12,13 @@ function MappingPage({ onBack }) {
   const angularRef = useRef(angular);
 
   const handleStopMapping = () => {
-    fetch("http://52.66.235.90:5747/mapping/stop")
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/mapping/stop")
       .then((response) => response.json())
       .then(() => onBack());
   };
 
   const handleSaveMap = () => {
-    fetch("http://52.66.235.90:5747/mapping/save_map", {
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/mapping/save_map", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,7 +29,7 @@ function MappingPage({ onBack }) {
 
   const handleStartMapping = async () => {
     const response = await fetch(
-      "http://52.66.235.90:5747/mapping/start"
+      "http://${API_BASE_URL}:${API_BASE_PORT}/mapping/start"
     );
     console.log(response.json());
   };
@@ -46,7 +47,7 @@ function MappingPage({ onBack }) {
   useEffect(() => {
     const setvelocity = async () => {
       try {
-        const response = await fetch("http://52.66.235.90:5747/joystick/control", {
+        const response = await fetch("http://${API_BASE_URL}:${API_BASE_PORT}/joystick/control", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

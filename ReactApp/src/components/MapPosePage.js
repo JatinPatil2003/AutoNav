@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import MapView from "./MapView";
 import "./css/MapPosePage.css";
+import { API_BASE_URL, API_BASE_PORT } from "./env";
 
 function MapPosePage({ mapName, onBack }) {
   const [poses, setPoses] = useState([]);
@@ -17,7 +18,7 @@ function MapPosePage({ mapName, onBack }) {
 
   useEffect(() => {
     fetch(
-      `http://52.66.235.90:5747/navigation/list/pose/${encodeURIComponent(
+      `http://${API_BASE_URL}:${API_BASE_PORT}/navigation/list/pose/${encodeURIComponent(
         mapName
       )}`
     )
@@ -29,7 +30,7 @@ function MapPosePage({ mapName, onBack }) {
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          "http://52.66.235.90:5747/navigation/goal/feedback"
+          "http://${API_BASE_URL}:${API_BASE_PORT}/navigation/goal/feedback"
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -61,7 +62,7 @@ function MapPosePage({ mapName, onBack }) {
   }, [changeNavStatus]);
 
   const handleAddPose = () => {
-    fetch("http://52.66.235.90:5747/navigation/new/pose", {
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/new/pose", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +81,7 @@ function MapPosePage({ mapName, onBack }) {
 
   const handleNavigationGoalStart = async () => {
     const response_navigation = await fetch(
-      "http://52.66.235.90:5747/navigation/goal/start",
+      "http://${API_BASE_URL}:${API_BASE_PORT}/navigation/goal/start",
       {
         method: "POST",
         headers: {
@@ -97,7 +98,7 @@ function MapPosePage({ mapName, onBack }) {
 
   const handleNavigationGoalStop = async () => {
     const response_cancel = await fetch(
-      "http://52.66.235.90:5747/navigation/goal/cancel",
+      "http://${API_BASE_URL}:${API_BASE_PORT}/navigation/goal/cancel",
       {
         method: "GET",
         headers: {
@@ -120,7 +121,7 @@ function MapPosePage({ mapName, onBack }) {
   };
 
   const handleGoalPoseDetails = async (pose) => {
-    const response = await fetch("http://52.66.235.90:5747/navigation/pose", {
+    const response = await fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/pose", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -142,7 +143,7 @@ function MapPosePage({ mapName, onBack }) {
   };
 
   const handleSetInitialPose = () => {
-    fetch("http://52.66.235.90:5747/navigation/initial_pose", {
+    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/initial_pose", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
