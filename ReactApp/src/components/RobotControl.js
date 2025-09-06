@@ -3,13 +3,13 @@ import NextPage from "./NextPage";
 import "./css/RobotControl.css";
 import image1 from "./img/fusion.png";
 import image2 from "./img/real.png";
-import { API_BASE_URL, API_BASE_PORT } from "./env";
+import { API_FULL_URL } from "./env";
 
 function RobotControl() {
   const [robotStatus, setRobotStatus] = useState("stopped");
 
   useEffect(() => {
-    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/robot/status")
+    fetch('${API_FULL_URL}/robot/status')
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "started") {
@@ -19,13 +19,13 @@ function RobotControl() {
   }, []);
 
   const handleStart = () => {
-    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/robot/start")
+    fetch('${API_FULL_URL}/robot/start')
       .then((response) => response.json())
       .then(() => setRobotStatus("started"));
   };
 
   const handleStop = () => {
-    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/robot/stop")
+    fetch('${API_FULL_URL}/robot/stop')
       .then((response) => response.json())
       .then(() => setRobotStatus("stopped"));
   };

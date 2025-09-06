@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import robotIconSrc from "./icons/robot.png";
-import { API_BASE_URL, API_BASE_PORT } from "./env";
+import { API_FULL_URL } from "./env";
 
 function MappingMap() {
   const [mapData, setMapData] = useState(null);
@@ -12,7 +12,7 @@ function MappingMap() {
     const fetchMapData = async () => {
       try {
         const response = await fetch(
-          "http://${API_BASE_URL}:${API_BASE_PORT}/mapping/current/map"
+          '${API_FULL_URL}/mapping/current/map'
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -35,7 +35,7 @@ function MappingMap() {
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          "http://${API_BASE_URL}:${API_BASE_PORT}/mapping/current/location"
+          '${API_FULL_URL}/mapping/current/location'
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import MapPosePage from "./MapPosePage";
 import "./css/NavigationPage.css";
-import { API_BASE_URL, API_BASE_PORT } from "./env";
+import { API_FULL_URL } from "./env";
 
 function NavigationPage({ onBack }) {
   const [maps, setMaps] = useState([]);
@@ -11,14 +11,14 @@ function NavigationPage({ onBack }) {
   const [stopButton, setStopButton] = useState(true);
 
   useEffect(() => {
-    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/list/maps")
+    fetch('${API_FULL_URL}/navigation/list/maps')
       .then((response) => response.json())
       .then((data) => setMaps(data));
   }, []);
 
   const handleUseMap = (map) => {
     if (map) {
-      fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/use_map", {
+      fetch('${API_FULL_URL}/navigation/use_map', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -31,14 +31,14 @@ function NavigationPage({ onBack }) {
   };
 
   const handleStopNavigation = () => {
-    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/stop")
+    fetch('${API_FULL_URL}/navigation/stop')
       .then((response) => response.json())
       .then(() => setSelectedMap(""))
       .then(() => setStopButton(true));
   };
 
   const handleStartNavigation = () => {
-    fetch("http://${API_BASE_URL}:${API_BASE_PORT}/navigation/start", {
+    fetch('${API_FULL_URL}/navigation/start', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
