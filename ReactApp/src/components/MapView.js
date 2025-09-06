@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import robotIconSrc from "./icons/robot.png";
 import poseIconSrc from "./icons/pose.png";
-import { API_BASE_URL, API_BASE_PORT } from "./env";
+import { API_FULL_URL } from "./env";
 
 const MapView = ({
   setSelectedPose,
@@ -24,7 +24,7 @@ const MapView = ({
     const fetchMapData = async () => {
       try {
         const response = await fetch(
-          "http://${API_BASE_URL}:${API_BASE_PORT}/navigation/current/map"
+          '${API_FULL_URL}/navigation/current/map'
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -47,7 +47,7 @@ const MapView = ({
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          "http://${API_BASE_URL}:${API_BASE_PORT}/navigation/current/location"
+          '${API_FULL_URL}/navigation/current/location'
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
