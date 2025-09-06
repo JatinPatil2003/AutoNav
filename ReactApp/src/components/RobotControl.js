@@ -30,6 +30,8 @@ function RobotControl() {
       .then(() => setRobotStatus("stopped"));
   };
 
+  console.log('${API_FULL_URL}');
+
   if (robotStatus === "started") {
     return <NextPage onBack={() => setRobotStatus("stopped")} />;
   }
