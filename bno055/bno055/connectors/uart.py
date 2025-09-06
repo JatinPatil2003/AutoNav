@@ -133,7 +133,7 @@ class UART(Connector):
         # Return the received payload:
         return buf_in
 
-    def write(self, reg_addr, length, data: bytes):
+    def write(self, reg_addr, length, data: bytes, read: bool=True):
         """
         Transmit data packages to the sensor.
 
@@ -150,11 +150,12 @@ class UART(Connector):
 
         try:
             self.serialConnection.write(buf_out)
-            buf_in = bytearray(self.serialConnection.read(2))
+            if read:
+                buf_in = bytearray(self.serialConnection.read(2))
+                if (buf_in.__len__() != 2) or (buf_in[1] != 0x01):
+                    return False
         except Exception:  # noqa: B902
             return False
 
-        if (buf_in.__len__() != 2) or (buf_in[1] != 0x01):
-            return False
         return True
 

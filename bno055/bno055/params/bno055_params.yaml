@@ -34,19 +34,19 @@ bno055:
     uart_port: "/dev/bno055"
     uart_baudrate: 115200
     uart_timeout: 0.1
-    data_query_frequency: 20
+    data_query_frequency: 50
     calib_status_frequency: 0.1
     frame_id: "imu_1"
-    operation_mode: 0x0C
-    placement_axis_remap: "P2"
+    operation_mode: 0X08
+    placement_axis_remap: "P1"
     acc_factor: 100.0
     mag_factor: 16000000.0
     gyr_factor: 900.0
     grav_factor: 100.0
-    set_offsets: false # set to true to use offsets below
-    offset_acc: [0xFFEC, 0x00A5, 0xFFE8]
-    offset_mag: [0xFFB4, 0xFE9E, 0x027D]
-    offset_gyr: [0x0002, 0xFFFF, 0xFFFF]
+    set_offsets: true # set to true to use offsets below
+    offset_acc: [0x0000, 0x0004, 0xFFE8]
+    offset_mag: [0x0000, 0x0000, 0x0000]
+    offset_gyr: [0xFFFE, 0xFFFF, 0x0000]
     ## Sensor standard deviation [x,y,z]
     ## Used to calculate covariance matrices
     ## defaults are used if parameters below are not provided
