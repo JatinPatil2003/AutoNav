@@ -18,7 +18,7 @@ function MappingPage({ onBack }) {
   };
 
   const handleSaveMap = () => {
-    fetch('{API_FULL_URL}/mapping/save_map', {
+    fetch(`${API_FULL_URL}/mapping/save_map`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
