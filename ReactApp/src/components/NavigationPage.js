@@ -11,14 +11,14 @@ function NavigationPage({ onBack }) {
   const [stopButton, setStopButton] = useState(true);
 
   useEffect(() => {
-    fetch('${API_FULL_URL}/navigation/list/maps')
+    fetch(`${API_FULL_URL}/navigation/list/maps`)
       .then((response) => response.json())
       .then((data) => setMaps(data));
   }, []);
 
   const handleUseMap = (map) => {
     if (map) {
-      fetch('${API_FULL_URL}/navigation/use_map', {
+      fetch(`${API_FULL_URL}/navigation/use_map`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -31,14 +31,14 @@ function NavigationPage({ onBack }) {
   };
 
   const handleStopNavigation = () => {
-    fetch('${API_FULL_URL}/navigation/stop')
+    fetch(`${API_FULL_URL}/navigation/stop`)
       .then((response) => response.json())
       .then(() => setSelectedMap(""))
       .then(() => setStopButton(true));
   };
 
   const handleStartNavigation = () => {
-    fetch('${API_FULL_URL}/navigation/start', {
+    fetch(`${API_FULL_URL}/navigation/start`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
