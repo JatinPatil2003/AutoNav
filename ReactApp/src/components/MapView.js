@@ -24,7 +24,7 @@ const MapView = ({
     const fetchMapData = async () => {
       try {
         const response = await fetch(
-          '${API_FULL_URL}/navigation/current/map'
+          `${API_FULL_URL}/navigation/current/map`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -47,7 +47,7 @@ const MapView = ({
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          '${API_FULL_URL}/navigation/current/location'
+          `${API_FULL_URL}/navigation/current/location`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

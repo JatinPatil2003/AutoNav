@@ -12,7 +12,7 @@ function MappingPage({ onBack }) {
   const angularRef = useRef(angular);
 
   const handleStopMapping = () => {
-    fetch('${API_FULL_URL}/mapping/stop')
+    fetch(`${API_FULL_URL}/mapping/stop`)
       .then((response) => response.json())
       .then(() => onBack());
   };
@@ -29,7 +29,7 @@ function MappingPage({ onBack }) {
 
   const handleStartMapping = async () => {
     const response = await fetch(
-      '${API_FULL_URL}/mapping/start'
+      `${API_FULL_URL}/mapping/start`
     );
     console.log(response.json());
   };
@@ -47,7 +47,7 @@ function MappingPage({ onBack }) {
   useEffect(() => {
     const setvelocity = async () => {
       try {
-        const response = await fetch('${API_FULL_URL}/joystick/control', {
+        const response = await fetch(`${API_FULL_URL}/joystick/control`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

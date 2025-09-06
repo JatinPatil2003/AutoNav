@@ -12,7 +12,7 @@ function MappingMap() {
     const fetchMapData = async () => {
       try {
         const response = await fetch(
-          '${API_FULL_URL}/mapping/current/map'
+          `${API_FULL_URL}/mapping/current/map`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -35,7 +35,7 @@ function MappingMap() {
     const fetchRobotLocation = async () => {
       try {
         const response = await fetch(
-          '${API_FULL_URL}/mapping/current/location'
+          `${API_FULL_URL}/mapping/current/location`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

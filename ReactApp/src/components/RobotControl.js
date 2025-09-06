@@ -9,7 +9,7 @@ function RobotControl() {
   const [robotStatus, setRobotStatus] = useState("stopped");
 
   useEffect(() => {
-    fetch('${API_FULL_URL}/robot/status')
+    fetch(`${API_FULL_URL}/robot/status`)
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "started") {
@@ -19,18 +19,18 @@ function RobotControl() {
   }, []);
 
   const handleStart = () => {
-    fetch('${API_FULL_URL}/robot/start')
+    fetch(`${API_FULL_URL}/robot/start`)
       .then((response) => response.json())
       .then(() => setRobotStatus("started"));
   };
 
   const handleStop = () => {
-    fetch('${API_FULL_URL}/robot/stop')
+    fetch(`${API_FULL_URL}/robot/stop`)
       .then((response) => response.json())
       .then(() => setRobotStatus("stopped"));
   };
 
-  console.log('${API_FULL_URL}');
+  console.log(`${API_FULL_URL}`);
 
   if (robotStatus === "started") {
     return <NextPage onBack={() => setRobotStatus("stopped")} />;
