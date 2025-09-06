@@ -29,10 +29,10 @@ server {
 
 server {
     listen 5747; # port which will listen
-    server_name 52.66.235.90;
+    server_name 13.201.73.66;
 
     location / {
-        proxy_pass http://172.16.0.10:8000;  
+        proxy_pass http://172.28.224.5:8000;  
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
