@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from fastapi import Request
 
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 import os
 import signal
 import psutil
@@ -19,8 +19,9 @@ process = None
 async def start_navigation(map_name: MapName):
     global process
     if not process:
-        process = Popen(['ros2', 'launch', 'autonav_navigation', 'navigation.launch.py', f'map_name:={map_name.name}.yaml'], preexec_fn=os.setsid)
-    # process = Popen(['pwd'], preexec_fn=os.setsid)
+        process = Popen(
+            ['ros2', 'launch', 'autonav_navigation', 'navigation.launch.py', f'map_name:={map_name.name}.yaml'], 
+            preexec_fn=os.setsid, stdout=DEVNULL)
     return {'Started'}
 
 @router.get("/navigation/stop")

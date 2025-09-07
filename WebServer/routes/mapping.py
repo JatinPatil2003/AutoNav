@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from fastapi import Request
 
-from subprocess import Popen, PIPE, run
+from subprocess import Popen, PIPE, run, DEVNULL
 import os
 import signal
 import psutil
@@ -18,7 +18,7 @@ process = None
 def start_ros2_launch():
     global process
     if not process:
-        process = Popen(['ros2', 'launch', 'autonav_navigation', 'slam.launch.py'], preexec_fn=os.setsid)
+        process = Popen(['ros2', 'launch', 'autonav_navigation', 'slam.launch.py'], preexec_fn=os.setsid, stdout=DEVNULL)
 
 def stop_ros2_launch():
     global process
@@ -58,7 +58,11 @@ async def get_map():
 
 @router.post("/mapping/save_map")
 async def joy_control(map_name: MapName):
-    result = run(['ros2', 'run', 'nav2_map_server', 'map_saver_cli', '-f', f'/WebServer/maps/{map_name.name}'], preexec_fn=os.setsid)
+    result = run([
+        "ros2", "run", "nav2_map_server", "map_saver_cli",
+        "--free", "0.15",
+        "-f", f"/WebServer/maps/{map_name.name}"
+    ], preexec_fn=os.setsid, stdout=DEVNULL)
 
     # Check if the command executed successfully
     if result.returncode == 0:

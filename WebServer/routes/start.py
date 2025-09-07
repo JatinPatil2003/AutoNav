@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Request
 
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 import os
 import signal
 import psutil
@@ -14,7 +14,9 @@ robot_status = "stopped"
 async def start_robot():
     global process, robot_status
     if not process:
-        process = Popen(['ros2', 'launch', 'autonav_bringup', 'autonav_bringup.launch.py'], preexec_fn=os.setsid)
+        process = Popen(
+            ['ros2', 'launch', 'autonav_bringup', 'autonav_bringup.launch.py'], 
+            preexec_fn=os.setsid, stdout=DEVNULL)
     robot_status = "started"
     return {'status': robot_status}
 
