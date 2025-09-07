@@ -1,4 +1,4 @@
-FROM ros:jazzy
+FROM ros:humble
 
 SHELL ["/bin/bash", "-c"]
 
@@ -56,10 +56,10 @@ RUN chmod +x /autonav_entrypoint.bash
 
 WORKDIR /colcon_ws
 
-RUN /bin/bash -c 'source /opt/ros/jazzy/setup.bash \
+RUN /bin/bash -c 'source /opt/ros/humble/setup.bash \
     && colcon build --symlink-install'
 
-# RUN source /opt/ros/jazzy/setup.sh \
+# RUN source /opt/ros/humble/setup.sh \
 #     && colcon build \
 #     && rm -rf log/ build/ src/ \
 #     && apt-get autoremove -y \
