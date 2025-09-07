@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import JoystickControl from "./JoystickView";
 import MappingMap from "./MappingMap";
 import "./css/MappingPage.css";
-import { API_FULL_URL } from "./env";
+import { API_FULL_URL, WS_FULL_URL } from "./env";
 
 function MappingPage({ onBack }) {
   const [mapName, setMapName] = useState("");
@@ -10,6 +10,7 @@ function MappingPage({ onBack }) {
   const [angular, setAngular] = useState(0.0);
   const linearRef = useRef(linear);
   const angularRef = useRef(angular);
+  const wsRef = useRef(null);
 
   const handleStopMapping = () => {
     fetch(`${API_FULL_URL}/mapping/stop`)
@@ -42,33 +43,31 @@ function MappingPage({ onBack }) {
   useEffect(() => {
     linearRef.current = linear;
     angularRef.current = angular;
+
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({type: 'joystick', data: {linear: linearRef.current, angular: angularRef.current}})
+      );
+    }
   }, [linear, angular]);
 
   useEffect(() => {
-    const setvelocity = async () => {
-      try {
-        const response = await fetch(`${API_FULL_URL}/joystick/control`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ linear: linearRef.current, angular: angularRef.current }),
-        });
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        console.log(data);
-      } catch (error) {
-        console.error("Error fetching robot location:", error);
-      }
+    // Connect WebSocket
+    const ws = new WebSocket(`${WS_FULL_URL}/joystick`);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
     };
 
-    setvelocity();
+    ws.onmessage = (event) => {
+    };
 
-    const intervalId = setInterval(setvelocity, 500);
+    ws.onclose = () => {
+      console.log("❌ WebSocket disconnected");
+    };
 
-    return () => clearInterval(intervalId);
+    return () => ws.close();
   }, []);
 
   return (

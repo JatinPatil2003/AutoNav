@@ -9,9 +9,9 @@ function JoystickControl({ onControl}) {
     if(sendVel){
       const { x, y } = data;
       const linear = y * 0.5; // Adjust as necessary
-      const angular = x * -1; // Adjust as necessary
+      const angular = x * -1.5; // Adjust as necessary
       onControl(linear, angular);
-      console.log(`Linear: ${linear}, Angular: ${angular}`);
+      // console.log(`Linear: ${linear}, Angular: ${angular}`);
     };
   };
 
@@ -19,7 +19,7 @@ function JoystickControl({ onControl}) {
     const linear = 0.0; // Adjust as necessary
     const angular = 0.0; // Adjust as necessary
     onControl(linear, angular);
-    console.log(`Linear: ${linear}, Angular: ${angular}`);
+    // console.log(`Linear: ${linear}, Angular: ${angular}`);
     setSendVel(false);
   };
 

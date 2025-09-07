@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import robotIconSrc from "./icons/robot.png";
-import { API_FULL_URL } from "./env";
+import { WS_FULL_URL } from "./env";
 
 function MappingMap() {
   const [mapData, setMapData] = useState(null);
@@ -9,51 +9,88 @@ function MappingMap() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const fetchMapData = async () => {
+    // Create WebSocket connection
+    const ws = new WebSocket(`${WS_FULL_URL}/autonav`);
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+
+    ws.onmessage = (event) => {
       try {
-        const response = await fetch(
-          `${API_FULL_URL}/mapping/current/map`
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+        const data = JSON.parse(event.data);
+
+        if (data.type === "location") {
+          setRobotLocation(data.data);
         }
-        const data = await response.json();
-        setMapData(data);
-      } catch (error) {
-        console.error("Error fetching map data:", error);
+        if (data.type === "map") {
+          setMapData(data.data);
+        }
+      } catch (err) {
+        console.error("Error parsing WS message:", err);
       }
     };
 
-    fetchMapData();
-
-    const intervalId = setInterval(fetchMapData, 3000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    const fetchRobotLocation = async () => {
-      try {
-        const response = await fetch(
-          `${API_FULL_URL}/mapping/current/location`
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        setRobotLocation(data);
-        // console.log(data);
-      } catch (error) {
-        console.error("Error fetching robot location:", error);
-      }
+    ws.onclose = () => {
+      console.log("❌ WebSocket disconnected");
     };
 
-    fetchRobotLocation();
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
 
-    const intervalId = setInterval(fetchRobotLocation, 500);
-
-    return () => clearInterval(intervalId);
+    // Cleanup on unmount
+    return () => {
+      ws.close();
+    };
   }, []);
+
+  // useEffect(() => {
+  //   const fetchMapData = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `${API_FULL_URL}/mapping/current/map`
+  //       );
+  //       if (!response.ok) {
+  //         throw new Error("Network response was not ok");
+  //       }
+  //       const data = await response.json();
+  //       setMapData(data);
+  //     } catch (error) {
+  //       console.error("Error fetching map data:", error);
+  //     }
+  //   };
+
+  //   fetchMapData();
+
+  //   const intervalId = setInterval(fetchMapData, 3000);
+
+  //   return () => clearInterval(intervalId);
+  // }, []);
+
+  // useEffect(() => {
+  //   const fetchRobotLocation = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `${API_FULL_URL}/mapping/current/location`
+  //       );
+  //       if (!response.ok) {
+  //         throw new Error("Network response was not ok");
+  //       }
+  //       const data = await response.json();
+  //       setRobotLocation(data);
+  //       // console.log(data);
+  //     } catch (error) {
+  //       console.error("Error fetching robot location:", error);
+  //     }
+  //   };
+
+  //   fetchRobotLocation();
+
+  //   const intervalId = setInterval(fetchRobotLocation, 500);
+
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   useEffect(() => {
     const loadRobotIcon = () => {

@@ -44,8 +44,8 @@ function RobotControl() {
         <button onClick={handleStop}>Stop Robot</button>
       </div>
       <div className="image-container">
-        <img className="img1" src={image1} alt="Image 1" />
-        <img className="img2" src={image2} alt="Image 2" />
+        <img className="img1" src={image1} alt="AutoNav 1" />
+        <img className="img2" src={image2} alt="AutoNav 2" />
       </div>
     </div>
   );
