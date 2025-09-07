@@ -9,6 +9,8 @@ import math
 from models.model import Velocity
 from ros.node import ros_node
 import rclpy
+from routes.websocket import broadcast_message
+import asyncio
 
 map_msg = {}
 location_msg = {}
@@ -40,6 +42,7 @@ def map_callback(msg):
             },
             'data': list(msg.data)
         }
+    asyncio.run(broadcast_message({"type": "map", "data": map_msg}))
     # print(map_msg)
 
 def get_map_msg():
@@ -100,7 +103,7 @@ def set_joystick_velocity(velocity: Velocity):
         pub = True
     
 
-def set_pub_cmd_vel():
+def timer_fuction():
     global twist_publisher, twist_msg, prev_pub
     if prev_pub is not pub:
         twist_msg.linear.x = 0.0
@@ -116,13 +119,36 @@ def set_pub_cmd_vel():
     
     prev_pub = pub
 
+    if True:
+        try:
+            trans = location_buffer.lookup_transform('map', 'base_footprint', rclpy.time.Time())
+            x = trans.transform.translation.x
+            y = trans.transform.translation.y
+
+            # Quaternion to Euler conversion (yaw)
+            q = trans.transform.rotation
+            siny_cosp = 2 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
+            theta = math.atan2(siny_cosp, cosy_cosp)
+
+            location_msg = {
+                'x': x,
+                'y': y,
+                'theta': theta
+            }
+
+            asyncio.run(broadcast_message({"type": "location", "data": location_msg}))
+
+        except: 
+            pass
+
 ros_node.create_subscription(OccupancyGrid, 
                              '/map', map_callback, 10)
 
 ros_node.create_subscription(PoseWithCovarianceStamped,
                              '/amcl_pose', location_callback, 10)
 
-ros_node.create_timer(0.05, set_pub_cmd_vel)
+ros_node.create_timer(0.05, timer_fuction)
 
 twist_publisher = ros_node.create_publisher(Twist, 'cmd_vel', 10)
 

@@ -13,7 +13,7 @@ MONGO_URI = "mongodb+srv://jatinpatil2003:iqEtcmVkve9wxP15@mydb.nk83zvt.mongodb.
 # mongodb = MongoClient(MONGO_URI)
 mongodb = MongoClient('mongodb', 27017)
 
-db = mongodb['autoserve']
+db = mongodb['autonav']
 fs = gridfs.GridFS(db, collection='maps')
 pose_collection = db['pose']
 
