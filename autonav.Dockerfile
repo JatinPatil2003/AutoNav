@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     uvicorn 
 
 RUN apt-get update && apt-get install -y python3-pip \
-    && python3 -m pip install --break-system-packages -U \
+    && python3 -m pip install -U \
     smbus \
     pyserial==3.4 \
     pynput \
