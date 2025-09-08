@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4   # use latest version
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -30,8 +30,8 @@ jobs:
       - name: Rename APK
         run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/AutoNav.apk
 
-      - name: Upload APK as artifact (optional)
-        uses: actions/upload-artifact@v3
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4   # updated version
         with:
           name: AutoNav-apk
           path: build/app/outputs/flutter-apk/AutoNav.apk
