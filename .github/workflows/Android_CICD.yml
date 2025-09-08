@@ -20,25 +20,29 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+        working-directory: AndroidApp/autonav
 
       - name: Analyze code
         run: flutter analyze
+        working-directory: AndroidApp/autonav
 
       - name: Build release APK
         run: flutter build apk --release
+        working-directory: AndroidApp/autonav
 
       - name: Rename APK
         run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/AutoNav.apk
+        working-directory: AndroidApp/autonav
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4   # updated version
         with:
           name: AutoNav-apk
-          path: build/app/outputs/flutter-apk/AutoNav.apk
+          path: AndroidApp/autonav/build/app/outputs/flutter-apk/AutoNav.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/AutoNav.apk
+          files: AndroidApp/autonav/build/app/outputs/flutter-apk/AutoNav.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
