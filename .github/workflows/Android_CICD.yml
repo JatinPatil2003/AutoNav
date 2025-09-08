@@ -40,9 +40,15 @@ jobs:
           name: AutoNav-apk
           path: AndroidApp/autonav/build/app/outputs/flutter-apk/AutoNav.apk
 
-      - name: Create GitHub Release
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: latest                # always update the "latest" release
+          name: "AutoNav Latest" 
+          body: "This release always contains the latest AutoNav.apk build."
           files: AndroidApp/autonav/build/app/outputs/flutter-apk/AutoNav.apk
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
