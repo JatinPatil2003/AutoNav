@@ -108,13 +108,13 @@ def timer_fuction():
     if prev_pub is not pub:
         twist_msg.linear.x = 0.0
         twist_msg.angular.z = 0.0
-        ros_node.get_logger().info(f"{twist_msg.linear.x}, {twist_msg.angular.z}")
+        # ros_node.get_logger().info(f"{twist_msg.linear.x}, {twist_msg.angular.z}")
         twist_publisher.publish(twist_msg)
         prev_pub = pub
         return
         
     if pub:
-        ros_node.get_logger().info(f"Publishing {twist_msg.linear.x}, {twist_msg.angular.z}")
+        # ros_node.get_logger().info(f"Publishing {twist_msg.linear.x}, {twist_msg.angular.z}")
         twist_publisher.publish(twist_msg)
     
     prev_pub = pub

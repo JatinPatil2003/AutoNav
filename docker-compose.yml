@@ -4,15 +4,15 @@ services:
   autonav:
     image: jatinvpatil/autonav:latest
     command: >
-      uvicorn index:app --host 0.0.0.0 --port 8000
+      uvicorn index:app --host 172.28.224.5 --port 8000
     # command: bash -c "cd /colcon_ws && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
-    # network_mode: "host"
+    network_mode: "host"
     devices:
       - "/dev/bno055:/dev/bno055"
       - "/dev/lidar:/dev/lidar_x4"
-    ports:
-      # - 27017:27017
-      - 8000:8000
+    # ports:
+    #   # - 27017:27017
+    #   - 8000:8000
     volumes:
       - "~/AutoNav:/colcon_ws/src"
       - "~/AutoNav/WebServer:/WebServer"
@@ -22,7 +22,7 @@ services:
     image: microros/micro-ros-agent:humble
     command: serial --dev /dev/ttyesp32
     privileged: true
-    # network_mode: host
+    network_mode: host
     volumes:
       - /dev/ttyesp32:/dev/ttyesp32
     restart: unless-stopped
