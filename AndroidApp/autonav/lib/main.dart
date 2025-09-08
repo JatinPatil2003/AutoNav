@@ -25,6 +25,8 @@ class MyApp extends StatelessWidget {
 }
 
 class RobotController extends StatefulWidget {
+  const RobotController({super.key});
+
   @override
   State<RobotController> createState() => _RobotControllerState();
 }
@@ -40,9 +42,8 @@ class _RobotControllerState extends State<RobotController> {
   @override
   void initState() {
     super.initState();
-    connectWebSocket();
     checkRobotStatus(); // first check
-    statusTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    statusTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       checkRobotStatus();
     });
   }
@@ -59,48 +60,82 @@ class _RobotControllerState extends State<RobotController> {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        print("✅ Success: ${response.body}");
+        // print("✅ Success: ${response.body}");
       } else {
-        print("❌ Error: ${response.statusCode}");
+        // print("❌ Error: ${response.statusCode}");
       }
     } catch (e) {
-      print("⚠️ Failed: $e");
+      // print("⚠️ Failed: $e");
     }
   }
 
-  void startRobot() => callApi("$API_FULL_URL/robot/start");
-  void stopRobot() => callApi("$API_FULL_URL/robot/stop");
+  void startRobot() => callApi("$apiFullUrl/robot/start");
+  void stopRobot() => callApi("$apiFullUrl/robot/stop");
 
   Future<void> checkRobotStatus() async {
     try {
-      final response = await http.get(Uri.parse("$API_FULL_URL/robot/status"));
+      final response = await http.get(Uri.parse("$apiFullUrl/robot/status"));
       if (response.statusCode == 200) {
-        setState(() {
-          status = "Connected";
-        });
+        if (status != "Connected") {
+          setState(() {
+            status = "Connected";
+          });
+          connectWebSocket(); // connect only when status changes to Connected
+        }
       } else {
         setState(() {
           status = "Disconnected";
         });
+        channel.sink.close();
       }
     } catch (e) {
       setState(() {
         status = "Disconnected";
       });
+      channel.sink.close();
     }
   }
 
   void connectWebSocket() {
-    channel = WebSocketChannel.connect(Uri.parse("$WS_FULL_URL/joystick"));
-    channel.stream.listen((message) {
-      print("📩 Received: $message");
+    if (status != "Connected") {
+      // print("⚠️ Skipping WebSocket connection, status is not Connected.");
+      return;
+    }
+
+    try {
+      channel = WebSocketChannel.connect(Uri.parse("$wsFullUrl/joystick"));
+      // print("🔌 WebSocket connecting...");
+
+      channel.stream.listen(
+        (message) {
+          // print("📩 Received: $message");
+        },
+        onDone: () {
+          // print("❌ WebSocket closed. Retrying in 5s...");
+          retryWebSocket();
+        },
+        onError: (error) {
+          // print("⚠️ WebSocket error: $error. Retrying in 5s...");
+          retryWebSocket();
+        },
+        cancelOnError: true,
+      );
+    } catch (e) {
+      // print("⚠️ Failed to connect WebSocket: $e. Retrying in 5s...");
+      retryWebSocket();
+    }
+  }
+
+  void retryWebSocket() {
+    Future.delayed(const Duration(seconds: 5), () {
+      connectWebSocket();
     });
   }
 
   void sendCommand(Map<String, dynamic> command) {
     final jsonCommand = jsonEncode(command);
     channel.sink.add(jsonCommand);
-    print("📤 Sent: $jsonCommand");
+    // print("📤 Sent: $jsonCommand");
   }
 
   @override
