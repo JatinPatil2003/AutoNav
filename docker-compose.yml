@@ -4,7 +4,7 @@ services:
   autonav:
     image: jatinvpatil/autonav:latest
     command: >
-      uvicorn index:app --host 172.28.224.5 --port 8000
+      uvicorn index:app --host 0.0.0.0 --port 8000
     # command: bash -c "cd /colcon_ws && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
     network_mode: "host"
     devices:
