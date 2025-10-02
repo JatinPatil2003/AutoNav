@@ -24,7 +24,7 @@ services:
     privileged: true
     network_mode: host
     volumes:
-      - /dev/ttyesp32:/dev/ttyesp32
+      - /dev/ttyUSB0:/dev/ttyesp32
     restart: unless-stopped
   
   mongodb:
