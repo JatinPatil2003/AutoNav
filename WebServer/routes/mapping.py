@@ -9,7 +9,7 @@ import psutil
 from ros.topics import set_joystick_velocity, get_location_mapping_msg, get_map_msg
 from ros.service import set_initial_pose
 from ros.action import send_goal, cancel_goal, get_navigation_feedback
-from mongodb.db import listMaps, listGoal, saveGoal, getGoal, saveMap
+from mongodb.db import listMaps, listGoal, saveGoal, getGoal, saveMap, updateGoals, deleteGoals, savePose
 from models.model import MapName, Goal, Pose, Velocity
 import threading
 
@@ -30,6 +30,7 @@ def stop_ros2_launch():
 @router.get("/mapping/start")
 async def start_navigation():
     threading.Thread(target=start_ros2_launch).start()
+    deleteGoals("temp")
     return {'status': 'Started'}
 
 @router.get("/mapping/stop")
@@ -60,7 +61,7 @@ async def get_map():
 async def joy_control(map_name: MapName):
     result = run([
         "ros2", "run", "nav2_map_server", "map_saver_cli",
-        "--free", "0.15",
+        "--free", "0.15", "--fmt", "png",
         "-f", f"/WebServer/maps/{map_name.name}"
     ], preexec_fn=os.setsid, stdout=DEVNULL)
 
@@ -70,3 +71,19 @@ async def joy_control(map_name: MapName):
         return {'status': 'Map saved successfully'}
     else:
         return {'status': 'Failed to save map', 'error': result.returncode}
+
+
+@router.post("/mapping/save_map_points")
+async def joy_control(map_name: MapName):
+    try:
+        updateGoals(map_name.name)
+        deleteGoals("temp")
+        return {'status': 'Map saved successfully'}
+    except:
+        return {'status': 'Failed to save map points'}
+
+@router.post("/mapping/save_pose")
+async def save_pose(name: MapName):
+    data = get_location_mapping_msg()
+    savePose(name.name, data)
+    return {'set'}

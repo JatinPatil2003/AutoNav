@@ -47,7 +47,7 @@ class _AutoFocusKeyboardState extends State<AutoFocusKeyboard> {
   Future<void> _showKeyboard() async {
     if (_onboardProcess != null) return;
     try {
-      _onboardProcess = await Process.start("onboard", []);
+      _onboardProcess = await Process.start("/home/jatin/Desktop/start_keyboard.sh", []);
     } catch (e) {
       print("Failed to launch onboard: $e");
     }
@@ -55,7 +55,7 @@ class _AutoFocusKeyboardState extends State<AutoFocusKeyboard> {
 
   void _hideKeyboard() {
     if (_onboardProcess != null) {
-      _onboardProcess!.kill();
+      Process.start("/home/jatin/Desktop/stop_keyboard.sh", []);
       _onboardProcess = null;
     }
   }

@@ -4,33 +4,42 @@ services:
   autonav:
     image: jatinvpatil/autonav:latest
     command: >
-      uvicorn index:app --host 0.0.0.0 --port 8000
+      uvicorn index:app --host 0.0.0.0 --port 8000 
     # command: bash -c "cd /colcon_ws && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
     network_mode: "host"
-    devices:
-      - "/dev/bno055:/dev/bno055"
-      - "/dev/lidar:/dev/lidar_x4"
+    pid: "host"
+    privileged: true 
+    # devices:
+    #   - "/dev/bno055:/dev/bno055"
+    #   - "/dev/lidar:/dev/lidar_x4"
     # ports:
     #   # - 27017:27017
     #   - 8000:8000
     volumes:
       - "~/AutoNav:/colcon_ws/src"
       - "~/AutoNav/WebServer:/WebServer"
+      - /var/run/dbus:/var/run/dbus  # Required for nmcli
+      - /run/systemd:/run/systemd
+      - /run/dbus:/run/dbus
+      - /etc/NetworkManager:/etc/NetworkManager
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/sudoers.d:/etc/sudoers.d 
     restart: unless-stopped
 
-  micro_ros:
-    image: microros/micro-ros-agent:humble
-    command: serial --dev /dev/ttyesp32
-    privileged: true
-    network_mode: host
-    volumes:
-      - /dev/ttyUSB0:/dev/ttyesp32
-    restart: unless-stopped
+  # micro_ros:
+  #   image: microros/micro-ros-agent:humble
+  #   command: serial --dev /dev/ttyesp32
+  #   privileged: true
+  #   network_mode: host
+  #   volumes:
+  #     - /dev/ttyesp32:/dev/ttyesp32
+  #   restart: unless-stopped
   
   mongodb:
     image: mongo:4.4.18
     ports:
       - 27017:27017
     volumes:
-      - ~/mongodb_data:/data/db
+      - ~/mongodb_data_test:/data/db
     restart: unless-stopped
+
