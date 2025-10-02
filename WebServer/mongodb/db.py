@@ -11,7 +11,9 @@ from models.model import Goal
 MONGO_URI = "mongodb+srv://jatinpatil2003:iqEtcmVkve9wxP15@mydb.nk83zvt.mongodb.net/"
 
 # mongodb = MongoClient(MONGO_URI)
-mongodb = MongoClient('mongodb', 27017)
+# mongodb = MongoClient('mongodb', 27017)
+mongodb = MongoClient('localhost', 27017)
+
 
 db = mongodb['autonav']
 fs = gridfs.GridFS(db, collection='maps')
@@ -23,10 +25,21 @@ maps_dir = os.path.join(os.getcwd(), 'maps')
 
 print('done connection')
 
+def deleteDatabase():
+    try:
+        mongodb.drop_database('autonav')
+        return True
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
 def saveMap(file_name: str):
-    pgm_file = maps_dir + '/' + file_name + '.pgm'
+    pgm_file = maps_dir + '/' + file_name + '.png'
     print(f"\n\n\n\n\n\n Execute Save Map \n\n\n\n\n")
     try:
+        for old in fs.find({"filename": f"{file_name}.pgm"}):
+            fs.delete(old._id)
+
         with open(pgm_file, 'rb') as file:
             data = file.read()
             fs.put(data, filename=f'{file_name}.pgm')
@@ -36,6 +49,8 @@ def saveMap(file_name: str):
 
     yaml_file = maps_dir + '/' + file_name + '.yaml'
     try:
+        for old in fs.find({"filename": f"{file_name}.yaml"}):
+            fs.delete(old._id)
         with open(yaml_file, 'r') as file:
             data = yaml.safe_load(file)
             yaml_str = yaml.dump(data)
@@ -133,6 +148,63 @@ def listGoal(map_name):
         return pose
     except Exception as e:
         return []
+
+def updateGoals(map_name: str):
+    # Find all goals with map_name "temp"
+    temp_goals = list(pose_collection.find({"map_name": "temp"}))
+
+    updated_count = 0
+
+    for goal in temp_goals:
+        # Check if a goal with same name already exists in the target map
+        existing = pose_collection.find_one({
+            "map_name": map_name,
+            "name": goal["name"]
+        })
+
+        if existing:
+            # Update the existing goal with the temp goal's x, y, theta
+            pose_collection.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {"x": goal["x"], "y": goal["y"], "theta": goal["theta"]}}
+            )
+        else:
+            # No conflict: just change map_name
+            pose_collection.update_one(
+                {"_id": goal["_id"]},
+                {"$set": {"map_name": map_name}}
+            )
+        updated_count += 1
+
+    print(f"Processed {updated_count} goals from 'temp' to '{map_name}'")
+
+
+def deleteGoals(map_name: str):
+    result = pose_collection.delete_many({"map_name": map_name})
+    print(f"Deleted {result.deleted_count} goals with map_name={map_name}")
+
+def savePose(name: str, data):
+    pose = {
+        'map_name': 'temp',
+        'name': name,
+        'x': data['x'],
+        'y': data['y'],
+        'theta': data['theta']
+    }
+    try:
+        result = pose_collection.update_one(
+            {"map_name": 'temp', "name": name},  # match condition
+            {"$set": pose},                        # update with new values
+            upsert=True                            # insert if not found
+        )
+        if result.matched_count > 0:
+            print(f"Updated pose: {map_name}:{name}")
+        elif result.upserted_id:
+            print(f"Inserted new pose with id {result.upserted_id}")
+        return True
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
     
 
 # goal = Goal(

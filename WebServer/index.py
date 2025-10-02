@@ -29,7 +29,6 @@ app.include_router(websocket.router)
 app.include_router(settings.router)
 
 
-
 @app.on_event("shutdown")
 def shutdown_event():
     ros_thread.join() 

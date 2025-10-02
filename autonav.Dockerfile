@@ -34,6 +34,10 @@ RUN git clone https://github.com/YDLIDAR/YDLidar-SDK.git \
     && make \
     && make install
     
+RUN apt-get update && apt-get install -y \
+    network-manager \
+    docker.io
+
 COPY /autonav_bringup /colcon_ws/src/autonav_bringup
 
 COPY /autonav_controller /colcon_ws/src/autonav_controller
