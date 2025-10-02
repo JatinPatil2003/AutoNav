@@ -6,7 +6,7 @@ import threading
 ros_thread = threading.Thread(target=start_ros_node)
 ros_thread.start()
 
-from routes import start, navigation, mapping, websocket
+from routes import start, navigation, mapping, websocket, settings
 
 app = FastAPI()
 
@@ -25,6 +25,9 @@ app.include_router(navigation.router)
 app.include_router(mapping.router)
 
 app.include_router(websocket.router)
+
+app.include_router(settings.router)
+
 
 
 @app.on_event("shutdown")

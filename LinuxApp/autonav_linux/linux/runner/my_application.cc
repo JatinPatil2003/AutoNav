@@ -53,7 +53,11 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "autonav_linux");
   }
 
-  gtk_window_set_default_size(window, 1280, 720);
+  gtk_window_set_default_size(window, 1280, 800);       // Set fixed size
+  gtk_window_move(window, 0, 0);
+  gtk_window_set_decorated(window, FALSE);               // Remove title bar
+  gtk_window_set_resizable(window, FALSE);             // Prevent resizing
+  gtk_window_set_position(window, GTK_WIN_POS_CENTER);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
