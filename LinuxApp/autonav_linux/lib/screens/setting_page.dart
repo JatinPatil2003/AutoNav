@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/setting_service.dart';
 import '../services/onfoucs_keyboard.dart';
@@ -561,6 +562,66 @@ class _SettingsPageState extends State<SettingsPage> {
                           },
                           child: const Text(
                             "Reset Database",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ExpansionTile(
+                title: const Text(
+                  "Stop App",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Center(
+                      child: SizedBox(
+                        width: 180, // consistent width
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[800],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            // Confirm dialog
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text("Stop App"),
+                                content: const Text("Are you sure you want to stop the app?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      exit(0); 
+                                    },
+                                    child: const Text("Stop"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Stop App",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 15,

@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../constants/api_constants.dart';
+import 'dart:io';
 
 class SettingsService {
   final String baseUrl = ApiConstants.apiFullUrl;
@@ -69,14 +70,40 @@ class SettingsService {
   // Stub: toggle VPN
   Future<bool> toggleVpn(bool enabled) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/vpn'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'enabled': enabled}),
-      );
-      return response.statusCode == 200;
+      // Determine the script path relative to current Dart/Flutter directory
+      String scriptName = "";
+      if (enabled){
+        scriptName = "start_vpn.sh";
+      }
+      else{
+        scriptName = "stop_vpn.sh";
+      }
+
+      // If running Flutter desktop, current directory should be project root
+      String basePath = Directory.current.path;
+
+      // Full path to script
+      String scriptPath = "$basePath/lib/scripts/$scriptName";
+      print("Reboot script path: $scriptPath");
+
+      // Make sure the script exists
+      if (!File(scriptPath).existsSync()) {
+        print("Reboot script not found at $scriptPath");
+        return false;
+      }
+
+      // Run the script asynchronously
+      ProcessResult result = await Process.run('bash', [scriptPath]);
+
+      if (result.exitCode == 0) {
+        print("Reboot script executed successfully");
+        return true;
+      } else {
+        print("Reboot script failed: ${result.stderr}");
+        return false;
+      }
     } catch (e) {
-      print("VPN toggle error: $e");
+      print("Reboot error: $e");
       return false;
     }
   }
@@ -84,8 +111,32 @@ class SettingsService {
   // Stub: reboot robot
   Future<bool> rebootRobot() async {
     try {
-      final response = await http.post(Uri.parse('$baseUrl/reboot'));
-      return response.statusCode == 200;
+      // Determine the script path relative to current Dart/Flutter directory
+      String scriptName = "restart.sh";
+
+      // If running Flutter desktop, current directory should be project root
+      String basePath = Directory.current.path;
+
+      // Full path to script
+      String scriptPath = "$basePath/lib/scripts/$scriptName";
+      print("Reboot script path: $scriptPath");
+
+      // Make sure the script exists
+      if (!File(scriptPath).existsSync()) {
+        print("Reboot script not found at $scriptPath");
+        return false;
+      }
+
+      // Run the script asynchronously
+      ProcessResult result = await Process.run('bash', [scriptPath]);
+
+      if (result.exitCode == 0) {
+        print("Reboot script executed successfully");
+        return true;
+      } else {
+        print("Reboot script failed: ${result.stderr}");
+        return false;
+      }
     } catch (e) {
       print("Reboot error: $e");
       return false;
