@@ -4,8 +4,9 @@ from pydantic import BaseModel
 import subprocess
 import asyncio
 import os
+from datetime import datetime
 
-from ros.topics import check_topic_data
+from mongodb.db import deleteDatabase
 
 router = APIRouter()
 
@@ -31,9 +32,10 @@ async def list_wifi():
         networks = list(dict.fromkeys(
             [n.strip() for n in networks_output.split("\n") if n.strip()]
         ))
+        print(f"Available networks: {networks}")
         return {"success": True, "networks": networks}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": str(e), "networks": ["None"]}
     
 @router.get("/wifi/current")
 async def list_wifi():
@@ -43,10 +45,10 @@ async def list_wifi():
         for line in current_output.split("\n"):
             if line.startswith("yes:"):
                 current = line.split(":")[1]
-
+        print(f"Current network: {current}")
         return {"success": True, "current": current}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": str(e), "current": "None"}
 
 @router.post("/wifi/connect")
 async def connect_wifi(request: WifiRequest):
@@ -84,9 +86,10 @@ async def reboot_robot():
         return {"success": False, "error": str(e)}
 
 async def delayed_reboot():
-    await asyncio.sleep(5)
     print("Rebooting system now...")
-    subprocess.Popen(["sudo", "reboot"])
+    # subprocess.Popen([
+    #     "docker", "exec", "reboot_helper", "/reboot/reboot-host.sh"
+    # ])
 
 @router.post("/sync_datetime")
 async def sync_datetime():
@@ -99,25 +102,6 @@ async def sync_datetime():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# @router.get("/sensors")
-# async def sensor_health():
-#     """
-#     Return status of sensors.
-#     Modify as per your sensor hardware access.
-#     """
-#     # Example: pretend we can check LiDAR and IMU via system commands or files
-#     sensors_status = {}
-#     try:
-#         # Check LiDAR (stub: modify according to your actual device)
-#         sensors_status["LiDAR"] = "ok" if os.path.exists("/dev/ttyUSB0") else "fail"
-
-#         # Check IMU (stub: modify according to your actual device)
-#         sensors_status["IMU"] = "ok" if os.path.exists("/dev/i2c-1") else "fail"
-
-#         return {"success": True, "sensors": sensors_status}
-#     except Exception as e:
-#         return {"success": False, "error": str(e)}
-
 @router.get("/sensor/{sensor_name}")
 async def sensor_health_single(sensor_name: str):
     """
@@ -125,8 +109,8 @@ async def sensor_health_single(sensor_name: str):
     Return "ok" if hz >= 10, else "fail".
     """
     topic_map = {
-        "LiDAR": "/scan",
-        "IMU": "/bno055/imu_raw",
+        "LiDAR": "/ydlidar/scan",
+        "IMU": "/bno055/imu",
         "Motor": "/motor/feedback"
     }
 
@@ -144,7 +128,7 @@ async def sensor_health_single(sensor_name: str):
         )
 
         try:
-            output, _ = process.communicate(timeout=6)  # wait up to 6s
+            output, _ = process.communicate(timeout=3)  # wait up to 6s
         except subprocess.TimeoutExpired:
             process.kill()
             output, _ = process.communicate()
@@ -154,13 +138,14 @@ async def sensor_health_single(sensor_name: str):
         for line in output.splitlines():
             if "average" in line:
                 parts = line.split()
+                print(parts)
                 try:
-                    average_hz = float(parts[-2])
+                    average_hz = float(parts[-1])
                 except:
                     average_hz = 0.0
                 break
 
-        status = "ok" if average_hz >= 10 else "fail"
+        status = "ok" if average_hz >= 5 else "fail"
         print(f"Sensor: {sensor_name}, Average Hz: {average_hz}, Status: {status}")
         return {"sensor": sensor_name, "status": status, "hz": average_hz}
 
@@ -170,11 +155,23 @@ async def sensor_health_single(sensor_name: str):
 @router.post("/vpn")
 async def toggle_vpn(request: VpnRequest):
     """
-    Enable/Disable VPN.
-    This needs actual VPN config, here just store state.
+    Enable/Disable VPN using systemd.
     """
-    # TODO: integrate with real VPN service
-    return {"success": True, "enabled": request.enabled}
+    action = "start" if request.enabled else "stop"
+    print(f"{action} vpn.service")
+    try:
+        subprocess.run(
+            ["sudo", "systemctl", action, "vpn.service"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return {"success": True, "enabled": request.enabled}
+    except subprocess.CalledProcessError as e:
+        return {
+            "success": False,
+            "message": f"Failed to {action} vpn.service: {e.stderr}",
+        }
 
 @router.post("/credentials")
 async def update_credentials(request: CredentialsRequest):
@@ -186,16 +183,61 @@ async def update_credentials(request: CredentialsRequest):
 
 @router.post("/update")
 async def update_firmware():
-    """
-    Trigger firmware/software update.
-    """
-    # TODO: implement actual update
-    return {"success": True, "message": "Firmware update started"}
+    image_name = "jatinvpatil/autonav"
+    try:
+        pull_result = subprocess.run(
+            ["docker", "pull", image_name],
+            capture_output=True, text=True, check=True
+        )
+
+        return {
+            "success": True,
+            "message": "Firmware update started",
+        }
+
+    except subprocess.CalledProcessError as e:
+        return {
+            "success": False,
+            "message": f"Failed to update: {e.stderr}"
+        }
+
+@router.get("/version")
+async def get_version():
+    image_name = "jatinvpatil/autonav"
+    try:
+        result = subprocess.run(
+            ["docker", "inspect", "--format='{{.Created}}'", image_name],
+            capture_output=True, text=True, check=True
+        )
+        created_str = result.stdout.strip().strip("'").strip('"')  # remove extra quotes
+
+        # Handle nanoseconds → Python only supports microseconds
+        if "." in created_str:
+            date_part, frac = created_str.split(".", 1)
+            if "+" in frac:  # keep timezone
+                frac, tz = frac.split("+", 1)
+                frac = frac[:6]  # keep only microseconds
+                created_str = f"{date_part}.{frac}+{tz}"
+            elif "Z" in frac:  # UTC
+                frac = frac.replace("Z", "")
+                frac = frac[:6]
+                created_str = f"{date_part}.{frac}Z"
+            else:
+                frac = frac[:6]
+                created_str = f"{date_part}.{frac}"
+
+        # Parse timestamp
+        created_dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+        firmware_version = created_dt.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"Firmware version: {firmware_version}")
+        return {"success": True, "version": firmware_version}
+    except subprocess.CalledProcessError as e:
+        return {"success": False, "message": f"Failed to get version: {e.stderr}"}
 
 @router.post("/reset_db")
 async def reset_database():
     """
     Reset robot database.
     """
-    # TODO: implement actual reset
+    deleteDatabase()
     return {"success": True, "message": "Database reset successful"}
