@@ -4,6 +4,21 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 
+class MapData {
+  final String id;
+  final String name;
+  final String previewUrl;
+  MapData({required this.id, required this.name, required this.previewUrl});
+}
+
+class MapPoints {
+  final List<String> localization;
+  final List<String> charging;
+  final List<String> standby;
+  final List<String> goals;
+  MapPoints({required this.localization, required this.charging, required this.standby, required this.goals});
+}
+
 class ApiService {
   final String baseUrl = ApiConstants.apiFullUrl;
 
@@ -103,5 +118,81 @@ class ApiService {
 
   Future<void> emergencyStop() async {
     await http.post(Uri.parse('$baseUrl/emergency'));
+  }
+
+  // Fetch all available maps
+  Future<List<MapData>> fetchMaps() async {
+    final response = await http.get(Uri.parse('$baseUrl/navigation/list/maps_linux'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data
+          .map((e) => MapData(
+                name: e['name'],
+                previewUrl: '$baseUrl${e['thumbnailUrl']}',
+                id: e['id'],
+              ))
+          .toList();
+    } else {
+      throw Exception("Failed to load maps");
+    }
+  }
+
+  // Fetch a single map by name
+  Future<MapData> fetchMapByName(String mapName) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/navigation/get_map'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': mapName}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return MapData(
+        name: data['name'],
+        previewUrl: '$baseUrl${data['thumbnailUrl']}',
+        id: data['id'],
+      );
+    } else {
+      throw Exception("Failed to fetch map: ${response.body}");
+    }
+  }
+
+  // Select / load a specific map
+  Future<bool> loadMap(String mapId) async {
+    print('Loading map with ID: $mapId');
+    final response = await http.post(
+      Uri.parse('$baseUrl/navigation/use_map_linux'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"name": mapId}),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<MapPoints> fetchLocalizationPoints(String mapName) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/navigation/points"),
+      body: jsonEncode({"map_name": mapName}),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return MapPoints(
+        localization: List<String>.from(data['localization']),
+        charging: List<String>.from(data['charging']),
+        standby: List<String>.from(data['standby']),
+        goals: List<String>.from(data['goals']),
+      );
+    } else {
+      return MapPoints(
+        localization: ["Entrance", "Kitchen", "Lobby", "Storage Room"],
+        charging: ["Dock 1", "Dock 2"],
+        standby: ["Standby 1", "Standby 2"],
+        goals: ["Goal A", "Goal B", "Goal C", "Goal D"],
+        // goals: [""],
+      );
+      // throw Exception("Failed to fetch points");
+    }
   }
 }

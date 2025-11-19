@@ -34,15 +34,15 @@ def deleteDatabase():
         return False
 
 def saveMap(file_name: str):
-    pgm_file = maps_dir + '/' + file_name + '.png'
+    png_file = maps_dir + '/' + file_name + '.png'
     print(f"\n\n\n\n\n\n Execute Save Map \n\n\n\n\n")
     try:
-        for old in fs.find({"filename": f"{file_name}.pgm"}):
+        for old in fs.find({"filename": f"{file_name}.png"}):
             fs.delete(old._id)
 
-        with open(pgm_file, 'rb') as file:
+        with open(png_file, 'rb') as file:
             data = file.read()
-            fs.put(data, filename=f'{file_name}.pgm')
+            fs.put(data, filename=f'{file_name}.png')
     except Exception as e:
         print(f"\n\n\n\n\n\n{e}\n\n\n\n\n")
         return False
@@ -59,17 +59,17 @@ def saveMap(file_name: str):
         print(f"\n\n\n\n\n\n{e}\n\n\n\n\n")
         return False
 
-    os.remove(pgm_file)
+    os.remove(png_file)
     os.remove(yaml_file)
 
     return True
 
 def loadMap(file_name: str):
-    pgm_file = maps_dir + '/' + file_name + '.pgm'
+    png_file = maps_dir + '/' + file_name + '.png'
     try:
-        file_data = fs.find_one({'filename': f'{file_name}.pgm'})
+        file_data = fs.find_one({'filename': f'{file_name}.png'})
         if file_data:
-            with open(pgm_file, 'wb') as file:
+            with open(png_file, 'wb') as file:
                 file.write(file_data.read())
     except:
         return False
@@ -105,8 +105,8 @@ def listMaps():
 # saveMap('cafe')
 # saveMap('cafe_3d')
 # saveMap('new_cafe')
-# loadMap('cafe')
-# loadMap('cafe_3d')
+# loadMap('2')
+# loadMap('3')
 # loadMap('new_cafe')
 # print(listMaps())
 
@@ -198,7 +198,7 @@ def savePose(name: str, data):
             upsert=True                            # insert if not found
         )
         if result.matched_count > 0:
-            print(f"Updated pose: {map_name}:{name}")
+            print(f"Updated pose: 'temp':{name}")
         elif result.upserted_id:
             print(f"Inserted new pose with id {result.upserted_id}")
         return True

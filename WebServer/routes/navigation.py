@@ -7,7 +7,7 @@ import os
 import signal
 import psutil
 from ros.topics import get_map_msg, get_location_msg
-from ros.service import set_initial_pose
+from ros.service import set_initial_pose, loadMapService
 from ros.action import send_goal, cancel_goal, get_navigation_feedback
 from mongodb.db import listMaps, listGoal, saveGoal, getGoal, loadMap
 from models.model import MapName, Goal, Pose
@@ -94,3 +94,41 @@ async def feedback_navigation():
 async def initial_pose(pose: Pose):
     set_initial_pose(pose)
     return {'Initial Pose Set'}
+
+@router.get("/navigation/list/maps_linux")
+async def list_maps():
+    """
+    Return maps with names + thumbnail URLs
+    """
+    maps = listMaps()  # assume this returns a list of map names
+    map_data = []
+    for m in maps:
+        loadMap(m)
+        map_data.append({
+            "id": m,
+            "name": m,
+            "thumbnailUrl": f"/maps/{m}.png"  # store thumbs in /static/maps/
+        })
+    print(map_data)
+    return map_data
+
+@router.post("/navigation/get_map")
+def get_map(map_name: MapName):
+    loadMap(map_name.name)
+    return {
+        "id": map_name.name,
+        "name": map_name.name,
+        "thumbnailUrl": f"/maps/{map_name.name}.png" 
+    }
+
+
+@router.post("/navigation/use_map_linux")
+async def use_map(name: MapName):
+    """
+    Select and load a map
+    """
+    global map_name
+    map_name = name.name
+    loadMap(map_name)  # your existing DB/ROS logic
+    loadMapService(map_name)
+    return {"message": f"Map {map_name} loaded successfully"}
