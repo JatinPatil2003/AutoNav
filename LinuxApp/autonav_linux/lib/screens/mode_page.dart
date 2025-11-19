@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import './setting_page.dart';
 import './mapping_page.dart';
-import './navigation_page.dart';
+import './map_select.dart';
 import '../services/api_service.dart';
 
 class ModePage extends StatefulWidget {
@@ -42,22 +42,29 @@ class _ModePageState extends State<ModePage> {
       loadingMessage = "Loading Maps...";
     });
 
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
     setState(() {
       loadingMessage = "Starting Navigation...";
     });
 
-    await Future.delayed(const Duration(seconds: 5));
+    await Future.delayed(const Duration(seconds: 2));
 
+    isLoading = false;
+    
     if (!mounted) return;
-    setState(() => isLoading = false);
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NavigationPage()),
+      MaterialPageRoute(builder: (context) => const MapSelectionPage()),
     );
+
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    
+    setState(() => isLoading = false);
+
   }
 
   @override
@@ -108,7 +115,7 @@ class _ModePageState extends State<ModePage> {
                       children: [
                         const CircularProgressIndicator(
                           color: Colors.blueAccent,
-                          strokeWidth: 4,
+                          strokeWidth: 8,
                         ),
                         const SizedBox(height: 16),
                         Text(

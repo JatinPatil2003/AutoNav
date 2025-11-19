@@ -3,10 +3,15 @@ from action_msgs.msg import GoalStatus
 import tf_transformations
 from geometry_msgs.msg import PoseWithCovarianceStamped, Quaternion
 from models.model import Pose, Goal
+from nav2_msgs.srv import LoadMap
+
+import os
 
 from ros.node import ros_node
 
 initial_pose_client = ros_node.create_client(SetInitialPose, '/set_initial_pose')
+
+load_map_client = ros_node.create_client(LoadMap, '/map_server/load_map')
 
 def set_initial_pose(pose: Goal):
     request = SetInitialPose.Request()
@@ -23,3 +28,15 @@ def set_initial_pose(pose: Goal):
 
     if initial_pose_client.wait_for_service(timeout_sec=1.0):
         response = initial_pose_client.call_async(request)
+
+def loadMapService(map_name: str):
+    request = LoadMap.Request()
+    request.map_url = os.path.join(os.getcwd(), "maps", f"{map_name}.yaml")
+    # request.map_url = os.path.join("/home/jatin/AutoNav/WebServer/maps", f"{map_name}.yaml")
+
+    if load_map_client.wait_for_service(timeout_sec=1.0):
+        response = load_map_client.call(request)
+        return response
+    else:
+        print("LoadMap service not available.")
+        return None
