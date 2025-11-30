@@ -23,8 +23,11 @@ class _RobotControllerState extends State<RobotController> {
   Timer? statusTimer;
 
   /// Default multipliers
-  double linearMultiplier = 0.5;
-  double angularMultiplier = 1.5;
+  double linearMultiplier = 0.3;
+  double angularMultiplier = 0.7;
+
+  bool emergencyActive = false;
+
 
   @override
   void initState() {
@@ -56,8 +59,29 @@ class _RobotControllerState extends State<RobotController> {
     }
   }
 
+  Future<void> callPostApi(String url, Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        // Success
+      } else {
+        // Handle failure
+      }
+    } catch (e) {
+      // Handle network errors
+    }
+  }
+
   void startRobot() => callApi("$apiFullUrl/robot/start");
   void stopRobot() => callApi("$apiFullUrl/robot/stop");
+  void emergencySet(bool value) {
+    callPostApi("$apiFullUrl/emergency", {"status": value});
+  }
 
   Future<void> checkRobotStatus() async {
     try {
@@ -259,6 +283,35 @@ class _RobotControllerState extends State<RobotController> {
               ),
             ),
             
+          if (status == "Connected")
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: emergencyActive
+                      ? const Color(0xFF690A0A) // dark red when latched
+                      : Colors.red,             // normal red when off
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  setState(() => emergencyActive = !emergencyActive);
+
+                  // Send true when latched, false when released
+                  emergencySet(emergencyActive);
+                },
+                child: Text(
+                  emergencyActive ? "EMERGENCY" : "EMERGENCY",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
+                ),
+              ),
+            ),
+
+
           const Spacer(),
 
           // Joystick at bottom center
