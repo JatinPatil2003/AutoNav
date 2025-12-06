@@ -1,12 +1,14 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
 import './map_view.dart';
 import '../constants/api_constants.dart';
 import '../services/api_service.dart';
+import '../services/onfoucs_keyboard.dart';
 
-class MappingPage extends StatefulWidget {
+class MappingPage extends StatefulWidget with RouteAware {
   const MappingPage({super.key});
 
   @override
@@ -18,7 +20,7 @@ class _MappingPageState extends State<MappingPage> {
   Map<String, dynamic>? robotPosition;
   List<Map<String, dynamic>> savedPoints = [];
   Map<String, dynamic>? currentMapData;
-  bool emergencyActive = false;
+  late bool emergencyActive;
 
   final String wsbaseUrl = ApiConstants.wsFullUrl;
   final ApiService _apiService = ApiService();
@@ -26,6 +28,14 @@ class _MappingPageState extends State<MappingPage> {
   @override
   void initState() {
     super.initState();
+
+    emergencyActive = _apiService.emergencyActive;
+
+    if (emergencyActive) {
+      _apiService.setLed(2); // Set LED to emergency status
+    } else {
+      _apiService.setLed(8); // Reset LED to normal status
+    }
     channel = WebSocketChannel.connect(
       Uri.parse('$wsbaseUrl/autonav'), // replace with your WS
     );
@@ -76,10 +86,20 @@ class _MappingPageState extends State<MappingPage> {
           builder: (context, setState) => AlertDialog(
             title: Text(title),
             content: requiresInput
-                ? TextField(
+                // ? TextField(
+                //     controller: controller,
+                //     autofocus: true,
+                //     decoration: InputDecoration(hintText: "$title name"),
+                //     onChanged: (value) {
+                //       setState(() {
+                //         isValid = value.trim().isNotEmpty;
+                //       });
+                //     },
+                //   )
+                ? AutoFocusKeyboard(
                     controller: controller,
-                    autofocus: true,
-                    decoration: InputDecoration(hintText: "$title name"),
+                    hintText: "$title name",
+                    obscureText: false,
                     onChanged: (value) {
                       setState(() {
                         isValid = value.trim().isNotEmpty;
@@ -111,14 +131,19 @@ class _MappingPageState extends State<MappingPage> {
                       }
 
                       if (title == "Save Map") {
-                        await _apiService.saveMap(name.toString());
-                        await _apiService.savemapPoints(name.toString());
+                        _apiService.saveMap(name.toString());
+                        _apiService.savemapPoints(name.toString());
 
-                        _apiService.stopMapping();
+                        if (emergencyActive) {
+                          _apiService.setLed(2); // Set LED to emergency status
+                        } else {
+                          _apiService.setLed(5); // Reset LED to normal status
+                        }
 
                         Navigator.pop(ctx);
 
                         channel.sink.close();
+                        _apiService.stopMapping();
                         
                         if (Navigator.of(context).canPop()){
                           Navigator.of(context).pop();
@@ -174,9 +199,14 @@ class _MappingPageState extends State<MappingPage> {
               left: 10,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
-                onPressed: () => {
-                  _apiService.stopMapping(),
-                  Navigator.pop(context),
+                onPressed: () {
+                  _apiService.stopMapping();
+                  if (emergencyActive) {
+                    _apiService.setLed(2); // Set LED to emergency status
+                  } else {
+                    _apiService.setLed(5); // Reset LED to normal status
+                  }
+                  Navigator.pop(context, _apiService.emergencyActive);
                 },
               ),
             ),
@@ -192,7 +222,12 @@ class _MappingPageState extends State<MappingPage> {
                 ),
                 onPressed: () {
                   setState(() => emergencyActive = !emergencyActive);
-                  _sendApi("/emergency");
+                  if (emergencyActive) {
+                    _apiService.setLed(2); // Set LED to emergency status
+                  } else {
+                    _apiService.setLed(8); // Reset LED to normal status
+                  }
+                  _apiService.emergencyStop(emergencyActive);
                 },
                 child: const Text(
                   "EMERGENCY",

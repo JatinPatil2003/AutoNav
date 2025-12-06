@@ -20,7 +20,15 @@ class MapPoints {
 }
 
 class ApiService {
+  ApiService._privateConstructor();
+
+  static final ApiService _instance = ApiService._privateConstructor();
+
+  factory ApiService() => _instance;
+
   final String baseUrl = ApiConstants.apiFullUrl;
+
+  bool emergencyActive = false;
 
   /// Sends a request to start the robot
   Future<bool> startRobot() async {
@@ -64,6 +72,20 @@ class ApiService {
     // return true;
   }
 
+  Future<bool> startNavigation() async {
+    print('calling navigation start');
+    final response = await http.post(Uri.parse('$baseUrl/navigation/start_linux'));
+    return response.statusCode == 200;
+    // return true;
+  }
+
+  Future<bool> stopNavigation() async {
+    print('calling navigation start');
+    final response = await http.get(Uri.parse('$baseUrl/navigation/stop'));
+    return response.statusCode == 200;
+    // return true;
+  }
+
   Future<bool> saveMap(String name) async {
     try {
       final response = await http.post(
@@ -76,6 +98,38 @@ class ApiService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> localizeAt(String mapName, String pointName) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/navigation/localize'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "map_name": mapName,
+        "name": pointName,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return {
+        "success": data["success"] ?? false,
+        "message": data["message"] ?? "No message received"
+      };
+    } else {
+      return {
+        "success": false,
+        "message": "Server Error (${response.statusCode})"
+      };
+    }
+  } catch (e) {
+    return {
+      "success": false,
+      "message": "Network Error: $e"
+    };
+  }
+}
+
 
   Future<bool> savemapPoints(String name) async {
     try {
@@ -116,8 +170,13 @@ class ApiService {
     await http.post(Uri.parse('$baseUrl/standby'));
   }
 
-  Future<void> emergencyStop() async {
-    await http.post(Uri.parse('$baseUrl/emergency'));
+  Future<void> emergencyStop(bool emergencystatus) async {
+    emergencyActive = emergencystatus;
+    await http.post(
+      Uri.parse('$baseUrl/emergency'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"status": emergencystatus}),
+    );
   }
 
   // Fetch all available maps
@@ -169,10 +228,20 @@ class ApiService {
     return response.statusCode == 200;
   }
 
+  Future<bool> setLed(int led_status) async {
+    print("Setting LED status to: $led_status");
+    final response = await http.post(
+      Uri.parse('$baseUrl/led_status'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"status": led_status}),
+    );
+    return response.statusCode == 200;
+  }
+
   Future<MapPoints> fetchLocalizationPoints(String mapName) async {
     final response = await http.post(
       Uri.parse("$baseUrl/navigation/points"),
-      body: jsonEncode({"map_name": mapName}),
+      body: jsonEncode({"name": mapName}),
       headers: {"Content-Type": "application/json"},
     );
 

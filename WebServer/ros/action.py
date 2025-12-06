@@ -4,6 +4,7 @@ from rclpy.action import ActionClient
 import tf_transformations
 from geometry_msgs.msg import PoseStamped, Quaternion
 from models.model import Pose
+from enum import Enum
 
 from ros.node import ros_node
 
@@ -11,6 +12,15 @@ goal_client = ActionClient(ros_node, NavigateToPose, 'navigate_to_pose')
 
 goal_send = None
 navigation_feedback = 0.0
+
+class NavStatus(Enum):
+    IDLE = 0
+    ACTIVE = 1
+    SUCCEEDED = 2
+    CANCELED = 3
+    FAILED = 4
+
+navigation_status = NavStatus.IDLE
 
 def send_goal(pose: Pose):
     global goal_send
@@ -25,6 +35,7 @@ def send_goal(pose: Pose):
 
     if not goal_send:
         if goal_client.wait_for_server(timeout_sec=1.0):
+            navigation_status = NavStatus.ACTIVE
             goal_send =goal_client.send_goal_async(goal, feedback_callback=feedback_callback)
             goal_send.add_done_callback(goal_accept_callback)
     else:
@@ -33,6 +44,7 @@ def send_goal(pose: Pose):
 
 def goal_accept_callback(future):
     goal_result = future.result().get_result_async()
+    navigation_status = NavStatus.ACTIVE
     goal_result.add_done_callback(result_callback)
 
 def result_callback(future):
@@ -41,6 +53,15 @@ def result_callback(future):
     goal_send = None
     # print(result)
     navigation_feedback = 0.0
+    # Map Nav2 status code to our enum
+    if result.status == GoalStatus.STATUS_SUCCEEDED:
+        navigation_status = NavStatus.SUCCEEDED
+    elif result.status == GoalStatus.STATUS_ABORTED:
+        navigation_status = NavStatus.FAILED
+    elif result.status == GoalStatus.STATUS_CANCELED:
+        navigation_status = NavStatus.CANCELED
+    else:
+        navigation_status = NavStatus.IDLE
 
 def feedback_callback(feedback_msg):
     # print(feedback_msg)
@@ -51,6 +72,7 @@ def cancel_goal():
     global goal_send, navigation_feedback
     if goal_send:
         navigation_feedback = 0.0
+        navigation_status = NavStatus.CANCELED
         goal_send.result().cancel_goal_async()
         goal_send = None
 

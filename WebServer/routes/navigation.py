@@ -6,11 +6,12 @@ from subprocess import Popen, PIPE, DEVNULL
 import os
 import signal
 import psutil
-from ros.topics import get_map_msg, get_location_msg
+import asyncio
+from ros.topics import get_map_msg, get_location_msg, set_led_status, rotate_n_times, get_cov_threshold
 from ros.service import set_initial_pose, loadMapService
 from ros.action import send_goal, cancel_goal, get_navigation_feedback
 from mongodb.db import listMaps, listGoal, saveGoal, getGoal, loadMap
-from models.model import MapName, Goal, Pose
+from models.model import MapName, Goal, Pose, PointInfo
 
 router = APIRouter()
 process = None
@@ -21,7 +22,16 @@ async def start_navigation(map_name: MapName):
     if not process:
         process = Popen(
             ['ros2', 'launch', 'autonav_navigation', 'navigation.launch.py', f'map_name:={map_name.name}.yaml'], 
-            preexec_fn=os.setsid, stdout=DEVNULL)
+            preexec_fn=os.setsid) #, stdout=DEVNULL)
+    return {'Started'}
+
+@router.post("/navigation/start_linux")
+async def start_navigation():
+    global process
+    if not process:
+        process = Popen(
+            ['ros2', 'launch', 'autonav_navigation', 'navigation.launch.py'], 
+            preexec_fn=os.setsid) #, stdout=DEVNULL)
     return {'Started'}
 
 @router.get("/navigation/stop")
@@ -35,7 +45,7 @@ async def stop_naviagtion():
     return {'Stopped'}
 
 @router.get("/navigation/list/maps")
-async def list_maps():
+async def list_maps():  
     return listMaps()
 
 @router.post("/navigation/use_map")
@@ -48,6 +58,41 @@ async def save_map_data(name: MapName):
 @router.get("/navigation/list/pose/{name}")
 async def list_poses(name: str):
     return listGoal(name)
+
+@router.post("/navigation/points")
+async def get_navigation_points(map_name: MapName):
+    point = listGoal(map_name.name)
+    localization = []
+    charging = []
+    standby = []
+    goals = []
+    for p in point:
+        if "localization" in p.lower():
+            localization.append(p)
+        elif "charger" in p.lower():
+            charging.append(p)
+        elif "standby" in p.lower():
+            standby.append(p)
+        else:
+            goals.append(p)
+    return {
+        "localization": localization,
+        "charging": charging,
+        "standby": standby,
+        "goals": goals
+    }
+
+@router.post("/navigation/localize")
+async def start_localization(point: PointInfo):
+    point_pose = getGoal(point.map_name, point.name)
+    pose = Pose(x=point_pose['x'], y=point_pose['y'], theta=point_pose['theta'])
+    set_initial_pose(pose)
+    print(f"Rotating for localization at point: {point.name}")
+    await asyncio.to_thread(rotate_n_times, 2)
+    localize_success = get_cov_threshold()
+    if localize_success:
+        return {'success': True, 'message': f'Localization to {point.name} Successful'}
+    return {'success': False, 'message': f'Localization Failed at {point.name}, Please Retry...'}
 
 @router.get("/navigation/current/map")
 async def get_current_map():

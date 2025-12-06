@@ -12,9 +12,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final SettingsService _settingService = SettingsService();
-
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   bool _vpnEnabled = true; // VPN ON by default
   // Map<String, dynamic> _sensorStatus = {};
@@ -148,495 +146,503 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Settings")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text("WiFi Networking",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      height: 180, // Scrollable list height
-                      child: ListView.builder(
-                        itemCount: _wifiNetworks.length,
-                        itemBuilder: (ctx, index) {
-                          final network = _wifiNetworks[index];
-                          final isConnected = network == _connectedNetwork;
-                          return ListTile(
-                            title: Text(
-                              network,
-                              style: TextStyle(
-                                color: isConnected ? Colors.green.shade900 : Colors.black,
-                                fontWeight: isConnected ? FontWeight.bold : FontWeight.normal,
+      body: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        trackVisibility: true,
+        thickness: 15,                          // 👈 BIG scrollbar
+        radius: const Radius.circular(5),
+        child: SingleChildScrollView(
+          controller: _scrollController,        // 👈 same controller
+          padding: const EdgeInsets.fromLTRB(25, 16, 25, 16),
+          child: Column(
+            children: [
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text("WiFi Networking",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: SizedBox(
+                        height: 180, // Scrollable list height
+                        child: ListView.builder(
+                          itemCount: _wifiNetworks.length,
+                          itemBuilder: (ctx, index) {
+                            final network = _wifiNetworks[index];
+                            final isConnected = network == _connectedNetwork;
+                            return ListTile(
+                              title: Text(
+                                network,
+                                style: TextStyle(
+                                  color: isConnected ? Colors.green.shade900 : Colors.black,
+                                  fontWeight: isConnected ? FontWeight.bold : FontWeight.normal,
+                                ),
                               ),
-                            ),
-                            trailing: isConnected ? const Icon(Icons.check, color: Colors.green) : null,
-                            onTap: isConnected ? null : () => _showPasswordDialog(network),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // VPN
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text("VPN", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Enable VPN"),
-                        Switch(
-                          value: _vpnEnabled,
-                          onChanged: (val) async {
-                            bool success = await _settingService.toggleVpn(val);
-                            if (success) setState(() => _vpnEnabled = val);
+                              trailing: isConnected ? const Icon(Icons.check, color: Colors.green) : null,
+                              onTap: isConnected ? null : () => _showPasswordDialog(network),
+                            );
                           },
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Reboot
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text("Reboot Robot",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: SizedBox(
-                      width: 180,
+              // VPN
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text("VPN", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Enable VPN"),
+                          Switch(
+                            value: _vpnEnabled,
+                            onChanged: (val) async {
+                              bool success = await _settingService.toggleVpn(val);
+                              if (success) setState(() => _vpnEnabled = val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Reboot
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text("Reboot Robot",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: SizedBox(
+                        width: 180,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[400],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8), // optional rounded corners
+                            ),
+                          ),
+                          onPressed: () async {
+                            bool success = await _settingService.rebootRobot();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(success ? "Robot will Reboot in 5 seconds ..." : "Failed")),
+                            );
+                          },
+                          child: const Text("Reboot", textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Sensor Health
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text("Sensor Health Check",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red[400],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8), // optional rounded corners
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         onPressed: () async {
-                          bool success = await _settingService.rebootRobot();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(success ? "Robot will Reboot in 5 seconds ..." : "Failed")),
+                          // Initial dialog state
+                          Map<String, String> sensorStatus = {
+                            "LiDAR": "checking",
+                            "IMU": "checking",
+                            "Motor": "checking",
+                          };
+
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (ctx) {
+                              bool isCheckingStarted = false;
+
+                              return StatefulBuilder(builder: (ctx, setStateDialog) {
+                                // Function to check sensors one by one
+                                Future<void> checkSensors() async {
+                                  if (isCheckingStarted) return; // prevent multiple calls
+                                  isCheckingStarted = true;
+
+                                  for (var sensor in sensorStatus.keys) {
+                                    if (!mounted) break; // stop if dialog is closed
+                                    setStateDialog(() => sensorStatus[sensor] = "loading");
+
+                                    // Simulate API call
+                                    bool success = await _settingService.sensorHealthCheckSensor(sensor);
+
+                                    if (!mounted) break;
+                                    setStateDialog(() => sensorStatus[sensor] = success ? "ok" : "fail");
+
+                                    // Wait 5 seconds before next sensor
+                                    // await Future.delayed(const Duration(milliseconds: 500));
+                                  }
+                                }
+
+                                // Start checking after first frame
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (!isCheckingStarted) checkSensors();
+                                });
+
+                                return AlertDialog(
+                                  title: const Text("Sensor Health Check"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: sensorStatus.entries.map((entry) {
+                                      Widget statusWidget;
+                                      Color textColor;
+
+                                      switch (entry.value) {
+                                        case "checking":
+                                          statusWidget = const Icon(Icons.hourglass_empty, color: Colors.yellow);
+                                          textColor = Colors.yellow.shade800;
+                                          break;
+                                        case "loading":
+                                          statusWidget = const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          );
+                                          textColor = Colors.yellow.shade800;
+                                          break;
+                                        case "ok":
+                                          statusWidget = const Icon(Icons.check_circle, color: Colors.green);
+                                          textColor = Colors.green;
+                                          break;
+                                        case "fail":
+                                          statusWidget = const Icon(Icons.cancel, color: Colors.red);
+                                          textColor = Colors.red;
+                                          break;
+                                        default:
+                                          statusWidget = const Icon(Icons.help);
+                                          textColor = Colors.black;
+                                      }
+
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(entry.key,
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold, color: textColor)),
+                                            statusWidget,
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(ctx).pop();
+                                      },
+                                      child: const Text("Close"),
+                                    ),
+                                  ],
+                                );
+                              });
+                            },
                           );
                         },
-                        child: const Text("Reboot", textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Sensor Health
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text("Sensor Health Check",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[400],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                        child: const Text(
+                          "Check Sensors",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ),
-                      onPressed: () async {
-                        // Initial dialog state
-                        Map<String, String> sensorStatus = {
-                          "LiDAR": "checking",
-                          "IMU": "checking",
-                          "Motor": "checking",
-                        };
+                    ),
+                  ],
+                ),
+              ),
 
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (ctx) {
-                            bool isCheckingStarted = false;
-
-                            return StatefulBuilder(builder: (ctx, setStateDialog) {
-                              // Function to check sensors one by one
-                              Future<void> checkSensors() async {
-                                if (isCheckingStarted) return; // prevent multiple calls
-                                isCheckingStarted = true;
-
-                                for (var sensor in sensorStatus.keys) {
-                                  if (!mounted) break; // stop if dialog is closed
-                                  setStateDialog(() => sensorStatus[sensor] = "loading");
-
-                                  // Simulate API call
-                                  bool success = await _settingService.sensorHealthCheckSensor(sensor);
-
-                                  if (!mounted) break;
-                                  setStateDialog(() => sensorStatus[sensor] = success ? "ok" : "fail");
-
-                                  // Wait 5 seconds before next sensor
-                                  await Future.delayed(const Duration(milliseconds: 500));
-                                }
-                              }
-
-                              // Start checking after first frame
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!isCheckingStarted) checkSensors();
-                              });
-
-                              return AlertDialog(
-                                title: const Text("Sensor Health Check"),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: sensorStatus.entries.map((entry) {
-                                    Widget statusWidget;
-                                    Color textColor;
-
-                                    switch (entry.value) {
-                                      case "checking":
-                                        statusWidget = const Icon(Icons.hourglass_empty, color: Colors.yellow);
-                                        textColor = Colors.yellow.shade800;
-                                        break;
-                                      case "loading":
-                                        statusWidget = const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        );
-                                        textColor = Colors.yellow.shade800;
-                                        break;
-                                      case "ok":
-                                        statusWidget = const Icon(Icons.check_circle, color: Colors.green);
-                                        textColor = Colors.green;
-                                        break;
-                                      case "fail":
-                                        statusWidget = const Icon(Icons.cancel, color: Colors.red);
-                                        textColor = Colors.red;
-                                        break;
-                                      default:
-                                        statusWidget = const Icon(Icons.help);
-                                        textColor = Colors.black;
-                                    }
-
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(entry.key,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold, color: textColor)),
-                                          statusWidget,
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
+              // Date & Time
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text(
+                    "Date & Time",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Center(
+                        child: SizedBox(
+                          width: 180, // 👈 consistent width
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue, // 👈 you can change color if needed
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () async {
+                              bool success = await _settingService.syncDateTime();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? "Date & Time Synced" : "Failed"),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(ctx).pop();
-                                    },
-                                    child: const Text("Close"),
-                                  ),
-                                ],
                               );
-                            });
-                          },
-                        );
-                      },
-                      child: const Text(
-                        "Check Sensors",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Date & Time
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text(
-                  "Date & Time",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Center(
-                      child: SizedBox(
-                        width: 180, // 👈 consistent width
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue, // 👈 you can change color if needed
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () async {
-                            bool success = await _settingService.syncDateTime();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success ? "Date & Time Synced" : "Failed"),
+                            },
+                            child: const Text(
+                              "Sync Date & Time",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                            );
-                          },
-                          child: const Text(
-                            "Sync Date & Time",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Credentials
-            // Card(
-            //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            //   child: ExpansionTile(
-            //     title: const Text("Credentials",
-            //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            //     children: [
-            //       Padding(
-            //         padding: const EdgeInsets.all(16),
-            //         child: Column(
-            //           children: [
-            //             AutoFocusKeyboard(controller: _usernameController, hintText: "Username"),
-            //             AutoFocusKeyboard(controller: _passwordController, hintText: "Password", obscureText: true),
-            //             const SizedBox(height: 10),
-            //             ElevatedButton(
-            //               onPressed: () async {
-            //                 bool success = await _settingService.updateCredentials(
-            //                     _usernameController.text, _passwordController.text);
-            //                 ScaffoldMessenger.of(context).showSnackBar(
-            //                     SnackBar(content: Text(success ? "Credentials Updated" : "Failed")));
-            //               },
-            //               child: const Text("Update Credentials"),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
-
-            // Firmware Update
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text(
-                  "Firmware Update",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ],
                 ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center, // 👈 center children
-                      children: [
-                        Text(
-                          "Current Version: $firmwareVersion",
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 12),
-                        Center( // 👈 ensures button is centered
-                          child: SizedBox(
-                            width: 180, // optional: fixed width for nicer look
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _isUpdating ? Colors.deepPurple[700] : Colors.deepPurple[400],
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+              ),
+
+              // Credentials
+              // Card(
+              //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              //   child: ExpansionTile(
+              //     title: const Text("Credentials",
+              //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              //     children: [
+              //       Padding(
+              //         padding: const EdgeInsets.all(16),
+              //         child: Column(
+              //           children: [
+              //             AutoFocusKeyboard(controller: _usernameController, hintText: "Username"),
+              //             AutoFocusKeyboard(controller: _passwordController, hintText: "Password", obscureText: true),
+              //             const SizedBox(height: 10),
+              //             ElevatedButton(
+              //               onPressed: () async {
+              //                 bool success = await _settingService.updateCredentials(
+              //                     _usernameController.text, _passwordController.text);
+              //                 ScaffoldMessenger.of(context).showSnackBar(
+              //                     SnackBar(content: Text(success ? "Credentials Updated" : "Failed")));
+              //               },
+              //               child: const Text("Update Credentials"),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+
+              // Firmware Update
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text(
+                    "Firmware Update",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center, // 👈 center children
+                        children: [
+                          Text(
+                            "Current Version: $firmwareVersion",
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 12),
+                          Center( // 👈 ensures button is centered
+                            child: SizedBox(
+                              width: 180, // optional: fixed width for nicer look
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _isUpdating ? Colors.deepPurple[700] : Colors.deepPurple[400],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
+                                onPressed: _isUpdating
+                                    ? null
+                                    : () async {
+                                        setState(() => _isUpdating = true);
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "Update Started"
+                                            ),
+                                          ),
+                                        );
+
+                                        bool success = await _settingService.updateFirmware();
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              success ? "Update Successful, Please REBOOT!" : "Update Failed",
+                                            ),
+                                          ),
+                                        );
+
+                                        await _fetchVersion(); 
+                                        setState(() => _isUpdating = false);
+                                      },
+                                child: _isUpdating
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.deepPurple,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        "Update Firmware",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                               ),
-                              onPressed: _isUpdating
-                                  ? null
-                                  : () async {
-                                      setState(() => _isUpdating = true);
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            "Update Started"
-                                          ),
-                                        ),
-                                      );
+              // Reset Database
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text(
+                    "Reset Database",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Center(
+                        child: SizedBox(
+                          width: 180, // 👈 keep width consistent
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () async {
+                              bool success = await _settingService.resetDatabase();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? "Database Reset" : "Failed"),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Reset Database",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                                      bool success = await _settingService.updateFirmware();
-
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            success ? "Update Successful, Please REBOOT!" : "Update Failed",
-                                          ),
-                                        ),
-                                      );
-
-                                      await _fetchVersion(); 
-                                      setState(() => _isUpdating = false);
-                                    },
-                              child: _isUpdating
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.deepPurple,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      "Update Firmware",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  title: const Text(
+                    "Stop App",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Center(
+                        child: SizedBox(
+                          width: 180, // consistent width
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[800],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              // Confirm dialog
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text("Stop App"),
+                                  content: const Text("Are you sure you want to stop the app?"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text("Cancel"),
                                     ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Reset Database
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text(
-                  "Reset Database",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Center(
-                      child: SizedBox(
-                        width: 180, // 👈 keep width consistent
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () async {
-                            bool success = await _settingService.resetDatabase();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success ? "Database Reset" : "Failed"),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        exit(0); 
+                                      },
+                                      child: const Text("Stop"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Stop App",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                            );
-                          },
-                          child: const Text(
-                            "Reset Database",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                title: const Text(
-                  "Stop App",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ],
                 ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Center(
-                      child: SizedBox(
-                        width: 180, // consistent width
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[800],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () {
-                            // Confirm dialog
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text("Stop App"),
-                                content: const Text("Are you sure you want to stop the app?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(),
-                                    child: const Text("Cancel"),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      exit(0); 
-                                    },
-                                    child: const Text("Stop"),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Stop App",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

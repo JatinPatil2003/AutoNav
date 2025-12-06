@@ -1,3 +1,22 @@
+#define dirPinLeft 21
+#define stepPinLeft 19
+#define enableLeft 2
+
+#define dirPinRight 18
+#define stepPinRight 5
+#define enableRight 2
+
+#define REVSTEPS 1600
+
+#define LED_NUM 24
+#define LED_PIN 17
+#define BRIGHTNESS 128
+
+#define LEncoder_output_A 32
+#define LEncoder_output_B 33
+#define REncoder_output_A 26
+#define REncoder_output_B 27
+
 #include <micro_ros_arduino.h>
 
 #include <stdio.h>
@@ -10,17 +29,23 @@
 
 #include <std_msgs/msg/float64_multi_array.h>
 #include <std_msgs/msg/bool.h>
+#include <std_msgs/msg/int64.h>
 
 #include <AccelStepper.h>
 #include <AsyncTimer.h>
+#include <Adafruit_NeoPixel.h>
+
+#include "led.h"
 
 rcl_subscription_t motorcommand_sub;
 rcl_subscription_t motor_emergency_sub;
+rcl_subscription_t led_sub;
 rcl_publisher_t motorfeedback_pub;
 
 std_msgs__msg__Bool emergencyMsg;
 std_msgs__msg__Float64MultiArray feedbackMsg;
 std_msgs__msg__Float64MultiArray commandMsg;
+std_msgs__msg__Int64 led_msg;
 
 double data_array[2] = {0};
 
@@ -35,22 +60,6 @@ TaskHandle_t Loop;
 
 bool micro_ros_init_successful;
 
-#define dirPinLeft 21
-#define stepPinLeft 19
-#define enableLeft 2
-
-#define dirPinRight 18
-#define stepPinRight 5
-#define enableRight 2
-
-#define REVSTEPS 1600
-
-#define LED_PIN 17
-
-#define LEncoder_output_A 32
-#define LEncoder_output_B 33
-#define REncoder_output_A 26
-#define REncoder_output_B 27
 
 volatile long LencoderTicks = 0;
 volatile long RencoderTicks = 0;
@@ -135,6 +144,13 @@ void motor_emergency_callback(const void * msgin)
   }
 }
 
+void led_status_callback(const void * msgin)
+{
+  const std_msgs__msg__Int64 * msg = (const std_msgs__msg__Int64 *)msgin;
+
+  led_status = (int)msg->data;
+}
+
 bool create_entities()
 {
   allocator = rcl_get_default_allocator();
@@ -159,6 +175,12 @@ bool create_entities()
     &motor_emergency_sub, &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
     "motor/emergency"));
+
+  RCCHECK(rclc_subscription_init_default(
+      &led_sub,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int64),
+      "/led_status"));
     
   commandMsg.data.capacity = 2;
   commandMsg.data.size = 2;
@@ -173,6 +195,7 @@ bool create_entities()
   RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor, &motorcommand_sub, &commandMsg, &motorcomand_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &motor_emergency_sub, &emergencyMsg, &motor_emergency_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &led_sub, &led_msg, &led_status_callback, ON_NEW_DATA));
 
   return true;
 }
@@ -201,6 +224,8 @@ void setup() {
   stepperLeft.setMaxSpeed(7000);
   stepperRight.setMaxSpeed(7000);
 
+  led_setup();
+
 //  stepperLeft.setSpeed(100);
 //  stepperRight.setSpeed(-100);
 
@@ -215,6 +240,8 @@ void setup() {
   delay(2000);
 
   state = WAITING_AGENT;
+
+  Serial.begin(115200);
 
   xTaskCreatePinnedToCore(
                     stepperrun_callback,   /* Task function. */
@@ -235,8 +262,8 @@ void loop() {
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
       if (state == WAITING_AGENT) {
         destroy_entities();
-        stepperLeft.setCurrentPosition(0);
-        stepperRight.setCurrentPosition(0);
+        RencoderTicks = 0;
+        LencoderTicks = 0;
       };
       break;
     case AGENT_CONNECTED:
@@ -247,8 +274,8 @@ void loop() {
       break;
     case AGENT_DISCONNECTED:
       destroy_entities();
-      stepperLeft.setCurrentPosition(0);
-      stepperRight.setCurrentPosition(0);
+      RencoderTicks = 0;
+      LencoderTicks = 0;
       state = WAITING_AGENT;
       break;
     default:
@@ -260,5 +287,9 @@ void loop() {
   data_array[1] = LencoderTicks * (2 * M_PI / -1000.0);
   feedbackMsg.data.data = data_array;
   RCSOFTCHECK(rcl_publish(&motorfeedback_pub, &feedbackMsg, NULL));
-
+  
+  led_handle();
 }
+
+
+// ros2 topic pub /led_status std_msgs/msg/Int64 "data: 1" --once 

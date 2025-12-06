@@ -115,13 +115,14 @@ async def sensor_health_single(sensor_name: str):
     }
 
     topic = topic_map.get(sensor_name)
+    print(f"Checking sensor: {sensor_name}, topic: {topic}")
     if topic is None:
         return {"sensor": sensor_name, "status": "unknown"}
 
     try:
         # Start subprocess
         process = subprocess.Popen(
-            ["ros2", "topic", "hz", topic, "-w", "5"],
+            ["bash", "-c", f"source /opt/ros/humble/setup.bash && ros2 topic hz {topic}"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True
@@ -132,7 +133,7 @@ async def sensor_health_single(sensor_name: str):
         except subprocess.TimeoutExpired:
             process.kill()
             output, _ = process.communicate()
-
+        print(f"ros2 topic hz output for {sensor_name}:\n{output}")
         # Parse output: look for "average: XX Hz"
         average_hz = 0.0
         for line in output.splitlines():

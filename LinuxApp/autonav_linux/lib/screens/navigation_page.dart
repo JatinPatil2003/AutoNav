@@ -3,254 +3,419 @@ import '../services/api_service.dart';
 import './animation.dart';
 
 class NavigationPage extends StatefulWidget {
-  const NavigationPage({super.key});
+  final String mapName;
+
+  const NavigationPage({super.key, required this.mapName});
 
   @override
   State<NavigationPage> createState() => _NavigationPageState();
 }
 
 class _NavigationPageState extends State<NavigationPage> {
-  bool isLoading = false;
-  bool isEmergency = false;
+  late Future<MapPoints> pointsFuture;
 
-  // Mode toggle: true = Position, false = Cruise
-  bool isPositionMode = true;
-
-  // Selected points
   String? selectedPoint;
-  String? selectedGoalForCruise;
-  String? selectedCruisePoint;
+  bool emergencyActive = false;
 
-  // Lists of points
-  final List<String> goalPoints = ['Goal 1', 'Goal 2', 'Goal 3'];
-  final List<String> standbyPoints = ['Standby 1', 'Standby 2'];
-  final List<String> chargingPoints = ['Charging 1', 'Charging 2'];
+  bool canNavigate = false;
+  bool canResume = false;
+  bool canStop = false;
 
-  final List<String> cruisePoints = [];
+  final ApiService _apiService = ApiService();
 
-  // Slider value
-  double holdTime = 2.0;
+  @override
+  void initState() {
+    super.initState();
+    emergencyActive = _apiService.emergencyActive;
 
-  // API Service
-  final ApiService apiService = ApiService();
+    if (emergencyActive) {
+      _apiService.setLed(2); // Set LED to emergency status
+    } else {
+      _apiService.setLed(4);
+    }
 
-  void startNavigation() async {
-  if (selectedPoint == null) return;
-  setState(() => isLoading = true);
+    pointsFuture = _apiService.fetchLocalizationPoints(widget.mapName);
+  }
 
-  try {
-    // await apiService.startNavigation(selectedPoint!);
-    if (mounted) {
-      Navigator.push(
+  // ---------------- ACTIONS ----------------
+  Future<void> startNavigation(String action) async {
+    print("API CALL: $action -> $selectedPoint");
+
+    if (emergencyActive) {
+      _apiService.setLed(2); // Set LED to emergency status
+    } else {
+      _apiService.setLed(9);
+    }
+
+    // final result = await Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => AnimationPage(targetPoint: selectedPoint!),
+    //   ),
+    // );
+
+    final result = await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => AnimationPage(targetPoint: selectedPoint!),
-        ),
+        MaterialPageRoute(builder: (context) => AnimationPage(targetPoint: selectedPoint!)),
       );
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to start navigation'),
-          backgroundColor: Colors.red.shade400,
-        ),
-      );
-    }
-  } finally {
-    setState(() => isLoading = false);
-  }
-}
 
-
-  void addGoalToCruise() {
-    if (selectedGoalForCruise != null && !cruisePoints.contains(selectedGoalForCruise)) {
+    if (result != null) {
       setState(() {
-        cruisePoints.add(selectedGoalForCruise!);
+        emergencyActive = result as bool;
       });
     }
+
+    setState(() {
+      canNavigate = false;
+      canResume = true;
+      canStop = true;
+    });
   }
 
-  void removeFromCruise() {
-    if (selectedCruisePoint != null) {
-      setState(() {
-        cruisePoints.remove(selectedCruisePoint);
-      });
+  void onNavigate() => startNavigation("navigate");
+  void onResume() => startNavigation("resume");
+
+  void onStop() {
+    print("API CALL: stop navigation");
+
+    if (emergencyActive) {
+      _apiService.setLed(2); // Set LED to emergency status
+    } else {
+      _apiService.setLed(4);
     }
+
+    setState(() {
+      selectedPoint = null;
+      canNavigate = false;
+      canResume = false;
+      canStop = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // onDoubleTap: () {
-      //   Navigator.pop(context); // double tap to go back
-      // },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Navigation'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.warning, color: isEmergency ? Colors.red : Colors.white),
-              onPressed: () {
-                setState(() => isEmergency = !isEmergency);
-                // Trigger emergency API if needed
-              },
-            )
-          ],
-        ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
+    return Scaffold(
+      backgroundColor: Colors.white,
+
+      body: Stack(
+        children: [
+          // ---------- MAIN UI ----------
+          FutureBuilder<MapPoints>(
+            future: pointsFuture,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final mapData = snapshot.data!;
+
+              return Row(
                 children: [
-                  // Mode toggle
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ToggleButtons(
-                      isSelected: [isPositionMode, !isPositionMode],
-                      onPressed: (index) {
-                        setState(() => isPositionMode = index == 0);
-                      },
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text('Position'),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text('Cruise'),
-                        ),
+                  // ---------- LEFT SIDE ----------
+                  Expanded(
+                    flex: 2,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 70, 10, 20),
+                      children: [
+                        if (mapData.goals.isNotEmpty)
+                          buildPointCard("Goal Points", mapData.goals),
+                        if (mapData.standby.isNotEmpty)
+                          buildPointCard("Standby Points", mapData.standby),
+                        if (mapData.charging.isNotEmpty)
+                          buildPointCard("Charging Points", mapData.charging),
+
+                        // Empty area for deselect
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            setState(() {
+                              selectedPoint = null;
+                              canNavigate = false;
+                              canResume = false;
+                              canStop = false;
+                            });
+                          },
+                          child: Container(height: 200, color: Colors.transparent),
+                        )
                       ],
                     ),
                   ),
+
+                  // ---------- RIGHT SIDE (BOX) ----------
                   Expanded(
-                    child: isPositionMode ? buildPositionMode() : buildCruiseMode(),
+                    flex: 1,
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(10, 80, 20, 20) ,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.grey.shade300),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            offset: const Offset(0, 4),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 40),
+
+                          // Selected point text (ALWAYS WORKS NOW)
+                          Expanded(
+                            child: Center(
+                              child: selectedPoint != null
+                                  ? Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          "Selected Point",
+                                          style: TextStyle(
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Text(
+                                          selectedPoint!,
+                                          style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : const SizedBox(),
+                            ),
+                          ),
+
+                          // Navigate button
+                          buildBigButton(
+                            label: "Navigate",
+                            color: const Color.fromARGB(255, 0, 102, 254),
+                            enabled: canNavigate,
+                            onTap: onNavigate,
+                          ),
+                          const SizedBox(height: 25),
+
+                          // Resume + Stop
+                          Row(
+                            children: [
+                              Expanded(
+                                child: buildSmallButton(
+                                  label: "Resume",
+                                  color: Colors.orange,
+                                  enabled: canResume,
+                                  onTap: onResume,   // Same as navigate
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: buildSmallButton(
+                                  label: "Stop",
+                                  color: Colors.red,
+                                  enabled: canStop,
+                                  onTap: onStop,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
+              );
+            },
+          ),
+
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 30),
+              onPressed: () {
+                if (emergencyActive) {
+                  _apiService.setLed(2);
+                } else {
+                  _apiService.setLed(6);
+                }
+                Navigator.pop(context);
+              },
+            ),
+          ),
+
+          // ---------- EMERGENCY BUTTON ----------
+          Positioned(
+            top: 10,
+            right: 10,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    emergencyActive ? const Color(0xFF690A0A) : Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
+              onPressed: () {
+                setState(() => emergencyActive = !emergencyActive);
+
+                if (emergencyActive) {
+                  _apiService.setLed(2);
+                } else {
+                  _apiService.setLed(4);
+                }
+
+                _apiService.emergencyStop(emergencyActive);
+              },
+              child: const Text(
+                "EMERGENCY",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ----------------- POSITION MODE -----------------
-  Widget buildPositionMode() {
-    return ListView(
-      padding: const EdgeInsets.all(8.0),
-      children: [
-        const Text('Goal Points:', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...goalPoints.map((point) => ListTile(
-              title: Text(point),
-              selected: selectedPoint == point,
-              onTap: () => setState(() => selectedPoint = point),
-            )),
-        const SizedBox(height: 10),
-        const Text('Standby Points:', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...standbyPoints.map((point) => ListTile(
-              title: Text(point),
-              selected: selectedPoint == point,
-              onTap: () => setState(() => selectedPoint = point),
-            )),
-        const SizedBox(height: 10),
-        const Text('Charging Points:', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...chargingPoints.map((point) => ListTile(
-              title: Text(point),
-              selected: selectedPoint == point,
-              onTap: () => setState(() => selectedPoint = point),
-            )),
-        if (selectedPoint != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0),
-            child: ElevatedButton(
-              onPressed: startNavigation,
-              child: const Text('Start'),
-            ),
+  // ---------- POINT CARDS ----------
+  Widget buildPointCard(String title, List<String> points) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 3),
+            blurRadius: 8,
           ),
-      ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Column(children: points.map(buildPointTile).toList()),
+        ],
+      ),
     );
   }
 
-  // ----------------- CRUISE MODE -----------------
-  Widget buildCruiseMode() {
-    return Row(
-      children: [
-        // Left column - Goals
-        Expanded(
-          child: Column(
-            children: [
-              const Text('Goals:', style: TextStyle(fontWeight: FontWeight.bold)),
-              Expanded(
-                child: ListView(
-                  children: goalPoints
-                      .map(
-                        (goal) => ListTile(
-                          title: Text(goal),
-                          selected: selectedGoalForCruise == goal,
-                          onTap: () => setState(() => selectedGoalForCruise = goal),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ],
+  Widget buildPointTile(String pointName) {
+    final isSelected = selectedPoint == pointName;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedPoint = pointName;
+          canNavigate = true;
+          canResume = false;
+          canStop = false;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 7),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blueAccent : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? Colors.blueAccent : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
           ),
         ),
-        // Middle buttons
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            ElevatedButton(
-              onPressed: addGoalToCruise,
-              child: const Icon(Icons.arrow_forward),
+            Text(
+              pointName,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: removeFromCruise,
-              child: const Icon(Icons.arrow_back),
-            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: Colors.white),
           ],
         ),
-        // Right column - Cruise points
-        Expanded(
-          child: Column(
-            children: [
-              const Text('Cruise Points:', style: TextStyle(fontWeight: FontWeight.bold)),
-              Expanded(
-                child: ListView(
-                  children: cruisePoints
-                      .map(
-                        (point) => ListTile(
-                          title: Text(point),
-                          selected: selectedCruisePoint == point,
-                          onTap: () => setState(() => selectedCruisePoint = point),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              // Slider for hold time
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Text('Hold Time: ${holdTime.toStringAsFixed(1)}s'),
-                    Slider(
-                      min: 2,
-                      max: 20,
-                      divisions: 18,
-                      value: holdTime,
-                      label: '${holdTime.toStringAsFixed(1)}s',
-                      onChanged: (value) => setState(() => holdTime = value),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      ),
+    );
+  }
+
+  // ---------- BUTTON WIDGETS ----------
+  Widget buildBigButton({
+    required String label,
+    required Color color,
+    required bool enabled,
+    required VoidCallback onTap,
+    double height = 90,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: height,
+      child: ElevatedButton(
+        onPressed: enabled ? onTap : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          disabledBackgroundColor: color.withOpacity(0.5),
+          padding: const EdgeInsets.symmetric(vertical: 30),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget buildSmallButton({
+    required String label,
+    required Color color,
+    required bool enabled,
+    required VoidCallback onTap,
+    double height = 80,   // <--- optional height parameter
+  }) {
+    return SizedBox(
+      height: height,
+      child: ElevatedButton(
+        onPressed: enabled ? onTap : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          disabledBackgroundColor: color.withOpacity(0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
   }
 }

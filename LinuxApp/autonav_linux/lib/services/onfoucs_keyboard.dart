@@ -6,6 +6,7 @@ class AutoFocusKeyboard extends StatefulWidget {
   final String hintText;
   final bool obscureText;
   final int maxLines;
+  final Function(String)? onChanged;
 
   const AutoFocusKeyboard({
     super.key,
@@ -13,6 +14,7 @@ class AutoFocusKeyboard extends StatefulWidget {
     this.hintText = "",
     this.obscureText = false,
     this.maxLines = 1,
+    this.onChanged,
   });
 
   @override
@@ -78,6 +80,7 @@ class _AutoFocusKeyboardState extends State<AutoFocusKeyboard> {
         hintText: widget.hintText,
         // border: const OutlineInputBorder(),
       ),
+      onChanged: widget.onChanged,
     );
   }
 }

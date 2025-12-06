@@ -13,65 +13,94 @@ class LocalizationPage extends StatefulWidget {
 
 class _LocalizationPageState extends State<LocalizationPage> {
   String? selectedPoint;
+  late String activeMap;
   bool isLoading = false;
-  bool emergencyActive = false;
+  late bool emergencyActive;
 
   late Future<MapData> mapFuture;
   late Future<MapPoints> pointsFuture; // <-- New future
   final ApiService _apiService = ApiService();
+  final ScrollController _scrollController = ScrollController();
+
 
   @override
   void initState() {
     super.initState();
+
+    emergencyActive = _apiService.emergencyActive;
+
+    if (emergencyActive) {
+      _apiService.setLed(2); // Set LED to emergency status
+    } else {
+      _apiService.setLed(6);
+    }
+
+    activeMap = widget.mapName;
+
     mapFuture = _apiService.fetchMapByName(widget.mapName);
     pointsFuture = _apiService.fetchLocalizationPoints(widget.mapName);
   }
 
   Future<void> localizeRobot(String pointName) async {
+    if (!mounted) return;
+
     setState(() => isLoading = true);
-    await Future.delayed(const Duration(seconds: 2)); // Mock delay
-    if (mounted) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.green.shade400,
-          elevation: 6,
-          margin: const EdgeInsets.only(
-            bottom: 10, // distance from bottom
-            left: 300,  // controls width indirectly
-            right: 300, // controls width indirectly
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          content: Text(
-            "Robot localized to $pointName successfully!",
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
+
+    final result = await _apiService.localizeAt(widget.mapName, pointName);
+    final bool success = result["success"] ?? false;
+    final String message = result["message"] ?? "Unknown response";
+
+    // Short delay so UI feels responsive (optional)
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
+
+    setState(() => isLoading = false);
+
+    // Show Success or Failure SnackBar based on API response
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor:
+            success ? Colors.green.shade600 : Colors.red.shade600,
+        elevation: 6,
+        margin: const EdgeInsets.only(
+          bottom: 10,
+          left: 300,
+          right: 300,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        content: Text(
+          message,   // <--- Use server message
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      );
-      await Future.delayed(const Duration(seconds: 2));
-      // Fetch MapPoints from API
-      // final mapPoints = await _apiService.fetchLocalizationPoints(widget.mapName);
+      ),
+    );
 
-      // Navigate to NavigationPage and pass MapPoints
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NavigationPage(
-              // mapPoints: mapPoints,
-              // mapName: widget.mapName,
-            ),
-          ),
-        );
-      }
+    // If failed, do not continue navigation
+    if (!success) return;
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    // Navigate to NavigationPage after success
+    final res = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NavigationPage(mapName: activeMap)),
+      );
+
+    if (res != null) {
+      setState(() {
+        emergencyActive = res as bool;
+      });
     }
   }
 
@@ -287,14 +316,39 @@ class _LocalizationPageState extends State<LocalizationPage> {
 
                       final points = snapshot.data!;
                       return Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Column(
-                            children: [
-                              buildPointCard(
-                                  "Localization Points", points.localization),
-                              buildPointCard("Charging Points", points.charging),
-                            ],
+                        child: Scrollbar(
+                          controller: _scrollController,     // <-- attach controller
+                          thumbVisibility: true,
+                          trackVisibility: true,
+                          thickness: 14,                     // <-- big scrollbar
+                          radius: const Radius.circular(5),
+                          child: SingleChildScrollView(
+                            controller: _scrollController,   // <-- attach same controller
+                            // padding: const EdgeInsets.symmetric(horizontal: 1),
+                            child: Column(
+                              children: [
+                                // ---- Show "No points" if everything is empty ----
+                                if (points.localization.isEmpty && points.charging.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 80),
+                                    child: Text(
+                                      "No points added to this map",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+
+                                // ---- Show cards only if data exists ----
+                                if (points.localization.isNotEmpty)
+                                  buildPointCard("Localization Points", points.localization),
+
+                                if (points.charging.isNotEmpty)
+                                  buildPointCard("Charging Points", points.charging),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -320,7 +374,12 @@ class _LocalizationPageState extends State<LocalizationPage> {
               ),
               onPressed: () {
                 setState(() => emergencyActive = !emergencyActive);
-                _apiService.emergencyStop();
+                if (emergencyActive) {
+                  _apiService.setLed(2); // Set LED to emergency status
+                } else {
+                  _apiService.setLed(6); // Reset LED to normal status
+                }
+                _apiService.emergencyStop(emergencyActive);
               },
               child: const Text(
                 "EMERGENCY",
@@ -335,7 +394,14 @@ class _LocalizationPageState extends State<LocalizationPage> {
             left: 10,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 30),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                if (emergencyActive) {
+                  _apiService.setLed(2); // Set LED to emergency status
+                } else {
+                  _apiService.setLed(6); // Reset LED to normal status
+                }
+                Navigator.pop(context);
+              },
             ),
           ),
 

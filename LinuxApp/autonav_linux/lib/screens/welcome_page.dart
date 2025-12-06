@@ -15,6 +15,13 @@ class _WelcomePageState extends State<WelcomePage> {
   bool isStarting = false; // loading flag for START
   bool isStopping = false; // loading flag for STOP
   final ApiService _apiService = ApiService();
+  bool emergencyActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiService.setLed(5);
+  }
 
   Future<void> _startRobot() async {
     setState(() {
@@ -28,7 +35,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
       if (!mounted) return;
 
-      await Navigator.push(
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ModePage()),
       );
@@ -37,6 +44,12 @@ class _WelcomePageState extends State<WelcomePage> {
         robotStarted = true;
         isStarting = false;
       });
+      // result contains emergencyActive from ModePage
+      if (result != null) {
+        setState(() {
+          emergencyActive = result as bool;
+        });
+      }
     } else {
       setState(() {
         isStarting = false;
@@ -79,6 +92,33 @@ class _WelcomePageState extends State<WelcomePage> {
       backgroundColor: Colors.grey[100],
       body: Stack(
         children: [
+          Positioned(
+            top: 10,
+            right: 10,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: emergencyActive ? const Color(0xFF690A0A) : Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                setState(() => emergencyActive = !emergencyActive);
+                _apiService.emergencyStop(emergencyActive);
+                if (emergencyActive) {
+                  _apiService.setLed(2); // Set LED to emergency status
+                }
+                else {
+                  _apiService.setLed(5); // Reset LED to normal status
+                }
+              },
+              child: const Text(
+                "EMERGENCY",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ),
+          ),
+
           Center(
             child: Container(
               padding: const EdgeInsets.all(24),
