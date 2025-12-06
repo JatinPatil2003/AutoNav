@@ -15,3 +15,13 @@ class MapName(BaseModel):
 class Velocity(BaseModel):
     linear: float
     angular: float
+
+class Emergency(BaseModel):
+    status: bool
+
+class LedStatus(BaseModel):
+    status: int
+
+class PointInfo(BaseModel):
+    map_name: str
+    name: str

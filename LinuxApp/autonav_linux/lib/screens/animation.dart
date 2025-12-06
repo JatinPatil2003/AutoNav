@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../services/api_service.dart';
 
 class AnimationPage extends StatefulWidget {
   final String targetPoint;
@@ -15,17 +16,37 @@ class _AnimationPageState extends State<AnimationPage>
   late AnimationController _controller;
   late Animation<Offset> _animation;
 
+  final ApiService _apiService = ApiService();
+
+  bool emergencyActive = false;
+
   @override
   void initState() {
     super.initState();
 
+    emergencyActive = _apiService.emergencyActive;
+
+    if (emergencyActive) {
+      _apiService.setLed(2); // Set LED to emergency status
+    } else {
+      _apiService.setLed(9);
+    }
+
     // Animation from left to right
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 10));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    );
+
     _animation = Tween<Offset>(
       begin: const Offset(-5.0, 0.0),
       end: const Offset(5.0, 0.0),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.bounceInOut));
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.bounceInOut,
+      ),
+    );
 
     _controller.repeat(reverse: true);
   }
@@ -40,31 +61,40 @@ class _AnimationPageState extends State<AnimationPage>
   Widget build(BuildContext context) {
     return GestureDetector(
       onDoubleTap: () {
-        Navigator.pop(context); // go back to previous page
-      },
+        if (emergencyActive) {
+          _apiService.setLed(2);
+        } else {
+          _apiService.setLed(4);
+        }
+        Navigator.pop(context, _apiService.emergencyActive);
+      }, // Double-tap to exit
       child: Scaffold(
-        // appBar: AppBar(
-        //   title: const Text('Navigation Animation'),
-        // ),
+        backgroundColor: Colors.black,   // FULL BLACK BACKGROUND
         body: Stack(
           children: [
+            // ----------- MAIN CONTENT -----------
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
                     'Robot moving to:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,   // visible on black
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     widget.targetPoint,
                     style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue),
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.lightBlueAccent, // bright on black
+                    ),
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 60),
                   SizedBox(
                     height: 100,
                     child: Stack(
@@ -72,15 +102,50 @@ class _AnimationPageState extends State<AnimationPage>
                         SlideTransition(
                           position: _animation,
                           child: const Icon(
-                            Icons.rocket,
-                            size: 50,
-                            color: Colors.red,
+                            Icons.rocket_launch,
+                            size: 70,
+                            color: Colors.deepOrangeAccent, // high contrast
                           ),
                         ),
                       ],
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // ------------- EMERGENCY BUTTON -------------
+            Positioned(
+              top: 20,
+              right: 20,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      emergencyActive ? const Color(0xFF690A0A) : Colors.red,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() => emergencyActive = !emergencyActive);
+                  if (emergencyActive) {
+                    _apiService.setLed(2);
+                  } else {
+                    _apiService.setLed(9);
+                  }
+
+                  _apiService.emergencyStop(emergencyActive);
+                },
+                child: const Text(
+                  "EMERGENCY",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
+                ),
               ),
             ),
           ],

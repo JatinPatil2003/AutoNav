@@ -6,6 +6,9 @@ import os
 import signal
 import psutil
 
+from models.model import Emergency, LedStatus
+from ros.topics import set_emergency_status, set_led_status
+
 router = APIRouter()
 process = None
 robot_status = "stopped"
@@ -33,3 +36,15 @@ async def stop_robot():
 @router.get("/robot/status")
 async def status_robot():
     return {'status': robot_status}
+
+@router.post("/emergency")
+async def emergency(status: Emergency):
+    print(f"Emergency status set to: {status.status}")
+    set_emergency_status(status.status)
+    return {'status': status}
+
+@router.post("/led_status")
+async def led_status(status: LedStatus):
+    print(f"LED status set to: {status.status}")
+    set_led_status(status.status)
+    return {'status': status}

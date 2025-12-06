@@ -12,10 +12,18 @@ class ModePage extends StatefulWidget {
 }
 
 class _ModePageState extends State<ModePage> {
+  final ApiService _apiService = ApiService();
+
   bool isLoading = false;
   String loadingMessage = "";
+  late bool emergencyActive;
 
-  final ApiService _apiService = ApiService();
+  @override
+  void initState() {
+    super.initState();
+
+    emergencyActive = _apiService.emergencyActive;
+  }
 
   Future<void> _startMapping() async {
     setState(() {
@@ -30,10 +38,17 @@ class _ModePageState extends State<ModePage> {
     if (!mounted) return;
     setState(() => isLoading = false);
 
-    Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MappingPage()),
     );
+
+    // result contains emergencyActive from ModePage
+    if (result != null) {
+      setState(() {
+        emergencyActive = result as bool;
+      });
+    }
   }
 
   Future<void> _startNavigation() async {
@@ -49,21 +64,31 @@ class _ModePageState extends State<ModePage> {
       loadingMessage = "Starting Navigation...";
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    await _apiService.startNavigation();
+
+    await Future.delayed(const Duration(seconds: 6));
 
     isLoading = false;
     
     if (!mounted) return;
 
-    Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MapSelectionPage()),
     );
+
+    // if (result != null) {
+    setState(() {
+      emergencyActive = _apiService.emergencyActive;
+    });
+    print("Emer $emergencyActive");
+    // }
 
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
     
     setState(() => isLoading = false);
+
 
   }
 
@@ -78,7 +103,35 @@ class _ModePageState extends State<ModePage> {
             left: 10,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 30),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(context, _apiService.emergencyActive);   // return status
+              },
+            ),
+          ),
+
+          Positioned(
+            top: 10,
+            right: 10,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: emergencyActive ? const Color(0xFF690A0A) : Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                setState(() => emergencyActive = !emergencyActive);
+                if (emergencyActive) {
+                  _apiService.setLed(2); // Set LED to emergency status
+                } else {
+                  _apiService.setLed(5); // Reset LED to normal status
+                }
+                _apiService.emergencyStop(emergencyActive);
+              },
+              child: const Text(
+                "EMERGENCY",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
             ),
           ),
 
