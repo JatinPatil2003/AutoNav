@@ -134,6 +134,10 @@ def timer_fuction():
     if pub:
         # ros_node.get_logger().info(f"Publishing {twist_msg.linear.x}, {twist_msg.angular.z}")
         twist_publisher.publish(twist_msg)
+
+    from ros.action import navigation_status
+    navigation_msg = {'status': navigation_status.name}
+    asyncio.run(broadcast_message({"type": "nav_status", "data": navigation_msg}))
     
     prev_pub = pub
 
@@ -165,6 +169,7 @@ def timer_fuction():
 def set_led_status(status: int):
     global led_publisher
     led_publisher.publish(Int64(data=status))
+
 
 def get_cov_threshold():
     global localization_cov

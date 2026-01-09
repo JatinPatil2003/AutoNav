@@ -15,7 +15,9 @@ class _NavigationPageState extends State<NavigationPage> {
   late Future<MapPoints> pointsFuture;
 
   String? selectedPoint;
+  String? selectedMap;
   bool emergencyActive = false;
+  bool navstatus = false;
 
   bool canNavigate = false;
   bool canResume = false;
@@ -35,11 +37,14 @@ class _NavigationPageState extends State<NavigationPage> {
     }
 
     pointsFuture = _apiService.fetchLocalizationPoints(widget.mapName);
+    selectedMap = widget.mapName;
   }
 
   // ---------------- ACTIONS ----------------
   Future<void> startNavigation(String action) async {
     print("API CALL: $action -> $selectedPoint");
+
+    await _apiService.navigateTo(selectedMap!, selectedPoint!);
 
     if (emergencyActive) {
       _apiService.setLed(2); // Set LED to emergency status
@@ -56,20 +61,34 @@ class _NavigationPageState extends State<NavigationPage> {
 
     final result = await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AnimationPage(targetPoint: selectedPoint!)),
+        MaterialPageRoute(builder: (context) => AnimationPage(selectedMap: selectedMap!, targetPoint: selectedPoint!)),
       );
 
-    if (result != null) {
+    if (result != null && result is Map<String, bool>) {
       setState(() {
-        emergencyActive = result as bool;
+        emergencyActive = result['emergencyActive'] ?? false;
+        navstatus = result['navstatus'] ?? false;
       });
     }
 
-    setState(() {
-      canNavigate = false;
-      canResume = true;
-      canStop = true;
-    });
+    if (navstatus) {
+      print('Navigation Succeeded');
+      setState(() {
+        selectedPoint = null;
+        canNavigate = false;
+        canResume = false;
+        canStop = false;
+      });
+    } else {
+      print('Navigation Failed/Cancelled');
+      setState(() {
+        canNavigate = false;
+        canResume = true;
+        canStop = true;
+      });
+    }
+
+    await _apiService.setLed(emergencyActive ? 2 : 4);
   }
 
   void onNavigate() => startNavigation("navigate");
@@ -117,12 +136,23 @@ class _NavigationPageState extends State<NavigationPage> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(20, 70, 10, 20),
                       children: [
+                        const Text(
+                          "  Select Navigation Point",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+                        
                         if (mapData.goals.isNotEmpty)
-                          buildPointCard("Goal Points", mapData.goals),
+                          buildPointCard("Goal Points", mapData.goals, Colors.blue),
                         if (mapData.standby.isNotEmpty)
-                          buildPointCard("Standby Points", mapData.standby),
+                          buildPointCard("Standby Points", mapData.standby, Colors.orange),
                         if (mapData.charging.isNotEmpty)
-                          buildPointCard("Charging Points", mapData.charging),
+                          buildPointCard("Charging Points", mapData.charging, Colors.green),
 
                         // Empty area for deselect
                         GestureDetector(
@@ -145,7 +175,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   Expanded(
                     flex: 1,
                     child: Container(
-                      margin: const EdgeInsets.fromLTRB(10, 80, 20, 20) ,
+                      margin: const EdgeInsets.fromLTRB(10, 125, 20, 20) ,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -161,9 +191,6 @@ class _NavigationPageState extends State<NavigationPage> {
                       ),
                       child: Column(
                         children: [
-                          const SizedBox(height: 40),
-
-                          // Selected point text (ALWAYS WORKS NOW)
                           Expanded(
                             child: Center(
                               child: selectedPoint != null
@@ -246,7 +273,7 @@ class _NavigationPageState extends State<NavigationPage> {
                 } else {
                   _apiService.setLed(6);
                 }
-                Navigator.pop(context);
+                Navigator.pop(context, _apiService.emergencyActive);
               },
             ),
           ),
@@ -287,7 +314,7 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   // ---------- POINT CARDS ----------
-  Widget buildPointCard(String title, List<String> points) {
+  Widget buildPointCard(String title, List<String> points, Color textColour) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12),
       padding: const EdgeInsets.all(16),
@@ -308,15 +335,22 @@ class _NavigationPageState extends State<NavigationPage> {
         children: [
           Text(title,
               style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  TextStyle(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.bold,
+                    color: textColour,
+                  )),
           const SizedBox(height: 12),
-          Column(children: points.map(buildPointTile).toList()),
+          Column(children: points
+            .map((point) => buildPointTile(point, textColour))
+            .toList(),
+          ),
         ],
       ),
     );
   }
 
-  Widget buildPointTile(String pointName) {
+  Widget buildPointTile(String pointName, Color textColor) {
     final isSelected = selectedPoint == pointName;
 
     return GestureDetector(

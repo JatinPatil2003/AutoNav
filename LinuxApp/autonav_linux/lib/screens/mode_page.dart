@@ -66,7 +66,7 @@ class _ModePageState extends State<ModePage> {
 
     await _apiService.startNavigation();
 
-    await Future.delayed(const Duration(seconds: 6));
+    await Future.delayed(const Duration(seconds: 15));
 
     isLoading = false;
     

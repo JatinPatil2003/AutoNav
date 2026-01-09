@@ -16,7 +16,20 @@ class MapPoints {
   final List<String> charging;
   final List<String> standby;
   final List<String> goals;
-  MapPoints({required this.localization, required this.charging, required this.standby, required this.goals});
+  MapPoints({
+    required this.localization,
+    required this.charging,
+    required this.standby,
+    required this.goals,
+  });
+}
+
+class Pose {
+  final double x;
+  final double y;
+  final double theta;
+
+  Pose({required this.x, required this.y, required this.theta});
 }
 
 class ApiService {
@@ -74,7 +87,9 @@ class ApiService {
 
   Future<bool> startNavigation() async {
     print('calling navigation start');
-    final response = await http.post(Uri.parse('$baseUrl/navigation/start_linux'));
+    final response = await http.post(
+      Uri.parse('$baseUrl/navigation/start_linux'),
+    );
     return response.statusCode == 200;
     // return true;
   }
@@ -99,37 +114,33 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> localizeAt(String mapName, String pointName) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/navigation/localize'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "map_name": mapName,
-        "name": pointName,
-      }),
-    );
+  Future<Map<String, dynamic>> localizeAt(
+    String mapName,
+    String pointName,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/navigation/localize'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"map_name": mapName, "name": pointName}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return {
-        "success": data["success"] ?? false,
-        "message": data["message"] ?? "No message received"
-      };
-    } else {
-      return {
-        "success": false,
-        "message": "Server Error (${response.statusCode})"
-      };
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          "success": data["success"] ?? false,
+          "message": data["message"] ?? "No message received",
+        };
+      } else {
+        return {
+          "success": false,
+          "message": "Server Error (${response.statusCode})",
+        };
+      }
+    } catch (e) {
+      return {"success": false, "message": "Network Error: $e"};
     }
-  } catch (e) {
-    return {
-      "success": false,
-      "message": "Network Error: $e"
-    };
   }
-}
-
 
   Future<bool> savemapPoints(String name) async {
     try {
@@ -181,16 +192,20 @@ class ApiService {
 
   // Fetch all available maps
   Future<List<MapData>> fetchMaps() async {
-    final response = await http.get(Uri.parse('$baseUrl/navigation/list/maps_linux'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/navigation/list/maps_linux'),
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data
-          .map((e) => MapData(
-                name: e['name'],
-                previewUrl: '$baseUrl${e['thumbnailUrl']}',
-                id: e['id'],
-              ))
+          .map(
+            (e) => MapData(
+              name: e['name'],
+              previewUrl: '$baseUrl${e['thumbnailUrl']}',
+              id: e['id'],
+            ),
+          )
           .toList();
     } else {
       throw Exception("Failed to load maps");
@@ -262,6 +277,40 @@ class ApiService {
         // goals: [""],
       );
       // throw Exception("Failed to fetch points");
+    }
+  }
+
+  Future<bool> navigateTo(String mapName, String poseName) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/navigation/goal/start'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"map_name": mapName, "name": poseName}),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint("navigateTo error: $e");
+      return false;
+    }
+  }
+
+  Future<bool> cancelNavigation() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/navigation/goal/cancel'));
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint("navigateTo error: $e");
+      return false;
     }
   }
 }

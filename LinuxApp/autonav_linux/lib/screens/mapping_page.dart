@@ -146,7 +146,7 @@ class _MappingPageState extends State<MappingPage> {
                         _apiService.stopMapping();
                         
                         if (Navigator.of(context).canPop()){
-                          Navigator.of(context).pop();
+                          Navigator.of(context).pop(emergencyActive);
                         }
                       } else {
                         await _apiService.savePose(name.toString());

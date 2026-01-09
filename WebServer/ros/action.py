@@ -23,7 +23,7 @@ class NavStatus(Enum):
 navigation_status = NavStatus.IDLE
 
 def send_goal(pose: Pose):
-    global goal_send
+    global goal_send, navigation_status
     goal = NavigateToPose.Goal()
     goal.pose.header.frame_id = 'map'
     goal.pose.pose.position.x = pose.x
@@ -38,17 +38,20 @@ def send_goal(pose: Pose):
             navigation_status = NavStatus.ACTIVE
             goal_send =goal_client.send_goal_async(goal, feedback_callback=feedback_callback)
             goal_send.add_done_callback(goal_accept_callback)
+            print(f'Navigation Status: {navigation_status.name}')
     else:
         cancel_goal()
         send_goal(pose)
 
 def goal_accept_callback(future):
+    global navigation_status
     goal_result = future.result().get_result_async()
     navigation_status = NavStatus.ACTIVE
     goal_result.add_done_callback(result_callback)
+    print(f'Navigation Status: {navigation_status.name}')
 
 def result_callback(future):
-    global goal_send, navigation_feedback
+    global goal_send, navigation_feedback, navigation_status
     result = future.result()
     goal_send = None
     # print(result)
@@ -62,24 +65,31 @@ def result_callback(future):
         navigation_status = NavStatus.CANCELED
     else:
         navigation_status = NavStatus.IDLE
+    print(f'Navigation Status: {navigation_status.name}')
 
 def feedback_callback(feedback_msg):
-    # print(feedback_msg)
-    global navigation_feedback
+    global navigation_feedback, navigation_status
     navigation_feedback = feedback_msg.feedback.distance_remaining
 
 def cancel_goal():
-    global goal_send, navigation_feedback
+    global goal_send, navigation_feedback, navigation_status
     if goal_send:
         navigation_feedback = 0.0
         navigation_status = NavStatus.CANCELED
         goal_send.result().cancel_goal_async()
         goal_send = None
+        print(f'Navigation Status: {navigation_status.name}')
 
 def get_navigation_feedback():
     global navigation_feedback
     return navigation_feedback
 
+# def timer_callback():
+#     global navigation_status
+#     navigation_msg = {'status': navigation_status.name}
+#     asyncio.run(broadcast_message({"type": "nav_status", "data": navigation_msg}))
+
+# ros_node.create_timer(0.2, timer_callback)
 
 # nav2_msgs.action.NavigateToPose_FeedbackMessage(
 #     goal_id=unique_identifier_msgs.msg.UUID(
