@@ -120,8 +120,10 @@ async def save_map_data(goal: Goal):
     return getGoal(goal.map_name, goal.name)
 
 @router.post("/navigation/goal/start")
-async def save_map_data(pose: Pose):
-    print(pose)
+async def save_map_data(point: PointInfo):
+    point_pose = getGoal(point.map_name, point.name)
+    print(f"Navigating to point: {point.name} at pose: {point_pose}")
+    pose = Pose(x=point_pose['x'], y=point_pose['y'], theta=point_pose['theta'])
     send_goal(pose)
     return {'Navigation Started'}
 

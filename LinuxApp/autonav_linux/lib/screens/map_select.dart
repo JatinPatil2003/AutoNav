@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 import './localization_page.dart';
 import './setting_page.dart';
 
-
 // --------------------------------------------------------
 // Custom Fast Image Loader (No flickering, no late loading)
 // --------------------------------------------------------
@@ -25,18 +24,17 @@ class _FastFadeImageState extends State<FastFadeImage> {
   void initState() {
     super.initState();
 
-    _image = Image.network(
-      widget.url,
-      fit: BoxFit.cover,
-    );
+    _image = Image.network(widget.url, fit: BoxFit.cover);
 
     // Preload image and fade it in when ready
-    _image!.image.resolve(const ImageConfiguration()).addListener(
-      ImageStreamListener(
-        (info, _) => setState(() => _loaded = true),
-        onError: (_, __) => setState(() => _loaded = true),
-      ),
-    );
+    _image!.image
+        .resolve(const ImageConfiguration())
+        .addListener(
+          ImageStreamListener(
+            (info, _) => setState(() => _loaded = true),
+            onError: (_, __) => setState(() => _loaded = true),
+          ),
+        );
   }
 
   @override
@@ -48,7 +46,6 @@ class _FastFadeImageState extends State<FastFadeImage> {
     );
   }
 }
-
 
 // --------------------------------------------------------
 // Main Map Selection Page
@@ -118,30 +115,27 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
       setState(() => isLoading = false);
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => LocalizationPage(mapName: name),
-        ),
+        MaterialPageRoute(builder: (_) => LocalizationPage(mapName: name)),
       );
     } else {
       if (mounted) {
         setState(() => isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to load map")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to load map")));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final width  = MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Stack(
         children: [
-
           // Back Button
           Positioned(
             top: 10,
@@ -173,7 +167,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                     color: Colors.black.withOpacity(0.08),
                     offset: const Offset(0, 6),
                     blurRadius: 14,
-                  )
+                  ),
                 ],
               ),
               child: Column(
@@ -181,24 +175,29 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                   Text(
                     "Select Map",
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[900],
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[900],
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
                   SizedBox(
-                    width: width  * 0.7,
+                    width: width * 0.7,
                     height: height * 0.7,
                     child: FutureBuilder<List<MapData>>(
                       future: mapsFuture,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         if (snapshot.hasError) {
-                          return Center(child: Text("Error: ${snapshot.error}"));
+                          return Center(
+                            child: Text("Error: ${snapshot.error}"),
+                          );
                         }
                         if (!snapshot.hasData || snapshot.data!.isEmpty) {
                           return const Center(child: Text("No maps available"));
@@ -211,11 +210,11 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                           padding: const EdgeInsets.all(12),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
-                            childAspectRatio: 1.2,
-                          ),
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 15,
+                                mainAxisSpacing: 15,
+                                childAspectRatio: 1.2,
+                              ),
                           itemCount: maps.length,
                           itemBuilder: (context, index) {
                             final map = maps[index];
@@ -274,20 +273,31 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       alignment: Alignment.center,
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blueAccent,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                      child: SizedBox(
+                                        width: 120, // 👈 button width
+                                        height: 40, // 👈 button height
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blueAccent,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            if (!isLoading) {
+                                              _onSelectMap(map, index);
+                                            }
+                                          },
+                                          child: const Text(
+                                            "Select",
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                        onPressed: () {
-                                          if (!isLoading) {
-                                            _onSelectMap(map, index);
-                                          }
-                                        },
-                                        child: const Text("Select"),
                                       ),
                                     ),
                                 ],

@@ -69,6 +69,25 @@ void Red_InOut() {
   FastLED.show();
 }
 
+void Green_InOut() {
+  // Update brightness
+  brightnessLevel -= fadeDirectionFast;
+
+  // Clamp
+  if (brightnessLevel >= 245) {
+    // brightnessLevel = 255;
+    fadeDirectionFast *= -1;   // start fading OUT
+  }
+
+  if (brightnessLevel <= 10) {
+    fadeDirectionFast *= -1;    // start fading IN
+  }
+
+  // Apply color
+  fill_solid(leds, NUM_LEDS, CHSV(86, 255, brightnessLevel));
+  FastLED.show();
+}
+
 
 
 void Blue_InOut() {
@@ -215,6 +234,9 @@ void led_timer_callback(){
       break;
     case 9:
       Yellow_InOut();
+      break;
+    case 10:
+      Green_InOut();
       break;
 
     default:
