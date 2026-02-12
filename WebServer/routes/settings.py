@@ -122,7 +122,7 @@ async def sensor_health_single(sensor_name: str):
     try:
         # Start subprocess
         process = subprocess.Popen(
-            ["bash", "-c", f"source /opt/ros/humble/setup.bash && ros2 topic hz {topic}"],
+            ["bash", "-c", f"source /opt/ros/kilted/setup.bash && ros2 topic hz {topic}"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True

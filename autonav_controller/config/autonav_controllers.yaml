@@ -9,14 +9,9 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    simple_velocity_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
 autonav_controller:
   ros__parameters:
     type        : diff_drive_controller/DiffDriveController
-
-    use_stamped_vel: false
 
     left_wheel_names  : ['base2left']
     right_wheel_names : ['base2right']
@@ -53,30 +48,23 @@ autonav_controller:
 
     # Velocity and acceleration limits
     # Whenever a min_* is unspecified, default to -max_*
-    linear:
-      x:
-        has_velocity_limits    : true
-        max_velocity           : 1.0  # m/s
-        min_velocity           : -1.0 # m/s
-        has_acceleration_limits: true
-        max_acceleration       : 0.2  # m/s^2
-        min_acceleration       : -1.0 # m/s^2
-        has_jerk_limits        : false
-        max_jerk               : 5.0  # m/s^3
-    angular:
-      z:
-        has_velocity_limits    : true
-        max_velocity           : 2.0  # rad/s
-        min_velocity           : -2.0 # m/s
-        has_acceleration_limits: true
-        max_acceleration       : 2.0  # rad/s^2
-        min_acceleration       : -2.0 # m/s^2
-        has_jerk_limits        : false
-        max_jerk               : 2.5  # rad/s^3
+    velocity_rolling_window_size: 10
 
-simple_velocity_controller:
-  ros__parameters:
-    joints:
-      - base2left
-      - base2right
+    linear.x.max_velocity: 1.0
+    linear.x.min_velocity: -1.0
+    linear.x.max_acceleration: 0.2
+    linear.x.max_deceleration: -1.0
+    linear.x.max_acceleration_reverse: -0.2
+    linear.x.max_deceleration_reverse: 1.0
+    linear.x.max_jerk: .NAN
+    linear.x.min_jerk: .NAN
+
+    angular.z.max_velocity: 2.0
+    angular.z.min_velocity: -2.0
+    angular.z.max_acceleration: 1.5
+    angular.z.max_deceleration: -1.5
+    angular.z.max_acceleration_reverse: -1.5
+    angular.z.max_deceleration_reverse: 1.5
+    angular.z.max_jerk: .NAN
+    angular.z.min_jerk: .NAN
 

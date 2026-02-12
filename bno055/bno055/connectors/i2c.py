@@ -27,7 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-from smbus import SMBus
+from smbus2 import SMBus
 
 from rclpy.node import Node
 

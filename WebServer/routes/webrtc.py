@@ -13,8 +13,9 @@ from aiortc import (
     RTCIceServer
 )
 
-router = APIRouter()
+from aiortc.sdp import candidate_from_sdp
 
+router = APIRouter()
 pcs = set()
 
 
@@ -27,15 +28,11 @@ class CameraTrack(VideoStreamTrack):
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 30)
 
-        # if not self.cap.isOpened():
-        #     raise RuntimeError("Camera not available")
-
     async def recv(self):
         pts, time_base = await self.next_timestamp()
 
         ret, frame = self.cap.read()
-
-        if not ret or frame is None:
+        if not ret:
             await asyncio.sleep(0.02)
             return await self.recv()
 
@@ -51,69 +48,57 @@ class CameraTrack(VideoStreamTrack):
         super().stop()
 
 
-
 @router.websocket("/ws/webrtc")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     print("Viewer connected")
 
-    websocket_open = True
-
-    async def safe_send(msg: str):
-        nonlocal websocket_open
-        if not websocket_open:
-            return
-        try:
-            await websocket.send_text(msg)
-        except Exception:
-            websocket_open = False
-
-    config = RTCConfiguration(
-        iceServers=[
-            RTCIceServer(urls=[
-                "stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-            ])
-        ]
+    pc = RTCPeerConnection(
+        RTCConfiguration(
+            iceServers=[
+                RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+            ]
+        )
     )
 
-    pc = RTCPeerConnection(configuration=config)
     pcs.add(pc)
 
     track = CameraTrack()
     pc.addTrack(track)
 
     @pc.on("connectionstatechange")
-    async def on_connectionstatechange():
+    async def on_state():
         print("PC state:", pc.connectionState)
-        if pc.connectionState in ["failed", "closed", "disconnected"]:
-            await pc.close()
 
+    @pc.on("iceconnectionstatechange")
+    async def ice_state():
+        print("ICE state:", pc.iceConnectionState)
+
+    # ---------- SEND ICE TO FLUTTER ----------
     @pc.on("icecandidate")
     async def on_icecandidate(candidate):
         if candidate:
-            await safe_send(json.dumps({
-                "candidate": candidate.to_sdp()
+            await websocket.send_text(json.dumps({
+                "candidate": candidate.to_sdp(),
+                "sdpMid": candidate.sdpMid,
+                "sdpMLineIndex": candidate.sdpMLineIndex,
             }))
 
+    # ---------- SEND OFFER ----------
+    offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+
+    await websocket.send_text(json.dumps({
+        "sdp": pc.localDescription.sdp,
+        "type": pc.localDescription.type
+    }))
+
     try:
-        # create offer
-        offer = await pc.createOffer()
-        await pc.setLocalDescription(offer)
-
-        await safe_send(json.dumps({
-            "sdp": pc.localDescription.sdp,
-            "type": pc.localDescription.type
-        }))
-
-        while websocket_open:
-            try:
-                message = await websocket.receive_text()
-            except WebSocketDisconnect:
-                break
-
+        while True:
+            message = await websocket.receive_text()
             data = json.loads(message)
 
+            # ---------- ANSWER ----------
             if "sdp" in data:
                 answer = RTCSessionDescription(
                     sdp=data["sdp"],
@@ -121,19 +106,142 @@ async def websocket_endpoint(websocket: WebSocket):
                 )
                 await pc.setRemoteDescription(answer)
 
-    finally:
-        print("Viewer disconnected")
+            # ---------- ICE FROM FLUTTER ----------
+            if "candidate" in data:
+                candidate = candidate_from_sdp(data["candidate"])
+                candidate.sdpMid = data["sdpMid"]
+                candidate.sdpMLineIndex = data["sdpMLineIndex"]
+                await pc.addIceCandidate(candidate)
 
-        websocket_open = False
+    except WebSocketDisconnect:
+        pass
 
-        try:
-            track.stop()
-        except:
-            pass
+    print("Viewer disconnected")
 
-        try:
-            await pc.close()
-        except:
-            pass
+    track.stop()
+    await pc.close()
+    pcs.discard(pc)
+import json
+import cv2
+import av
+import asyncio
 
-        pcs.discard(pc)
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from aiortc import (
+    RTCPeerConnection,
+    RTCSessionDescription,
+    VideoStreamTrack,
+    RTCConfiguration,
+    RTCIceServer
+)
+
+from aiortc.sdp import candidate_from_sdp
+
+router = APIRouter()
+pcs = set()
+
+
+class CameraTrack(VideoStreamTrack):
+    def __init__(self):
+        super().__init__()
+
+        self.cap = cv2.VideoCapture("/dev/robotcam")
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+
+    async def recv(self):
+        pts, time_base = await self.next_timestamp()
+
+        ret, frame = self.cap.read()
+
+        if not ret:
+            await asyncio.sleep(0.02)
+            return await self.recv()
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        video_frame = av.VideoFrame.from_ndarray(frame, format="rgb24")
+        video_frame.pts = pts
+        video_frame.time_base = time_base
+        return video_frame
+
+    def stop(self):
+        if self.cap.isOpened():
+            self.cap.release()
+        super().stop()
+
+
+@router.websocket("/ws/webrtc")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    print("Viewer connected")
+
+    pc = RTCPeerConnection(
+        RTCConfiguration(
+            iceServers=[
+                RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+            ]
+        )
+    )
+
+    pcs.add(pc)
+
+    track = CameraTrack()
+    pc.addTrack(track)
+
+    @pc.on("connectionstatechange")
+    async def on_state():
+        print("PC state:", pc.connectionState)
+
+    @pc.on("iceconnectionstatechange")
+    async def ice_state():
+        print("ICE state:", pc.iceConnectionState)
+
+    # ---------- SEND ICE TO FLUTTER ----------
+    @pc.on("icecandidate")
+    async def on_icecandidate(candidate):
+        if candidate:
+            await websocket.send_text(json.dumps({
+                "candidate": candidate.to_sdp(),
+                "sdpMid": candidate.sdpMid,
+                "sdpMLineIndex": candidate.sdpMLineIndex,
+            }))
+
+    # ---------- SEND OFFER ----------
+    offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+
+    await websocket.send_text(json.dumps({
+        "sdp": pc.localDescription.sdp,
+        "type": pc.localDescription.type
+    }))
+
+    try:
+        while True:
+            message = await websocket.receive_text()
+            data = json.loads(message)
+
+            # ---------- ANSWER ----------
+            if "sdp" in data:
+                answer = RTCSessionDescription(
+                    sdp=data["sdp"],
+                    type=data["type"]
+                )
+                await pc.setRemoteDescription(answer)
+
+            # ---------- ICE FROM FLUTTER ----------
+            if "candidate" in data:
+                candidate = candidate_from_sdp(data["candidate"])
+                candidate.sdpMid = data["sdpMid"]
+                candidate.sdpMLineIndex = data["sdpMLineIndex"]
+                await pc.addIceCandidate(candidate)
+
+    except WebSocketDisconnect:
+        pass
+
+    print("Viewer disconnected")
+
+    track.stop()
+    await pc.close()
+    pcs.discard(pc)
