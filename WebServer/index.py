@@ -7,7 +7,7 @@ import threading
 ros_thread = threading.Thread(target=start_ros_node)
 ros_thread.start()
 
-from routes import start, navigation, mapping, websocket, settings
+from routes import start, navigation, mapping, websocket, settings, webrtc
 
 app = FastAPI()
 
@@ -31,6 +31,7 @@ app.include_router(websocket.router)
 
 app.include_router(settings.router)
 
+app.include_router(webrtc.router)
 
 @app.on_event("shutdown")
 def shutdown_event():
