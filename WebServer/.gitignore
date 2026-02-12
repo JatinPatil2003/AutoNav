@@ -1,2 +1,4 @@
 main_test.py
 __pycache__
+maps/*
+!maps/.gitkeep

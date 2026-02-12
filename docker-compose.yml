@@ -4,20 +4,21 @@ services:
   autonav:
     image: jatinvpatil/autonav:latest
     command: >
-      uvicorn index:app --host 0.0.0.0 --port 8000 
-    # command: bash -c "cd /colcon_ws && colcon build --symlink-install && source /colcon_ws/install/setup.bash && ros2 launch autonav_bringup autonav_bringup.launch.py"
+      /opt/venv/bin/uvicorn index:app --host 0.0.0.0 --port 8000
     network_mode: "host"
-    pid: "host"
+    ipc: host
+    user: "1000:1000"
     privileged: true 
     devices:
       # - "/dev/bno055:/dev/bno055"
-      - "/dev/lidar:/dev/lidar_x4"
-    # ports:
-    #   # - 27017:27017
-    #   - 8000:8000
+      - /dev/lidar:/dev/lidar_x4
+      
     volumes:
-      - "/dev/bno055:/dev/bno055"
-      - "~/AutoNav:/colcon_ws/src"
+      - /dev/bno055:/dev/bno055
+      - /dev/robotcam:/dev/robotcam
+      - /dev/video0:/dev/video0
+      - /dev/video1:/dev/video1
+      # - "~/AutoNav:/colcon_ws/src"
       - "~/AutoNav/WebServer:/WebServer"
       - /var/run/dbus:/var/run/dbus  # Required for nmcli
       - /run/systemd:/run/systemd
@@ -27,14 +28,22 @@ services:
       - /etc/sudoers.d:/etc/sudoers.d 
     restart: unless-stopped
 
+
   micro_ros:
-    image: microros/micro-ros-agent:humble
+    image: microros/micro-ros-agent:kilted
     command: serial --dev /dev/esp32
     privileged: true
     network_mode: host
+    ipc: host
+    user: "1000:1000"
     volumes:
       - /dev/esp32:/dev/esp32
+      - ~/AutoNav/fastdds.xml:/fastdds.xml
+    environment:
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - FASTDDS_DEFAULT_PROFILES_FILE=/fastdds.xml
     restart: unless-stopped
+
   
   mongodb:
     image: mongo:4.4.18

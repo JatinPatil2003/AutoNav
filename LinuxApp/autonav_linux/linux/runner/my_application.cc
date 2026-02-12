@@ -54,7 +54,8 @@ static void my_application_activate(GApplication* application) {
   }
 
   gtk_window_set_default_size(window, 1280, 800);       // Set fixed size
-  gtk_window_move(window, 0, 0);
+  // gtk_window_move(window, 0, 0);
+  gtk_window_fullscreen(window);
   gtk_window_set_decorated(window, FALSE);               // Remove title bar
   gtk_window_set_resizable(window, FALSE);             // Prevent resizing
   gtk_window_set_position(window, GTK_WIN_POS_CENTER);
