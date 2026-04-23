@@ -7,6 +7,8 @@ import 'package:flutter_joystick/flutter_joystick.dart';
 
 import 'config.dart';
 import 'setting_screen.dart';
+import 'robot_video_webrtc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 WebSocketChannel? channel;
 
@@ -27,11 +29,16 @@ class _RobotControllerState extends State<RobotController> {
   double angularMultiplier = 0.7;
 
   bool emergencyActive = false;
+  bool videoEnabled = true;
+
+  final GlobalKey<RobotVideoWidgetState> videoKeyRef =
+    GlobalKey<RobotVideoWidgetState>();
 
 
   @override
   void initState() {
     super.initState();
+    loadSettings();
     checkRobotStatus(); // first check
     statusTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       checkRobotStatus();
@@ -91,13 +98,14 @@ class _RobotControllerState extends State<RobotController> {
         if (status != "Connected") {
           setState(() {
             status = "Connected";
-            robotStatusText = data[0].toUpperCase() + data.substring(1); // or extract specific fields if available
+            robotStatusText = mapRobotStatus(data); // or extract specific fields if available
           });
           connectWebSocket(); // connect only when status changes to Connected
+          // videoKeyRef.currentState?.startConnection();
         } 
         else {
           setState(() {
-            robotStatusText = data[0].toUpperCase() + data.substring(1);
+            robotStatusText = mapRobotStatus(data);
           });
         }
       } else {
@@ -118,31 +126,31 @@ class _RobotControllerState extends State<RobotController> {
 
   void connectWebSocket() {
     if (status != "Connected") {
-      // print("⚠️ Skipping WebSocket connection, status is not Connected.");
+      print("⚠️ Skipping WebSocket connection, status is not Connected.");
       return;
     }
 
     try {
       channel = WebSocketChannel.connect(Uri.parse("$wsFullUrl/joystick"));
-      // print("🔌 WebSocket connecting...");
 
       channel?.stream.listen(
         (message) {
           // print("📩 Received: $message");
         },
         onDone: () {
-          // print("❌ WebSocket closed. Retrying in 5s...");
-          retryWebSocket();
+          print("❌ WebSocket closed. Retrying in 5s...");
+          status = "Disconnected";
+          // retryWebSocket();
         },
         onError: (error) {
-          // print("⚠️ WebSocket error: $error. Retrying in 5s...");
-          retryWebSocket();
+          print("⚠️ WebSocket error: $error. Retrying in 5s...");
+          // retryWebSocket();
         },
         cancelOnError: true,
       );
     } catch (e) {
-      // print("⚠️ Failed to connect WebSocket: $e. Retrying in 5s...");
-      retryWebSocket();
+      print("⚠️ Failed to connect WebSocket: $e. Retrying in 5s...");
+      // retryWebSocket();
     }
   }
 
@@ -158,12 +166,72 @@ class _RobotControllerState extends State<RobotController> {
     // print("📤 Sent: $jsonCommand");
   }
 
+  Future<void> saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setDouble("linear", linearMultiplier);
+    await prefs.setDouble("angular", angularMultiplier);
+    await prefs.setBool("videoEnabled", videoEnabled);
+  }
+
+  Future<void> loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      linearMultiplier = prefs.getDouble("linear") ?? 0.3;
+      angularMultiplier = prefs.getDouble("angular") ?? 0.7;
+      videoEnabled = prefs.getBool("videoEnabled") ?? true;
+    });
+
+    print("Loaded settings - "
+          "Linear: $linearMultiplier, "
+          "Angular: $angularMultiplier, "
+          "Video Enabled: $videoEnabled");
+  }
+
+  String mapRobotStatus(String apiStatus) {
+    final s = apiStatus.toLowerCase();
+
+    if (s == "started" || s == "running") return "RUNNING";
+    if (s == "stopped" || s == "idle") return "IDLE";
+
+    return apiStatus.toUpperCase(); // fallback
+  }
+
+  Color robotStatusColor(String status) {
+    if (status == "RUNNING") return Colors.green;
+    if (status == "IDLE") return Colors.orange;
+    return Colors.white;
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(220, 128, 134, 219), // light grey background
       appBar: AppBar(
-        title: const Text("AutoNav"),
+        toolbarHeight: 40,
+        title: Text(
+          "AutoNav",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 30,
+            fontWeight: FontWeight.w900, // heavier than bold
+            letterSpacing: 1.2,
+            shadows: [
+              Shadow(
+                offset: Offset(2, 2),
+                blurRadius: 4,
+                color: Colors.black.withOpacity(0.35),
+              ),
+              Shadow(
+                offset: Offset(-1, -1),
+                blurRadius: 2,
+                color: Colors.white.withOpacity(0.2),
+              ),
+            ],
+          ),
+        ),
         backgroundColor: status == "Connected" ? Colors.green : Colors.red,
         actions: [
           Center(
@@ -181,14 +249,17 @@ class _RobotControllerState extends State<RobotController> {
                   builder: (_) => SettingsScreen(
                     linear: linearMultiplier,
                     angular: angularMultiplier,
+                    videoEnabled: videoEnabled,
                   ),
                 ),
               );
-              if (result != null && result is Map<String, double>) {
+              if (result != null && result is Map<String, dynamic>) {
                 setState(() {
-                  linearMultiplier = result["linear"]!.clamp(0.0, 1.0);
-                  angularMultiplier = result["angular"]!.clamp(0.0, 2.0);
+                  linearMultiplier = (result["linear"] as num?)?.toDouble().clamp(0.0, 1.0) ?? linearMultiplier;
+                  angularMultiplier =(result["angular"] as num?)?.toDouble().clamp(0.0, 2.0) ?? angularMultiplier;
+                  videoEnabled = result["videoEnabled"] as bool? ?? videoEnabled;
                 });
+                await saveSettings();
               }
             },
           ),
@@ -196,9 +267,15 @@ class _RobotControllerState extends State<RobotController> {
       ),
       body: Column(
         children: [
+          if (videoEnabled)
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: RobotVideoWidget(key: videoKeyRef),
+            ),
+            
           // Buttons row
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(0, 16, 0, 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -217,11 +294,11 @@ class _RobotControllerState extends State<RobotController> {
                     backgroundColor: WidgetStateProperty.resolveWith<Color>(
                       (states) {
                         if (states.contains(WidgetState.hovered)) {
-                          return robotStatusText == "Stopped"
+                          return robotStatusText == "IDLE"
                               ? Colors.green.shade700
                               : Colors.grey.shade700;
                         }
-                        return robotStatusText == "Stopped"
+                        return robotStatusText == "IDLE"
                             ? Colors.green
                             : Colors.grey;
                       },
@@ -245,11 +322,11 @@ class _RobotControllerState extends State<RobotController> {
                     backgroundColor: WidgetStateProperty.resolveWith<Color>(
                       (states) {
                         if (states.contains(WidgetState.hovered)) {
-                          return robotStatusText == "Started"
+                          return robotStatusText == "RUNNING"
                               ? Colors.red.shade700
                               : Colors.grey.shade700;
                         }
-                        return robotStatusText == "Started"
+                        return robotStatusText == "RUNNING"
                             ? Colors.red
                             : Colors.grey;
                       },
@@ -263,20 +340,25 @@ class _RobotControllerState extends State<RobotController> {
 
           if (status == "Connected")
             Padding(
-              padding: const EdgeInsets.all(25.0),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 20),
               child: RichText(
                 text: TextSpan(
                   style: const TextStyle(
                     fontSize: 16,
-                    color: Color.fromARGB(255, 255, 255, 255), // ensure text is visible
+                    color: Colors.white,
                   ),
                   children: [
                     const TextSpan(
                       text: "Robot Status: ",
-                      style: TextStyle(fontWeight: FontWeight.bold), // ✅ Only this bold
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
-                      text: robotStatusText, // normal text
+                      text: robotStatusText,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: robotStatusColor(robotStatusText),
+                      ),
                     ),
                   ],
                 ),
@@ -292,7 +374,7 @@ class _RobotControllerState extends State<RobotController> {
                       ? const Color(0xFF690A0A) // dark red when latched
                       : Colors.red,             // normal red when off
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () {
