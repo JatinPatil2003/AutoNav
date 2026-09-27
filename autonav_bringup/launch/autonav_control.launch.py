@@ -6,6 +6,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     RegisterEventHandler,
     TimerAction,
+    SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessStart
@@ -20,6 +21,11 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    # Force C locale for numeric parsing. This works around a known ROS 2 bug
+    # where floating point parameters (like wheel_separation) fail to parse in locales 
+    # that use commas for decimals instead of dots. The C locale is always available.
+    # set_locale = SetEnvironmentVariable('LC_NUMERIC', 'C')
+
     autonav_description_dir = get_package_share_directory('autonav_description')
 
     use_rviz_arg = DeclareLaunchArgument(
@@ -76,7 +82,13 @@ def generate_launch_description():
     autonav_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['autonav_controller', '--controller-manager', '/controller_manager'],
+        arguments=[
+            'autonav_controller',
+            '--controller-manager',
+            '/controller_manager',
+            '--param-file',
+            controller_params_file,
+        ],
         remappings=[
             ('/autonav_controller/cmd_vel_unstamped', '/autonav_controller/cmd_vel'),
         ],
@@ -96,6 +108,8 @@ def generate_launch_description():
             'joint_state_broadcaster',
             '--controller-manager',
             '/controller_manager',
+            '--param-file',
+            controller_params_file,
         ],
     )
 
@@ -114,6 +128,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            # set_locale,
             use_rviz_arg,
             robot_state_publisher_node,
             rviz_node,

@@ -243,12 +243,12 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  Future<bool> setLed(int led_status) async {
-    print("Setting LED status to: $led_status");
+  Future<bool> setLed(int ledStatus) async {
+    print("Setting LED status to: $ledStatus");
     final response = await http.post(
       Uri.parse('$baseUrl/led_status'),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"status": led_status}),
+      body: jsonEncode({"status": ledStatus}),
     );
     return response.statusCode == 200;
   }

@@ -7,7 +7,6 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -22,11 +21,12 @@ add_library(${PROJECT_NAME} SHARED
   src/motor_controller.cpp
 )
 
-ament_target_dependencies(${PROJECT_NAME}
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
+target_link_libraries(${PROJECT_NAME}
+  hardware_interface::hardware_interface
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  rclcpp_lifecycle::rclcpp_lifecycle
+  std_msgs::std_msgs
 )
 
 target_link_libraries(${PROJECT_NAME} ${MODBUS_LIBRARIES})
@@ -40,11 +40,6 @@ install(
 install(
   DIRECTORY include
   DESTINATION include
-)
-
-install(
-  PROGRAMS scripts/set_slave_id.py
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 include_directories(

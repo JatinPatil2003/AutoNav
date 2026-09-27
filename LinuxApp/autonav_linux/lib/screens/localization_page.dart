@@ -114,7 +114,7 @@ class _LocalizationPageState extends State<LocalizationPage> {
         border: Border.all(color: Colors.grey.shade300, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             offset: const Offset(0, 4),
             blurRadius: 8,
           ),
@@ -191,7 +191,7 @@ class _LocalizationPageState extends State<LocalizationPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     offset: const Offset(0, 8),
                     blurRadius: 16,
                   ),

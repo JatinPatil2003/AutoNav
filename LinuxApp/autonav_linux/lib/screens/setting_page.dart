@@ -86,8 +86,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showPasswordDialog(String network) {
-    final TextEditingController _passwordController = TextEditingController();
-    bool _isLoading = false;
+    final TextEditingController passwordController = TextEditingController();
+    bool isLoading = false;
 
     showDialog(
       context: context,
@@ -99,29 +99,29 @@ class _SettingsPageState extends State<SettingsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               AutoFocusKeyboard(
-                controller: _passwordController,
+                controller: passwordController,
                 hintText: "Password",
                 // autofocus: true,
                 // decoration: const InputDecoration(labelText: "Password"),
                 obscureText: true,
               ),
               const SizedBox(height: 20),
-              if (_isLoading) const CircularProgressIndicator(),
+              if (isLoading) const CircularProgressIndicator(),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: _isLoading ? null : () => Navigator.of(ctx).pop(),
+              onPressed: isLoading ? null : () => Navigator.of(ctx).pop(),
               child: const Text("Cancel"),
             ),
             ElevatedButton(
-              onPressed: _isLoading
+              onPressed: isLoading
                   ? null
                   : () async {
-                      setStateDialog(() => _isLoading = true);
+                      setStateDialog(() => isLoading = true);
                       bool success =
-                          await _settingService.updateWifi(network, _passwordController.text);
-                      setStateDialog(() => _isLoading = false);
+                          await _settingService.updateWifi(network, passwordController.text);
+                      setStateDialog(() => isLoading = false);
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(success ? "Connected Successfully" : "Connection Failed")),

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import './localization_page.dart';
@@ -164,7 +163,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     offset: const Offset(0, 6),
                     blurRadius: 14,
                   ),
@@ -269,7 +268,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                                   if (selected)
                                     Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.45),
+                                        color: Colors.black.withValues(alpha: 0.45),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       alignment: Alignment.center,
