@@ -15,6 +15,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <future>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -27,19 +28,23 @@ namespace autonav_firmware
 {
 AutonavInterface::AutonavInterface()
 {
-  left_slave_id_ = 1;
-  right_slave_id_ = 2;
 }
 
 AutonavInterface::~AutonavInterface()
 {
+  if (emergency_executor_) {
+    emergency_executor_->cancel();
+  }
+  if (emergency_spin_thread_.joinable()) {
+    emergency_spin_thread_.join();
+  }
 }
 
 hardware_interface::CallbackReturn AutonavInterface::on_init(
-  const hardware_interface::HardwareInfo & info)
+  const hardware_interface::HardwareComponentInterfaceParams & params)
 {
   if (
-    hardware_interface::SystemInterface::on_init(info) !=
+    hardware_interface::SystemInterface::on_init(params) !=
     hardware_interface::CallbackReturn::SUCCESS)
   {
     return hardware_interface::CallbackReturn::ERROR;
@@ -48,6 +53,11 @@ hardware_interface::CallbackReturn AutonavInterface::on_init(
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+
+  left_port_ = info_.hardware_parameters["left_port"];
+  right_port_ = info_.hardware_parameters["right_port"];
+  left_slave_id_ = std::stoi(info_.hardware_parameters["left_slave_id"]);
+  right_slave_id_ = std::stoi(info_.hardware_parameters["right_slave_id"]);
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -91,10 +101,50 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
     }
   }
 
-  if (!motor_controller_.connect("/dev/ttyUSB0", 115200)) {
-    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to Modbus motor drivers");
+  if (!left_motor_controller_.connect(left_port_, 9600)) {
+    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to left Modbus motor driver");
     return hardware_interface::CallbackReturn::ERROR;
   }
+  if (!right_motor_controller_.connect(right_port_, 9600)) {
+    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to right Modbus motor driver");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  left_motor_controller_.enableMotor(left_slave_id_);
+  right_motor_controller_.enableMotor(right_slave_id_);
+
+  left_motor_controller_.startWorker(left_slave_id_);
+  right_motor_controller_.startWorker(right_slave_id_);
+
+  emergency_stop_.store(false);
+
+  // Subscribe to /autonav/emergency_status
+  emergency_node_ = std::make_shared<rclcpp::Node>("autonav_emergency_listener");
+  emergency_sub_ = emergency_node_->create_subscription<std_msgs::msg::Bool>(
+    "/autonav/emergency_status", 10,
+    [this](const std_msgs::msg::Bool::SharedPtr msg) {
+      bool is_emergency = msg->data;
+      if (is_emergency != emergency_stop_.load()) {
+        if (is_emergency) {
+          RCLCPP_WARN(
+            rclcpp::get_logger("AutonavInterface"),
+            "EMERGENCY STATUS TRUE: Engaging brake! Motor write commands halted.");
+          left_motor_controller_.setTargetVelocity(0.0);
+          right_motor_controller_.setTargetVelocity(0.0);
+        } else {
+          RCLCPP_INFO(
+            rclcpp::get_logger("AutonavInterface"),
+            "EMERGENCY STATUS FALSE: Emergency cleared. Resuming normal motor write commands.");
+        }
+        emergency_stop_.store(is_emergency);
+      }
+    });
+
+  emergency_executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  emergency_executor_->add_node(emergency_node_);
+  emergency_spin_thread_ = std::thread([this]() {
+    emergency_executor_->spin();
+  });
 
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Successfully activated!");
 
@@ -104,10 +154,26 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
 hardware_interface::CallbackReturn AutonavInterface::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Deactivating ...please wait...");
 
-  motor_controller_.disconnect();
+  if (emergency_executor_) {
+    emergency_executor_->cancel();
+  }
+  if (emergency_spin_thread_.joinable()) {
+    emergency_spin_thread_.join();
+  }
+  emergency_sub_.reset();
+  emergency_node_.reset();
+  emergency_executor_.reset();
+
+  left_motor_controller_.stopWorker();
+  right_motor_controller_.stopWorker();
+
+  left_motor_controller_.disableMotor(left_slave_id_);
+  right_motor_controller_.disableMotor(right_slave_id_);
+
+  left_motor_controller_.disconnect();
+  right_motor_controller_.disconnect();
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Successfully deactivated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -116,10 +182,12 @@ hardware_interface::CallbackReturn AutonavInterface::on_deactivate(
 hardware_interface::return_type AutonavInterface::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  // Read left motor feedback
-  motor_controller_.readFeedback(left_slave_id_, hw_positions_[1], hw_velocities_[1]);
-  // Read right motor feedback
-  motor_controller_.readFeedback(right_slave_id_, hw_positions_[0], hw_velocities_[0]);
+  // Instantaneous non-blocking read from background workers
+  hw_positions_[0] = right_motor_controller_.getFeedbackPosition();
+  hw_velocities_[0] = right_motor_controller_.getFeedbackVelocity();
+
+  hw_positions_[1] = left_motor_controller_.getFeedbackPosition();
+  hw_velocities_[1] = left_motor_controller_.getFeedbackVelocity();
 
   return hardware_interface::return_type::OK;
 }
@@ -127,10 +195,16 @@ hardware_interface::return_type AutonavInterface::read(
 hardware_interface::return_type autonav_firmware::AutonavInterface::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  // Write left motor command
-  motor_controller_.setVelocity(left_slave_id_, hw_commands_[1]);
-  // Write right motor command
-  motor_controller_.setVelocity(right_slave_id_, hw_commands_[0]);
+  if (emergency_stop_.load()) {
+    // When emergency status is true, enforce brake (0.0 rad/s) and refuse to forward hw_commands_
+    left_motor_controller_.setTargetVelocity(0.0);
+    right_motor_controller_.setTargetVelocity(0.0);
+    return hardware_interface::return_type::OK;
+  }
+
+  // Instantaneous non-blocking write to background workers
+  right_motor_controller_.setTargetVelocity(hw_commands_[0]);
+  left_motor_controller_.setTargetVelocity(hw_commands_[1]);
 
   return hardware_interface::return_type::OK;
 }

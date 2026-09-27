@@ -18,11 +18,14 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <atomic>
+#include <thread>
 
 #include "hardware_interface/system_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "std_msgs/msg/bool.hpp"
 #include "autonav_firmware/motor_controller.hpp"
 
 namespace autonav_firmware
@@ -41,7 +44,7 @@ public:
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State &) override;
 
   // Implementing hardware_interface::SystemInterface
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & hardware_info) override;
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams & params) override;
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
   hardware_interface::return_type read(
@@ -52,15 +55,25 @@ public:
     const rclcpp::Duration &) override;
 
 private:
-  MotorController motor_controller_;
+  MotorController left_motor_controller_;
+  MotorController right_motor_controller_;
   
-  int left_slave_id_ = 1;
-  int right_slave_id_ = 2;
+  int left_slave_id_;
+  int right_slave_id_;
+  std::string left_port_;
+  std::string right_port_;
   double hw_start_sec_;
   double hw_stop_sec_;
   std::vector<double> hw_commands_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
+
+  // Emergency stop subscriber and background executor
+  std::shared_ptr<rclcpp::Node> emergency_node_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr emergency_sub_;
+  std::atomic<bool> emergency_stop_{false};
+  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> emergency_executor_;
+  std::thread emergency_spin_thread_;
 };
 }  // namespace autonav_firmware
 

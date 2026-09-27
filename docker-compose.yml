@@ -9,11 +9,11 @@ services:
     ipc: host
     user: "1000:1000"
     privileged: true 
-    devices:
-      # - "/dev/bno055:/dev/bno055"
-      - /dev/lidar:/dev/lidar_x4
+    # devices:
+    #   # - "/dev/bno055:/dev/bno055"
       
     volumes:
+      - /dev/lidar:/dev/lidar_x4
       - /dev/bno055:/dev/bno055
       - /dev/robotcam:/dev/robotcam
       - /dev/video0:/dev/video0
@@ -50,7 +50,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ~/mongodb_data_test:/data/db
+      - ~/mongodb_data:/data/db
     restart: unless-stopped
     # mongodb://localhost:27017
 

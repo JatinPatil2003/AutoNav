@@ -93,7 +93,13 @@ def generate_launch_description():
     autonav_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['autonav_controller', '--controller-manager', '/controller_manager'],
+        arguments=[
+            'autonav_controller',
+            '--controller-manager',
+            '/controller_manager',
+            '--param-file',
+            controller_params_file,
+        ],
         remappings=[
             ('/autonav_controller/cmd_vel_unstamped', '/autonav_controller/cmd_vel'),
         ],
@@ -113,6 +119,8 @@ def generate_launch_description():
             'joint_state_broadcaster',
             '--controller-manager',
             '/controller_manager',
+            '--param-file',
+            controller_params_file,
         ],
     )
 

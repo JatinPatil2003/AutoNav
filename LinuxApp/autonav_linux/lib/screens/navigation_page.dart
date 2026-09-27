@@ -183,7 +183,7 @@ class _NavigationPageState extends State<NavigationPage> {
                         border: Border.all(color: Colors.grey.shade300),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             offset: const Offset(0, 4),
                             blurRadius: 8,
                           ),
@@ -324,7 +324,7 @@ class _NavigationPageState extends State<NavigationPage> {
         border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, 3),
             blurRadius: 8,
           ),
@@ -407,7 +407,7 @@ class _NavigationPageState extends State<NavigationPage> {
         onPressed: enabled ? onTap : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          disabledBackgroundColor: color.withOpacity(0.5),
+          disabledBackgroundColor: color.withValues(alpha: 0.5),
           padding: const EdgeInsets.symmetric(vertical: 30),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         ),
@@ -436,7 +436,7 @@ class _NavigationPageState extends State<NavigationPage> {
         onPressed: enabled ? onTap : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          disabledBackgroundColor: color.withOpacity(0.5),
+          disabledBackgroundColor: color.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),

@@ -7,11 +7,11 @@ class MapView extends StatefulWidget {
   final List<Map<String, dynamic>> savedPoints;
 
   const MapView({
-    Key? key,
+    super.key,
     required this.mapData,
     required this.robotPosition,
     required this.savedPoints,
-  }) : super(key: key);
+  });
 
   @override
   State<MapView> createState() => _MapViewState();

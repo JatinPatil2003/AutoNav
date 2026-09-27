@@ -6,3 +6,4 @@ log
 test
 
 WebServer/maps/*
+__pycache__/
