@@ -5,8 +5,8 @@ This setup provides dynamic DNS names for OpenVPN clients.
 Example:
 
 ```text
-autonav.robot → current VPN IP of user autonav
-openvpn.robot → current VPN IP of user openvpn
+autonav.robot  → current VPN IP of user autonav
+openvpn.robot  → current VPN IP of user openvpn
 ```
 
 The IP addresses are obtained dynamically from OpenVPN Access Server using `VPNStatus`. Nothing is hardcoded for the robot VPN IPs.
@@ -147,30 +147,7 @@ sudo chmod +x /usr/local/bin/update-robot-dns.sh
 
 ---
 
-# 5. Test the updater once
-
-```bash
-sudo /usr/local/bin/update-robot-dns.sh
-```
-
-The generated records are stored here:
-
-```bash
-/etc/dnsmasq-robots.hosts
-```
-
-Example:
-
-```text
-172.27.232.22 autonav.robot
-172.27.224.15 openvpn.robot
-```
-
-The IPs are generated from the current OpenVPN sessions.
-
----
-
-# 6. Start dnsmasq
+# 5. Start dnsmasq
 
 ```bash
 sudo systemctl enable dnsmasq
@@ -179,7 +156,7 @@ sudo systemctl restart dnsmasq
 
 ---
 
-# 7. Create automatic DNS updater service
+# 6. Create automatic DNS updater service
 
 ```bash
 sudo tee /etc/systemd/system/robot-dns-update.service > /dev/null <<'EOF'
@@ -196,7 +173,7 @@ EOF
 
 ---
 
-# 8. Create automatic DNS updater timer
+# 7. Create automatic DNS updater timer
 
 ```bash
 sudo tee /etc/systemd/system/robot-dns-update.timer > /dev/null <<'EOF'
@@ -215,20 +192,20 @@ EOF
 
 ---
 
-# 9. Enable the automatic updater
+# 8. Enable the automatic updater
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now robot-dns-update.timer
 ```
 
-The updater now runs every 10 seconds.
+The updater runs every 10 seconds.
 
 ---
 
-# 10. Configure OpenVPN Access Server DNS
+# 9. Configure OpenVPN Access Server DNS
 
-Set Access Server to use the dnsmasq DNS server:
+Set Access Server to use custom DNS:
 
 ```bash
 sudo /usr/local/openvpn_as/scripts/sacli \
@@ -252,6 +229,70 @@ sudo /usr/local/openvpn_as/scripts/sacli Start
 
 ---
 
+# 10. Configure systemd-resolved for Robot DNS
+
+The OpenVPN Access Server uses `systemd-resolved`, while dnsmasq serves the `.robot` domain.
+
+Configure `systemd-resolved` to route only `.robot` queries to dnsmasq:
+
+```bash
+sudo resolvectl dns as0t0 172.27.224.1
+sudo resolvectl domain as0t0 '~robot'
+```
+
+Create a persistent systemd service:
+
+```bash
+sudo tee /etc/systemd/system/robot-dns-resolved.service > /dev/null <<'EOF'
+[Unit]
+Description=Configure systemd-resolved for OpenVPN robot DNS
+After=systemd-resolved.service openvpnas.service
+Wants=systemd-resolved.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/resolvectl dns as0t0 172.27.224.1
+ExecStart=/usr/bin/resolvectl domain as0t0 ~robot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+Enable the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now robot-dns-resolved.service
+```
+
+DNS routing:
+
+```text
+*.robot
+   |
+   v
+172.27.224.1
+   |
+   v
+dnsmasq
+   |
+   v
+/etc/dnsmasq-robots.hosts
+```
+
+Normal DNS:
+
+```text
+Internet DNS
+   |
+   v
+172.31.0.2
+```
+
+---
+
 # 11. Reconnect OpenVPN clients
 
 Reconnect all OpenVPN clients so they receive the new DNS configuration.
@@ -265,8 +306,6 @@ sudo systemctl restart openvpn-client@autonavvpn.service
 ---
 
 # 12. DNS behavior
-
-After reconnecting, VPN clients use the Access Server dnsmasq resolver.
 
 Robot hostname:
 
@@ -298,7 +337,7 @@ google.com    → 172.31.0.2
 
 # 13. Automatic IP updates
 
-The systemd timer runs:
+The systemd timer runs every 10 seconds:
 
 ```text
 Every 10 seconds
@@ -333,7 +372,10 @@ No robot VPN IP needs to be manually configured.
 /usr/local/bin/update-robot-dns.sh
 /etc/systemd/system/robot-dns-update.service
 /etc/systemd/system/robot-dns-update.timer
+/etc/systemd/system/robot-dns-resolved.service
 ```
+
+---
 
 # 15. Client usage
 
@@ -349,4 +391,4 @@ or:
 ssh user@autonav.robot
 ```
 
-The hostname always resolves to the robot's current VPN address.
+The hostname resolves to the robot's current VPN address.
