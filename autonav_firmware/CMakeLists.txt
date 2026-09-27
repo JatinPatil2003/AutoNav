@@ -14,11 +14,12 @@ find_package(std_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
-find_package(PkgConfig)
-# find_package(serial REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MODBUS REQUIRED libmodbus)
 
 add_library(${PROJECT_NAME} SHARED 
   src/autonav_interface.cpp
+  src/motor_controller.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME}
@@ -28,6 +29,9 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_lifecycle
 )
 
+target_link_libraries(${PROJECT_NAME} ${MODBUS_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${MODBUS_INCLUDE_DIRS})
+
 install(
   TARGETS ${PROJECT_NAME}
   DESTINATION lib
@@ -36,6 +40,11 @@ install(
 install(
   DIRECTORY include
   DESTINATION include
+)
+
+install(
+  PROGRAMS scripts/set_slave_id.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 include_directories(

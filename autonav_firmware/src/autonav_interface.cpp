@@ -22,23 +22,13 @@
 #include "autonav_firmware/autonav_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
-#include "std_msgs/msg/int64_multi_array.hpp"
 
 namespace autonav_firmware
 {
 AutonavInterface::AutonavInterface()
-: node_(std::make_shared<rclcpp::Node>("autonav_interface_node"))
 {
-  feedback_subscription_ = node_->create_subscription<std_msgs::msg::Float64MultiArray>(
-    "/motor/feedback", 10,
-    [this](const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
-      this->processFeedback(msg);
-    });
-
-  // left_cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64>("/motor/left_cmd", 10);
-  // right_cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64>("/motor/right_cmd", 10);
-  cmd_publisher_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>("/motor/command", 10);
+  left_slave_id_ = 1;
+  right_slave_id_ = 2;
 }
 
 AutonavInterface::~AutonavInterface()
@@ -101,6 +91,11 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
     }
   }
 
+  if (!motor_controller_.connect("/dev/ttyUSB0", 115200)) {
+    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to Modbus motor drivers");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Successfully activated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -112,34 +107,30 @@ hardware_interface::CallbackReturn AutonavInterface::on_deactivate(
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Deactivating ...please wait...");
 
+  motor_controller_.disconnect();
   RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "Successfully deactivated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-void AutonavInterface::processFeedback(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
-{
-  if (msg->data.size() >= 2) {
-    hw_positions_[1] = msg->data[0];  // base2left
-    hw_positions_[0] = msg->data[1];  // base2right
-    // RCLCPP_INFO(rclcpp::get_logger("AutonavInterface"), "position successfully readed!");
-  }
-}
-
 hardware_interface::return_type AutonavInterface::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  rclcpp::spin_some(node_);
+  // Read left motor feedback
+  motor_controller_.readFeedback(left_slave_id_, hw_positions_[1], hw_velocities_[1]);
+  // Read right motor feedback
+  motor_controller_.readFeedback(right_slave_id_, hw_positions_[0], hw_velocities_[0]);
+
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type autonav_firmware::AutonavInterface::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  auto cmd_msg = std::make_shared<std_msgs::msg::Float64MultiArray>();
-  cmd_msg->data.push_back(hw_commands_[1]);  // base2left command
-  cmd_msg->data.push_back(hw_commands_[0]);  // base2right command
-  cmd_publisher_->publish(*cmd_msg);
+  // Write left motor command
+  motor_controller_.setVelocity(left_slave_id_, hw_commands_[1]);
+  // Write right motor command
+  motor_controller_.setVelocity(right_slave_id_, hw_commands_[0]);
 
   return hardware_interface::return_type::OK;
 }
