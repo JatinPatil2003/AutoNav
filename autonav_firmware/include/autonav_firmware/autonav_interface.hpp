@@ -23,8 +23,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
-#include "std_msgs/msg/int64_multi_array.hpp"
+#include "autonav_firmware/motor_controller.hpp"
 
 namespace autonav_firmware
 {
@@ -53,13 +52,10 @@ public:
     const rclcpp::Duration &) override;
 
 private:
-  std::shared_ptr<rclcpp::Node> node_;
-  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr feedback_subscription_;
-  // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr left_cmd_publisher_;
-  // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr right_cmd_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr cmd_publisher_;
-
-  void processFeedback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
+  MotorController motor_controller_;
+  
+  int left_slave_id_ = 1;
+  int right_slave_id_ = 2;
   double hw_start_sec_;
   double hw_stop_sec_;
   std::vector<double> hw_commands_;
