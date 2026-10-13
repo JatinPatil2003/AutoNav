@@ -1,144 +1,46 @@
-# Getting Started with Create React App
+# ReactApp — AutoNav Operator Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The web operator dashboard: login, robot-assignment workflow, admin panel, and (in future milestones) mapping/navigation/analytics/documentation. Talks to `PlatformServer` for auth/users/robots, and — once a future milestone wires it up — to `WebServer` for live ROS telemetry/control.
 
+Served exclusively over HTTPS in every deployed environment; see `AWS/nginx/dashboard.autonav.in.conf`.
 
-## Setting Up AWS EC-2
+## Stack
+
+Vite, React 18, TypeScript, Tailwind CSS, Redux Toolkit + RTK Query, React Router.
+
+This app was migrated off Create React App (CRA, now unmaintained) onto Vite as part of this rewrite.
+
+## Architecture
+
+Feature-based (`src/features/<feature>/{pages,components,api}`), with route guards in `src/router/` and shared UI primitives in `src/components/ui/`. Authentication state is **not** duplicated into a Redux slice — `useAuth()` (`src/features/auth/useAuth.ts`) derives it directly from RTK Query's cache for `GET /users/me`, so there's a single source of truth and nothing to desync after login/logout/refresh.
+
+```
+src/
+  app/          Redux store, the RTK Query baseApi (with silent-refresh-on-401), error helpers
+  router/       route tree + guards (PublicRoute, ProtectedRoute, AdminRoute, RobotRequiredRoute)
+  features/     auth, robot-access, admin, dashboard (each: pages/ components/ *Api.ts)
+  components/ui shared Tailwind-based primitives (Button, Input, Card, Spinner, PlaceholderPage)
+  legacy-robot-ui/   pre-rewrite CRA components (MappingMap, JoystickView, etc.) — untouched,
+                      not wired into routing; a future milestone decides whether to port or retire them
+```
+
+## Getting started
 
 ```bash
-sudo apt update
-sudo apt install nginx
-```
-```bash
-sudo nano /etc/nginx/sites-available/default
-```
-```
-server {
-    listen 5747; # port which will listen
-    server_name <instance_ip>;
-
-    # For API
-    location / {
-        proxy_pass http://<localserver_vpn_tunnel_ip>:8000;  
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    #For Websockets
-    location /ws/ {
-        proxy_pass http://<localserver_vpn_tunnel_ip>:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+cp .env.example .env.local   # VITE_API_BASE_URL -> your local PlatformServer
+npm install
+npm run dev                  # http://localhost:5173
 ```
 
-server {
-    listen 5747; # port which will listen
-    server_name 13.201.73.66;
+Run `PlatformServer` locally alongside this (see `../PlatformServer/README.md`) for the auth/API backend.
 
-    location / {
-        proxy_pass http://172.28.224.5:8000;  
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+## Scripts
 
-    location /ws/ {
-        proxy_pass http://172.28.224.5:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Type-check + production build to `dist/` |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | ESLint (excludes `src/legacy-robot-ui`) |
 
-```bash
-sudo systemctl restart nginx
-```
-```bash
-# For Debugging
-sudo nginx -t
-curl http://<instance_ip>:5747
-sudo tail -f /var/log/nginx/error.log
-```
-
-Run FastAPI Backend on localhost:8080
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+See the repo-root `CLAUDE.md` and `AWS/README.md` for how this is deployed to EC2.

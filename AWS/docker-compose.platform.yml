@@ -1,0 +1,42 @@
+services:
+  platform-mongo:
+    image: mongo:6.0
+    container_name: platform-mongo
+    restart: unless-stopped
+    networks: [platform-net]
+    volumes:
+      - platform-mongo-data:/data/db
+    env_file: .env
+    # No host port published — only reachable from platform-backend over the
+    # internal bridge network, reducing attack surface on the public EC2 host.
+
+  platform-backend:
+    image: ${DOCKER_USERNAME}/autonav:platform-backend
+    container_name: platform-backend
+    restart: unless-stopped
+    networks: [platform-net]
+    ports:
+      - "4000:4000"
+    env_file: .env
+    depends_on: [platform-mongo]
+    volumes:
+      # Bind mount (not a named volume) so they land at a predictable path
+      # on the EC2 host — AWS/scripts/compress-old-logs.sh (run via cron)
+      # gzip-compresses the older rotated files from here.
+      - ./logs/platform-backend:/app/logs
+
+  platform-frontend:
+    image: ${DOCKER_USERNAME}/autonav:platform-frontend
+    container_name: platform-frontend
+    restart: unless-stopped
+    networks: [platform-net]
+    ports:
+      - "8081:80"
+    depends_on: [platform-backend]
+
+networks:
+  platform-net:
+    driver: bridge
+
+volumes:
+  platform-mongo-data:

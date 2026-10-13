@@ -1,0 +1,113 @@
+name: Platform_CI
+
+# Builds/deploys PlatformServer + the new ReactApp (Vite) platform dashboard,
+# separately from AutoNav_CI.yml (which still builds react.Dockerfile on the
+# `autonav_web` branch). Adjust the trigger branch below once this work has
+# a settled home branch.
+on:
+  push:
+    branches: ["autonav_4.0"]
+  workflow_dispatch:
+
+jobs:
+  test_backend:
+    name: Test PlatformServer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+        working-directory: PlatformServer
+      - run: npm run build
+        working-directory: PlatformServer
+      - run: npm test
+        working-directory: PlatformServer
+
+  build_backend:
+    name: Build & push platform-backend image
+    runs-on: ubuntu-latest
+    needs: test_backend
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v3.1.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/build-push-action@v5.3.0
+        with:
+          context: ./PlatformServer
+          file: ./PlatformServer/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/autonav:platform-backend
+
+  build_frontend:
+    name: Build & push platform-frontend image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v3.1.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/build-push-action@v5.3.0
+        with:
+          context: .
+          file: ./ReactApp/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/autonav:platform-frontend
+
+  deploy:
+    name: Deploy platform stack to EC2
+    runs-on: ubuntu-latest
+    needs: [build_backend, build_frontend]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Copy AWS/ deploy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: "AWS/docker-compose.platform.yml,AWS/deploy.sh"
+          target: "~/AutoNav/AWS/"
+          strip_components: 1
+
+      - name: Write .env on EC2 from secrets
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          envs: MONGO_ROOT_PW,JWT_ACCESS_SECRET,JWT_REFRESH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,ADMIN_EMAILS,DOCKER_USERNAME
+          script: |
+            cat > ~/AutoNav/AWS/.env <<EOF
+            MONGO_INITDB_ROOT_USERNAME=platformadmin
+            MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PW}
+            MONGO_URI=mongodb://platformadmin:${MONGO_ROOT_PW}@platform-mongo:27017/autonav_platform?authSource=admin
+            NODE_ENV=production
+            PORT=4000
+            JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+            JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+            ADMIN_EMAILS=${ADMIN_EMAILS}
+            FRONTEND_URL=https://dashboard.autonav.in
+            COOKIE_DOMAIN=dashboard.autonav.in
+            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+            GOOGLE_CALLBACK_URL=https://dashboard.autonav.in/api/auth/google/callback
+            DOCKER_USERNAME=${DOCKER_USERNAME}
+            EOF
+            chmod 600 ~/AutoNav/AWS/.env
+
+      - name: Deploy via docker compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            cd ~/AutoNav/AWS
+            chmod +x deploy.sh
+            ./deploy.sh
