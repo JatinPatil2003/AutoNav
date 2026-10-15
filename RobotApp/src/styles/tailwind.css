@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+}
+
+#root {
+  width: 1280px;
+  height: 800px;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* Kiosk touchscreen: no accidental text selection or pull-to-refresh. */
+  user-select: none;
+  overscroll-behavior: none;
+}

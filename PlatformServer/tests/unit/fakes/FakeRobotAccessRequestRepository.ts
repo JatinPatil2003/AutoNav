@@ -8,9 +8,9 @@ import { IRobotAccessRequestRepository } from "../../../src/modules/robot-access
 export class FakeRobotAccessRequestRepository implements IRobotAccessRequestRepository {
   private requests = new Map<string, IRobotAccessRequestDocument>();
 
-  async create(userId: string): Promise<IRobotAccessRequestDocument> {
+  async create(userId: string, robotId: string): Promise<IRobotAccessRequestDocument> {
     const hasPending = [...this.requests.values()].some(
-      (r) => r.user.toString() === userId && r.status === "pending",
+      (r) => r.user.toString() === userId && r.robot.toString() === robotId && r.status === "pending",
     );
 
     if (hasPending) {
@@ -23,6 +23,7 @@ export class FakeRobotAccessRequestRepository implements IRobotAccessRequestRepo
     const request = {
       _id: id,
       user: new Types.ObjectId(userId),
+      robot: new Types.ObjectId(robotId),
       status: "pending" as RobotAccessRequestStatus,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -36,17 +37,19 @@ export class FakeRobotAccessRequestRepository implements IRobotAccessRequestRepo
     return this.requests.get(id) ?? null;
   }
 
-  async findLatestForUser(userId: string): Promise<IRobotAccessRequestDocument | null> {
-    const matches = [...this.requests.values()]
+  async listForUser(userId: string): Promise<IRobotAccessRequestDocument[]> {
+    return [...this.requests.values()]
       .filter((r) => r.user.toString() === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    return matches[0] ?? null;
   }
 
-  async findPendingForUser(userId: string): Promise<IRobotAccessRequestDocument | null> {
+  async findPendingForUserAndRobot(
+    userId: string,
+    robotId: string,
+  ): Promise<IRobotAccessRequestDocument | null> {
     return (
       [...this.requests.values()].find(
-        (r) => r.user.toString() === userId && r.status === "pending",
+        (r) => r.user.toString() === userId && r.robot.toString() === robotId && r.status === "pending",
       ) ?? null
     );
   }
@@ -76,5 +79,17 @@ export class FakeRobotAccessRequestRepository implements IRobotAccessRequestRepo
     request.reviewedAt = new Date();
     request.rejectionReason = reason;
     return request;
+  }
+
+  async deleteForRobot(robotId: string): Promise<void> {
+    for (const [id, request] of this.requests) {
+      if (request.robot.toString() === robotId) this.requests.delete(id);
+    }
+  }
+
+  async deleteForUser(userId: string): Promise<void> {
+    for (const [id, request] of this.requests) {
+      if (request.user.toString() === userId) this.requests.delete(id);
+    }
   }
 }

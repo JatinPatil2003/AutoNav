@@ -12,7 +12,10 @@
     "lint": "eslint \"src/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
-    "seed:robot": "ts-node scripts/seedRobot.ts"
+    "seed:robot": "ts-node scripts/seedRobot.ts",
+    "migrate:robot-assignments": "ts-node scripts/migrateRobotAssignments.ts",
+    "migrate:robot-secret-hash": "ts-node scripts/backfillRobotSecretHash.ts",
+    "migrate:assignment-access-flags": "ts-node scripts/backfillAssignmentAccessFlags.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

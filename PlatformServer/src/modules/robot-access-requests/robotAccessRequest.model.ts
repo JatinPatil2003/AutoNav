@@ -4,6 +4,7 @@ export type RobotAccessRequestStatus = "pending" | "approved" | "rejected";
 
 export interface IRobotAccessRequest {
   user: Types.ObjectId;
+  robot: Types.ObjectId;
   status: RobotAccessRequestStatus;
   reviewedBy?: Types.ObjectId;
   reviewedAt?: Date;
@@ -19,6 +20,7 @@ export interface IRobotAccessRequestDocument extends IRobotAccessRequest, Docume
 const robotAccessRequestSchema = new Schema<IRobotAccessRequestDocument>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    robot: { type: Schema.Types.ObjectId, ref: "Robot", required: true },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
@@ -32,10 +34,11 @@ const robotAccessRequestSchema = new Schema<IRobotAccessRequestDocument>(
   { timestamps: true },
 );
 
-// Prevents a user from having more than one simultaneous pending request;
-// a new request is allowed again once the previous one is rejected/approved.
+// Prevents a user from having more than one simultaneous pending request for
+// the *same* robot; a user may still have concurrent pending requests for
+// different robots now that User<->Robot is many-to-many.
 robotAccessRequestSchema.index(
-  { user: 1 },
+  { user: 1, robot: 1 },
   { unique: true, partialFilterExpression: { status: "pending" } },
 );
 

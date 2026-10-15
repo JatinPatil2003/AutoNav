@@ -1,6 +1,6 @@
 services:
   platform-mongo:
-    image: mongo:6.0
+    image: mongo:9.0.2
     container_name: platform-mongo
     restart: unless-stopped
     networks: [platform-net]

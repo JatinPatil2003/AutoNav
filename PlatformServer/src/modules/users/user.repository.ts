@@ -7,7 +7,7 @@ export class MongooseUserRepository implements IUserRepository {
   }
 
   async findByIdPopulated(id: string): Promise<IUserDocument | null> {
-    return UserModel.findById(id).populate("robot").exec();
+    return UserModel.findById(id).exec();
   }
 
   async findByEmail(email: string): Promise<IUserDocument | null> {
@@ -47,10 +47,6 @@ export class MongooseUserRepository implements IUserRepository {
     await UserModel.findByIdAndUpdate(userId, { $inc: { refreshTokenVersion: 1 } }).exec();
   }
 
-  async assignRobot(userId: string, robotId: string): Promise<IUserDocument | null> {
-    return UserModel.findByIdAndUpdate(userId, { $set: { robot: robotId } }, { new: true }).exec();
-  }
-
   async setPassword(userId: string, passwordHash: string): Promise<IUserDocument | null> {
     return UserModel.findByIdAndUpdate(
       userId,
@@ -60,10 +56,14 @@ export class MongooseUserRepository implements IUserRepository {
   }
 
   async listAllPopulated(): Promise<IUserDocument[]> {
-    return UserModel.find().populate("robot").sort({ createdAt: -1 }).exec();
+    return UserModel.find().sort({ createdAt: -1 }).exec();
   }
 
   async updateRole(userId: string, role: "user" | "admin"): Promise<IUserDocument | null> {
     return UserModel.findByIdAndUpdate(userId, { $set: { role } }, { new: true }).exec();
+  }
+
+  async deleteById(userId: string): Promise<void> {
+    await UserModel.deleteOne({ _id: userId }).exec();
   }
 }

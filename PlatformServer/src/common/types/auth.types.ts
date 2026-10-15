@@ -24,3 +24,14 @@ export interface ResetTokenPayload {
   sub: string;
   purpose: "password-reset";
 }
+
+export interface PinSetupTokenPayload {
+  sub: string;
+  robotId: string;
+  purpose: "robot-pin-setup";
+}
+
+export interface AuthRobot {
+  id: string;
+  robotId: string;
+}

@@ -16,3 +16,7 @@ process.env.EMAIL_APP_PASSWORD = "test-app-password";
 process.env.OTP_EXPIRY_MINUTES = "10";
 process.env.RESET_TOKEN_SECRET = "test-reset-token-secret-0123456789";
 process.env.RESET_TOKEN_TTL = "10m";
+process.env.ROBOT_SECRET_ENC_KEY = "LLcw5AnWzRusExtL9BT6aBiD74fSzRVjmKdlkdGjyOs=";
+process.env.PIN_SETUP_TOKEN_SECRET = "test-pin-setup-token-secret-0123456789";
+process.env.PIN_SETUP_TOKEN_TTL = "10m";
+process.env.PLATFORM_TO_ROBOT_TOKEN_TTL = "60s";

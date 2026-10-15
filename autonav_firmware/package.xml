@@ -11,6 +11,8 @@
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>autonav_msgs</depend>
   <depend>libmodbus-dev</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>

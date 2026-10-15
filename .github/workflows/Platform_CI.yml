@@ -1,9 +1,9 @@
 name: Platform_CI
 
-# Builds/deploys PlatformServer + the new ReactApp (Vite) platform dashboard,
-# separately from AutoNav_CI.yml (which still builds react.Dockerfile on the
-# `autonav_web` branch). Adjust the trigger branch below once this work has
-# a settled home branch.
+# Builds/deploys PlatformServer + PlatformApp (Vite) platform dashboard,
+# separately from AutoNav_CI.yml (which still builds platform-app.Dockerfile
+# on the `autonav_web` branch). Adjust the trigger branch below once this
+# work has a settled home branch.
 on:
   push:
     branches: ["autonav_4.0"]
@@ -54,7 +54,7 @@ jobs:
       - uses: docker/build-push-action@v5.3.0
         with:
           context: .
-          file: ./ReactApp/Dockerfile
+          file: ./PlatformApp/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/autonav:platform-frontend
 

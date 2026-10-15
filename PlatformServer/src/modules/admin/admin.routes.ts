@@ -4,7 +4,12 @@ import { requireAdmin } from "../../common/middleware/requireAdmin.middleware";
 import { validate } from "../../common/middleware/validate.middleware";
 import { asyncHandler } from "../../common/utils/asyncHandler.util";
 import { AdminController } from "./admin.controller";
-import { updateUserRoleSchema } from "./admin.validation";
+import {
+  grantRobotAssignmentSchema,
+  revokeRobotAssignmentSchema,
+  updateRobotAssignmentAccessSchema,
+  updateUserRoleSchema,
+} from "./admin.validation";
 import {
   approveRequestSchema,
   rejectRequestSchema,
@@ -70,6 +75,85 @@ export function createAdminRouter(adminController: AdminController): Router {
 
   /**
    * @openapi
+   * /api/admin/robot-assignments:
+   *   post:
+   *     summary: Directly grant a user access to a robot (admin only), bypassing the request workflow
+   *     tags: [Admin]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       201:
+   *         description: Assignment created or reactivated
+   *       409:
+   *         description: User already has active access to this robot
+   */
+  router.post(
+    "/robot-assignments",
+    validate({ body: grantRobotAssignmentSchema }),
+    asyncHandler(adminController.grantRobotAssignment),
+  );
+
+  /**
+   * @openapi
+   * /api/admin/robot-assignments/{id}/revoke:
+   *   post:
+   *     summary: Revoke a user's access to a robot (admin only)
+   *     tags: [Admin]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Assignment revoked
+   */
+  router.post(
+    "/robot-assignments/:id/revoke",
+    validate({ body: revokeRobotAssignmentSchema }),
+    asyncHandler(adminController.revokeRobotAssignment),
+  );
+
+  /**
+   * @openapi
+   * /api/admin/robot-assignments/{id}/access:
+   *   patch:
+   *     summary: Toggle a user's HMI (RobotApp) and/or PlatformApp access on an existing assignment (admin only)
+   *     tags: [Admin]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Access flags updated
+   */
+  router.patch(
+    "/robot-assignments/:id/access",
+    validate({ body: updateRobotAssignmentAccessSchema }),
+    asyncHandler(adminController.updateRobotAssignmentAccess),
+  );
+
+  /**
+   * @openapi
+   * /api/admin/robots/{robotId}/assignments:
+   *   get:
+   *     summary: List all assignments (any status) for a robot (admin only)
+   *     tags: [Admin]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Assignments for the robot
+   */
+  router.get("/robots/:robotId/assignments", asyncHandler(adminController.listAssignmentsForRobot));
+
+  /**
+   * @openapi
+   * /api/admin/users/{userId}/assignments:
+   *   get:
+   *     summary: List all assignments (any status) for a user (admin only)
+   *     tags: [Admin]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Assignments for the user
+   */
+  router.get("/users/:userId/assignments", asyncHandler(adminController.listAssignmentsForUser));
+
+  /**
+   * @openapi
    * /api/admin/users:
    *   get:
    *     summary: List all platform users (admin only)
@@ -101,6 +185,23 @@ export function createAdminRouter(adminController: AdminController): Router {
     validate({ body: updateUserRoleSchema }),
     asyncHandler(adminController.updateUserRole),
   );
+
+  /**
+   * @openapi
+   * /api/admin/users/{id}:
+   *   delete:
+   *     summary: Permanently delete a user, their robot assignments, and their access requests (admin only; cannot target self)
+   *     tags: [Admin]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       204:
+   *         description: User deleted
+   *       403:
+   *         description: Attempted to delete your own account
+   *       404:
+   *         description: User not found
+   */
+  router.delete("/users/:id", asyncHandler(adminController.deleteUser));
 
   return router;
 }

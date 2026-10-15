@@ -1,33 +1,28 @@
-version: '3.8'
+# Modular robot-side stack: one container per subsystem, all built FROM the
+# shared ROS base image (docker/base.Dockerfile), published as
+# jatinvpatil/autonav:base. To build and run everything straight from that
+# published base:
+#
+#   docker compose build
+#   docker compose up -d
+#
+# When iterating on docker/base.Dockerfile itself, build it locally and
+# point the subsystem builds at your local tag instead of the published one:
+#
+#   docker build -f docker/base.Dockerfile -t autonav-ros-base:dev .
+#   BASE_IMAGE=autonav-ros-base:dev docker compose build
+#
+# See docker-compose.dev.yml for rviz/debug tooling, which is not meant to
+# run on the robot itself.
 
 services:
-  autonav:
-    image: jatinvpatil/autonav:latest
-    command: >
-      /opt/venv/bin/uvicorn index:app --host 0.0.0.0 --port 8000
-    network_mode: "host"
-    ipc: host
-    user: "1000:1000"
-    privileged: true 
-    # devices:
-    #   # - "/dev/bno055:/dev/bno055"
-      
+  mongodb:
+    image: mongo:9.0.2
+    ports:
+      - 27017:27017
     volumes:
-      - /dev/lidar:/dev/lidar_x4
-      - /dev/bno055:/dev/bno055
-      - /dev/robotcam:/dev/robotcam
-      - /dev/video0:/dev/video0
-      - /dev/video1:/dev/video1
-      # - "~/AutoNav:/colcon_ws/src"
-      - "~/AutoNav/WebServer:/WebServer"
-      - /var/run/dbus:/var/run/dbus  # Required for nmcli
-      - /run/systemd:/run/systemd
-      - /run/dbus:/run/dbus
-      - /etc/NetworkManager:/etc/NetworkManager
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/sudoers.d:/etc/sudoers.d 
+      - ~/mongodb_data:/data/db
     restart: unless-stopped
-
 
   micro_ros:
     image: microros/micro-ros-agent:kilted
@@ -38,19 +33,121 @@ services:
     user: "1000:1000"
     volumes:
       - /dev/esp32:/dev/esp32
-      - ~/AutoNav/fastdds.xml:/fastdds.xml
+      - ./fastdds.xml:/fastdds.xml
     environment:
       - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
       - FASTDDS_DEFAULT_PROFILES_FILE=/fastdds.xml
     restart: unless-stopped
 
-  
-  mongodb:
-    image: mongo:4.4.18
-    ports:
-      - 27017:27017
+  lidar:
+    build:
+      context: .
+      dockerfile: docker/lidar.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
+    image: jatinvpatil/autonav:lidar
+    network_mode: host
+    ipc: host
+    privileged: true
+    user: "1000:1000"
     volumes:
-      - ~/mongodb_data:/data/db
+      - /dev/lidar:/dev/lidar
     restart: unless-stopped
-    # mongodb://localhost:27017
 
+  imu:
+    build:
+      context: .
+      dockerfile: docker/imu.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
+    image: jatinvpatil/autonav:imu
+    network_mode: host
+    ipc: host
+    privileged: true
+    user: "1000:1000"
+    volumes:
+      - /dev/bno055:/dev/bno055
+    restart: unless-stopped
+
+  controller:
+    build:
+      context: .
+      dockerfile: docker/controller.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
+    image: jatinvpatil/autonav:controller
+    network_mode: host
+    ipc: host
+    privileged: true
+    user: "1000:1000"
+    volumes:
+      - /dev/esp32:/dev/esp32
+    restart: unless-stopped
+
+  localization:
+    build:
+      context: .
+      dockerfile: docker/localization.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
+    image: jatinvpatil/autonav:localization
+    network_mode: host
+    ipc: host
+    user: "1000:1000"
+    restart: unless-stopped
+    depends_on:
+      - imu
+      - controller
+
+  navigation:
+    build:
+      context: .
+      dockerfile: docker/navigation.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
+    image: jatinvpatil/autonav:navigation
+    network_mode: host
+    ipc: host
+    privileged: true
+    user: "1000:1000"
+    environment:
+      - NAV_MODE=navigation
+    volumes:
+      - ./RobotServer/maps:/colcon_ws/maps
+    restart: unless-stopped
+    depends_on:
+      - lidar
+      - localization
+
+  robotserver:
+    build:
+      context: .
+      dockerfile: RobotServer/Dockerfile
+    image: jatinvpatil/autonav:robotserver
+    network_mode: host
+    ipc: host
+    user: "1000:1000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - MONGO_URI=mongodb://localhost:27017/autonav
+      - CORS_ORIGINS=
+      - MAPS_DIR=/app/maps
+      - CAMERA_DEVICE=/dev/robotcam
+      - PLATFORM_BASE_URL=${PLATFORM_BASE_URL}
+      - PLATFORM_ROBOT_SECRET=${PLATFORM_ROBOT_SECRET}
+      - ROSTER_SYNC_INTERVAL_MINUTES=60
+      - ROBOT_SESSION_ACCESS_SECRET=${ROBOT_SESSION_ACCESS_SECRET}
+      - ROBOT_SESSION_REFRESH_SECRET=${ROBOT_SESSION_REFRESH_SECRET}
+      - ROBOT_SESSION_ACCESS_TTL=15m
+      - ROBOT_SESSION_REFRESH_TTL=24h
+      - PIN_LOGIN_MAX_ATTEMPTS=5
+      - PIN_LOGIN_LOCKOUT_MINUTES=15
+      - ROBOTAPP_STATIC_DIR=/app/robotapp-dist
+    volumes:
+      - /dev/robotcam:/dev/robotcam
+      - ./RobotServer/maps:/app/maps
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+      - navigation

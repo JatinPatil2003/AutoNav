@@ -1,6 +1,6 @@
 # PlatformServer
 
-The AutoNav platform backend — authentication, user management, and the robot-assignment workflow for the operator dashboard. This is a separate concern from `WebServer` (the FastAPI ROS bridge): `PlatformServer` owns accounts, roles, and which user is assigned which robot; `WebServer` owns live ROS telemetry/control for a given robot.
+The AutoNav platform backend — authentication, user management, and the robot-assignment workflow for the operator dashboard. This is a separate concern from `RobotServer` (the robot-side ROS bridge): `PlatformServer` owns accounts, roles, and which user is assigned which robot; `RobotServer` owns live ROS telemetry/control for a given robot.
 
 Communication with this API happens over HTTPS only in every deployed environment (see `AWS/nginx/dashboard.autonav.in.conf`); plain HTTP is only ever used on `localhost` during local development.
 

@@ -6,27 +6,34 @@ import {
 import { IRobotAccessRequestRepository } from "./robotAccessRequest.repository.interface";
 
 export class MongooseRobotAccessRequestRepository implements IRobotAccessRequestRepository {
-  async create(userId: string): Promise<IRobotAccessRequestDocument> {
-    const request = new RobotAccessRequestModel({ user: userId, status: "pending" });
+  async create(userId: string, robotId: string): Promise<IRobotAccessRequestDocument> {
+    const request = new RobotAccessRequestModel({ user: userId, robot: robotId, status: "pending" });
     return request.save();
   }
 
   async findById(id: string): Promise<IRobotAccessRequestDocument | null> {
-    return RobotAccessRequestModel.findById(id).exec();
+    return RobotAccessRequestModel.findById(id).populate("robot").exec();
   }
 
-  async findLatestForUser(userId: string): Promise<IRobotAccessRequestDocument | null> {
-    return RobotAccessRequestModel.findOne({ user: userId }).sort({ createdAt: -1 }).exec();
+  async listForUser(userId: string): Promise<IRobotAccessRequestDocument[]> {
+    return RobotAccessRequestModel.find({ user: userId })
+      .populate("robot")
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
-  async findPendingForUser(userId: string): Promise<IRobotAccessRequestDocument | null> {
-    return RobotAccessRequestModel.findOne({ user: userId, status: "pending" }).exec();
+  async findPendingForUserAndRobot(
+    userId: string,
+    robotId: string,
+  ): Promise<IRobotAccessRequestDocument | null> {
+    return RobotAccessRequestModel.findOne({ user: userId, robot: robotId, status: "pending" }).exec();
   }
 
   async listByStatus(status: RobotAccessRequestStatus): Promise<IRobotAccessRequestDocument[]> {
     return RobotAccessRequestModel.find({ status })
       .sort({ createdAt: 1 })
       .populate("user", "email name")
+      .populate("robot")
       .exec();
   }
 
@@ -48,5 +55,13 @@ export class MongooseRobotAccessRequestRepository implements IRobotAccessRequest
       { $set: { status: "rejected", reviewedBy, reviewedAt: new Date(), rejectionReason: reason } },
       { new: true },
     ).exec();
+  }
+
+  async deleteForRobot(robotId: string): Promise<void> {
+    await RobotAccessRequestModel.deleteMany({ robot: robotId }).exec();
+  }
+
+  async deleteForUser(userId: string): Promise<void> {
+    await RobotAccessRequestModel.deleteMany({ user: userId }).exec();
   }
 }

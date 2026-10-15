@@ -41,7 +41,7 @@ ekf_filter_node:
       
 
       # IMU Configuration
-      imu0: bno055/imu
+      imu0: autonav_imu/imu
       # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
       # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
       # want to use its Z position value, then set the entire vector to false, except for the third entry. The order of the

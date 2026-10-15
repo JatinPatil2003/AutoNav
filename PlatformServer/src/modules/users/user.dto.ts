@@ -1,5 +1,4 @@
 import { IUserDocument } from "./user.model";
-import { IRobotDocument } from "../robots/robot.model";
 
 export interface PublicRobotDto {
   id: string;
@@ -16,13 +15,10 @@ export interface PublicUserDto {
   avatarUrl?: string;
   role: string;
   authProviders: ("local" | "google")[];
-  robot: PublicRobotDto | null;
+  robots: PublicRobotDto[];
 }
 
-export function toPublicUserDto(user: IUserDocument): PublicUserDto {
-  const robot = user.robot as unknown as IRobotDocument | undefined;
-  const isPopulatedRobot = !!robot && typeof robot === "object" && "name" in robot;
-
+export function toPublicUserDto(user: IUserDocument, robots: PublicRobotDto[] = []): PublicUserDto {
   return {
     id: user._id.toString(),
     email: user.email,
@@ -30,14 +26,6 @@ export function toPublicUserDto(user: IUserDocument): PublicUserDto {
     avatarUrl: user.avatarUrl,
     role: user.role,
     authProviders: user.authProviders,
-    robot: isPopulatedRobot
-      ? {
-          id: robot._id.toString(),
-          name: robot.name,
-          displayName: robot.displayName,
-          vpnHostname: robot.vpnHostname,
-          status: robot.status,
-        }
-      : null,
+    robots,
   };
 }

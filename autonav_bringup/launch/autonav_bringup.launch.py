@@ -24,8 +24,9 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     autonav_description_dir = get_package_share_directory('autonav_description')
     autonav_localization_dir = get_package_share_directory('autonav_localization')
-    pkg_bno055 = get_package_share_directory('bno055')
-    pkg_ydlidar = get_package_share_directory('ydlidar_ros2_driver')
+    pkg_autonav_imu = get_package_share_directory('autonav_imu')
+    pkg_autonav_firmware = get_package_share_directory('autonav_firmware')
+    pkg_rplidar = get_package_share_directory('rplidar_ros')
 
     use_rviz_arg = DeclareLaunchArgument(
         'rviz',
@@ -66,13 +67,20 @@ def generate_launch_description():
 
     imu = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_bno055, 'launch', 'bno055.launch.py'),
+            os.path.join(pkg_autonav_imu, 'launch', 'autonav_imu.launch.py'),
         )
     )
 
     lidar = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_ydlidar, 'launch', 'ydlidar_launch.py'),
+            os.path.join(pkg_rplidar, 'launch', 'rplidar_a2m8_launch.py'),
+        ),
+        launch_arguments={'serial_port': '/dev/lidar'}.items(),
+    )
+
+    esp32_bridge = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_autonav_firmware, 'launch', 'esp32_bridge.launch.py'),
         )
     )
 
@@ -159,6 +167,7 @@ def generate_launch_description():
             delayed_joint_broad_spawner,
             imu,
             lidar,
+            esp32_bridge,
             ekf,
             lidar_republisher,
             velocity_republisher,

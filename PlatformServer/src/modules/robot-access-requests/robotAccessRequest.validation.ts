@@ -1,7 +1,11 @@
 import { z } from "zod";
 
-export const approveRequestSchema = z.object({
+export const createRequestSchema = z.object({
   robotId: z.string().min(1, "robotId is required"),
+});
+
+export const approveRequestSchema = z.object({
+  robotId: z.string().min(1).optional(),
 });
 
 export const rejectRequestSchema = z.object({

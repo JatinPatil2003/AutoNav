@@ -66,13 +66,6 @@ export class FakeUserRepository implements IUserRepository {
     if (user) user.refreshTokenVersion += 1;
   }
 
-  async assignRobot(userId: string, robotId: string): Promise<IUserDocument | null> {
-    const user = this.users.get(userId);
-    if (!user) return null;
-    user.robot = new Types.ObjectId(robotId);
-    return user;
-  }
-
   async setPassword(userId: string, passwordHash: string): Promise<IUserDocument | null> {
     const user = this.users.get(userId);
     if (!user) return null;
@@ -90,5 +83,9 @@ export class FakeUserRepository implements IUserRepository {
     if (!user) return null;
     user.role = role;
     return user;
+  }
+
+  async deleteById(userId: string): Promise<void> {
+    this.users.delete(userId);
   }
 }

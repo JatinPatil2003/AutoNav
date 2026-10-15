@@ -42,7 +42,7 @@ describe("Auth routes", () => {
 
     const meRes = await agent.get("/api/users/me");
     expect(meRes.status).toBe(200);
-    expect(meRes.body.user.robot).toBeNull();
+    expect(meRes.body.user.robots).toEqual([]);
 
     const logoutRes = await agent.post("/api/auth/logout");
     expect(logoutRes.status).toBe(204);

@@ -24,13 +24,13 @@ import {
   SignupDto,
   VerifyOtpDto,
 } from "./auth.validation";
-import { IPasswordResetOtpRepository } from "./passwordResetOtp.repository.interface";
+import { IEmailOtpRepository } from "./emailOtp.repository.interface";
 import { IEmailOtpSender } from "./otpSender.interface";
 
 export class AuthService {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly otpRepository: IPasswordResetOtpRepository,
+    private readonly otpRepository: IEmailOtpRepository,
     private readonly emailOtpSender: IEmailOtpSender,
   ) {}
 
@@ -151,12 +151,12 @@ export class AuthService {
       return;
     }
 
-    await this.otpRepository.invalidateActiveForUser(user._id.toString());
+    await this.otpRepository.invalidateActiveForUser(user._id.toString(), "password-reset");
 
     const otp = generateOtp();
     const otpHash = await hashOtp(otp);
     const expiresAt = new Date(Date.now() + config.otp.expiryMinutes * 60 * 1000);
-    await this.otpRepository.create(user._id.toString(), otpHash, expiresAt);
+    await this.otpRepository.create(user._id.toString(), "password-reset", otpHash, expiresAt);
 
     await this.emailOtpSender.sendOtp(user.email, otp);
     logger.debug({ userId: user._id.toString() }, "auth.forgotPassword: OTP issued");
@@ -173,7 +173,10 @@ export class AuthService {
       throw new UnauthorizedError("Invalid or expired code");
     }
 
-    const otpRecord = await this.otpRepository.findLatestActiveForUser(user._id.toString());
+    const otpRecord = await this.otpRepository.findLatestActiveForUser(
+      user._id.toString(),
+      "password-reset",
+    );
     if (!otpRecord) {
       throw new UnauthorizedError("Invalid or expired code");
     }

@@ -29,26 +29,44 @@ jobs:
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
-          name: Build and push AutoNav
-          environment:
-            DOCKER_CLI_AARCH64_IMAGE: docker.io/docker/cli:24.0.6-dind-aarch64
+          name: Build and push the shared ROS base image
           command: |
             docker buildx build \
               --platform=linux/arm64,linux/amd64 \
-              --cache-from type=registry,ref=$IMAGE_NAME:cache \
-              --cache-to type=registry,ref=$IMAGE_NAME:cache,mode=max \
+              --cache-from type=registry,ref=$IMAGE_NAME:base-cache \
+              --cache-to type=registry,ref=$IMAGE_NAME:base-cache,mode=max \
               --push \
-              -t $IMAGE_NAME:latest \
-              -f autonav.Dockerfile \
+              -t $IMAGE_NAME:base \
+              -f docker/base.Dockerfile \
               .
-      # - run:
-      #     name: Publish Docker Image to Docker Hub
-      #     command: |
-      #       docker push $IMAGE_NAME:latest
+      - run:
+          name: Build and push the modular ROS subsystem images
+          command: |
+            for service in lidar imu controller localization navigation; do
+              docker buildx build \
+                --platform=linux/arm64,linux/amd64 \
+                --build-arg BASE_IMAGE=$IMAGE_NAME:base \
+                --cache-from type=registry,ref=$IMAGE_NAME:$service-cache \
+                --cache-to type=registry,ref=$IMAGE_NAME:$service-cache,mode=max \
+                --push \
+                -t $IMAGE_NAME:$service \
+                -f docker/$service.Dockerfile \
+                .
+            done
+      - run:
+          name: Build and push RobotServer
+          command: |
+            docker buildx build \
+              --platform=linux/arm64,linux/amd64 \
+              --cache-from type=registry,ref=$IMAGE_NAME:robotserver-cache \
+              --cache-to type=registry,ref=$IMAGE_NAME:robotserver-cache,mode=max \
+              --push \
+              -t $IMAGE_NAME:robotserver \
+              -f RobotServer/Dockerfile \
+              .
 
 workflows:
   version: 2
   build-master:
     jobs:
       - build
-

@@ -1,0 +1,9 @@
+uint8 pattern_id
+bool use_custom_params
+uint8 hue
+uint8 sat
+uint8 val
+uint16 speed_ms
+---
+bool success
+string message

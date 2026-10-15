@@ -7,13 +7,14 @@ export class RobotAccessRequestController {
 
   createRequest = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw new UnauthorizedError();
-    const request = await this.requestService.createRequest(req.user.id);
+    const { robotId } = req.body;
+    const request = await this.requestService.createRequest(req.user.id, robotId);
     res.status(201).json({ request });
   };
 
-  getMyLatestRequest = async (req: Request, res: Response): Promise<void> => {
+  listMine = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw new UnauthorizedError();
-    const request = await this.requestService.getMyLatestRequest(req.user.id);
-    res.status(200).json({ request });
+    const requests = await this.requestService.listMine(req.user.id);
+    res.status(200).json({ requests });
   };
 }

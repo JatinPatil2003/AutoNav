@@ -10,32 +10,34 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(autonav_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MODBUS REQUIRED libmodbus)
 
-add_library(${PROJECT_NAME} SHARED 
-  src/autonav_interface.cpp
-  src/motor_controller.cpp
-)
+# add_library(${PROJECT_NAME} SHARED
+#   src/autonav_interface.cpp
+#   src/motor_controller.cpp
+# )
 
-target_link_libraries(${PROJECT_NAME}
-  hardware_interface::hardware_interface
-  pluginlib::pluginlib
-  rclcpp::rclcpp
-  rclcpp_lifecycle::rclcpp_lifecycle
-  std_msgs::std_msgs
-)
+# target_link_libraries(${PROJECT_NAME}
+#   hardware_interface::hardware_interface
+#   pluginlib::pluginlib
+#   rclcpp::rclcpp
+#   rclcpp_lifecycle::rclcpp_lifecycle
+#   std_msgs::std_msgs
+# )
 
-target_link_libraries(${PROJECT_NAME} ${MODBUS_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${MODBUS_INCLUDE_DIRS})
+# target_link_libraries(${PROJECT_NAME} ${MODBUS_LIBRARIES})
+# target_include_directories(${PROJECT_NAME} PUBLIC ${MODBUS_INCLUDE_DIRS})
 
-install(
-  TARGETS ${PROJECT_NAME}
-  DESTINATION lib
-)
+# install(
+#   TARGETS ${PROJECT_NAME}
+#   DESTINATION lib
+# )
 
 install(
   DIRECTORY include
@@ -46,22 +48,41 @@ include_directories(
   include
 )
 
-pluginlib_export_plugin_description_file(hardware_interface autonav_interface.xml)
+# ESP32 serial bridge node: device identity, LED patterns, physical e-stop
+# feedback. Independent of the ros2_control plugin above -- plain executable.
+add_executable(esp32_bridge_node
+  src/esp32_bridge_node.cpp
+  src/esp32_serial_transport.cpp
+  src/esp32_frame_codec.cpp
+)
+ament_target_dependencies(esp32_bridge_node rclcpp std_msgs std_srvs autonav_msgs)
 
-ament_export_include_directories(
-  include
+install(
+  TARGETS esp32_bridge_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-ament_export_libraries(
-  ${PROJECT_NAME}
+install(
+  DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
 )
 
-ament_export_dependencies(
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
-)
+# pluginlib_export_plugin_description_file(hardware_interface autonav_interface.xml)
+
+# ament_export_include_directories(
+#   include
+# )
+
+# ament_export_libraries(
+#   ${PROJECT_NAME}
+# )
+
+# ament_export_dependencies(
+#   hardware_interface
+#   pluginlib
+#   rclcpp
+#   rclcpp_lifecycle
+# )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

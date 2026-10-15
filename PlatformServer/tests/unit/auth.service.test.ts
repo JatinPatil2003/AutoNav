@@ -1,18 +1,18 @@
 import { AuthService } from "../../src/modules/auth/auth.service";
 import { ConflictError, UnauthorizedError } from "../../src/common/errors";
 import { FakeUserRepository } from "./fakes/FakeUserRepository";
-import { FakePasswordResetOtpRepository } from "./fakes/FakePasswordResetOtpRepository";
+import { FakeEmailOtpRepository } from "./fakes/FakeEmailOtpRepository";
 import { FakeEmailOtpSender } from "./fakes/FakeEmailOtpSender";
 
 describe("AuthService", () => {
   let authService: AuthService;
   let userRepository: FakeUserRepository;
-  let otpRepository: FakePasswordResetOtpRepository;
+  let otpRepository: FakeEmailOtpRepository;
   let emailOtpSender: FakeEmailOtpSender;
 
   beforeEach(() => {
     userRepository = new FakeUserRepository();
-    otpRepository = new FakePasswordResetOtpRepository();
+    otpRepository = new FakeEmailOtpRepository();
     emailOtpSender = new FakeEmailOtpSender();
     authService = new AuthService(userRepository, otpRepository, emailOtpSender);
   });
@@ -26,7 +26,7 @@ describe("AuthService", () => {
 
     expect(user.email).toBe("jane@example.com");
     expect(user.role).toBe("user");
-    expect(user.robot).toBeNull();
+    expect(user.robots).toEqual([]);
     expect(tokens.accessToken).toEqual(expect.any(String));
     expect(tokens.refreshToken).toEqual(expect.any(String));
   });

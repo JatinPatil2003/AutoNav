@@ -1,0 +1,60 @@
+# Dev/debug tooling: rviz viewers and the interactive map-saver, layered on
+# top of the modular images from docker-compose.yml. Meant for a developer
+# machine (X11 forwarding) or an on-robot debug session, not for the
+# always-on robot stack.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml build
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm save_map
+#
+# Note: camera/camera_view services are intentionally omitted — they depend
+# on autonav_perception, which isn't present in this repo (see CLAUDE.md).
+
+services:
+  rviz:
+    image: jatinvpatil/autonav:base
+    container_name: rviz
+    network_mode: "host"
+    ipc: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority
+    command: >
+      ros2 launch autonav_bringup view_rviz.launch.py rviz:=True
+
+  rviz_slam:
+    extends: rviz
+    container_name: rviz_slam
+    command: >
+      ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True
+
+  rviz_navigation:
+    extends: rviz
+    container_name: rviz_navigation
+    command: >
+      ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True
+
+  rviz_cartographer:
+    extends: rviz
+    container_name: rviz_cartographer
+    command: >
+      ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True
+
+  save_map:
+    build:
+      context: .
+      dockerfile: docker/navigation.Dockerfile
+    image: jatinvpatil/autonav:navigation
+    container_name: save_map
+    network_mode: "host"
+    ipc: host
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./RobotServer/maps:/colcon_ws/maps
+    command: >
+      ros2 launch autonav_navigation save_map.launch.py

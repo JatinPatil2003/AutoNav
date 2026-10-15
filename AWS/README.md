@@ -1,6 +1,6 @@
 # AWS
 
-Everything deployed to the EC2 host for the AutoNav platform (auth/dashboard layer — `PlatformServer` + `ReactApp`). This is separate from the robot-side `docker-compose.yml` at the repo root, which runs on the robot itself with host networking and device mounts.
+Everything deployed to the EC2 host for the AutoNav platform (auth/dashboard layer — `PlatformServer` + `PlatformApp`). This is separate from the robot-side `docker-compose.yml` at the repo root, which runs on the robot itself with host networking and device mounts.
 
 The EC2 host already runs OpenVPN Access Server + nginx for `vpn.autonav.in`, `vpn-admin.autonav.in`, and `aldr-dashboard.autonav.in` (see `docs/OpenVPN Access Server + Nginx + Cloudflare Setup.md`). This folder adds a fourth site, `dashboard.autonav.in`, reusing the same wildcard `*.autonav.in` Cloudflare Origin certificate already installed at `/etc/nginx/ssl/autonav/`.
 

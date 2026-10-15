@@ -11,7 +11,6 @@ export interface IUser {
   name: string;
   avatarUrl?: string;
   role: UserRole;
-  robot?: Types.ObjectId;
   refreshTokenVersion: number;
   isEmailVerified: boolean;
 }
@@ -36,7 +35,6 @@ const userSchema = new Schema<IUserDocument>(
     name: { type: String, required: true, trim: true },
     avatarUrl: { type: String },
     role: { type: String, enum: ["user", "admin"], required: true, default: "user" },
-    robot: { type: Schema.Types.ObjectId, ref: "Robot" },
     refreshTokenVersion: { type: Number, required: true, default: 0 },
     isEmailVerified: { type: Boolean, required: true, default: false },
   },

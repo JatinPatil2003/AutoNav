@@ -1,4 +1,4 @@
-import { IRobotDocument, RobotModel, RobotStatus } from "./robot.model";
+import { IEncryptedSecret, IRobotDocument, RobotModel, RobotStatus } from "./robot.model";
 import { CreateRobotInput, IRobotRepository } from "./robot.repository.interface";
 
 export class MongooseRobotRepository implements IRobotRepository {
@@ -8,6 +8,14 @@ export class MongooseRobotRepository implements IRobotRepository {
 
   async findByName(name: string): Promise<IRobotDocument | null> {
     return RobotModel.findOne({ name }).exec();
+  }
+
+  async findByRobotId(robotId: string): Promise<IRobotDocument | null> {
+    return RobotModel.findOne({ robotId: robotId.toLowerCase() }).exec();
+  }
+
+  async findBySecretHash(robotSecretHash: string): Promise<IRobotDocument | null> {
+    return RobotModel.findOne({ robotSecretHash }).exec();
   }
 
   async listByStatus(status: RobotStatus): Promise<IRobotDocument[]> {
@@ -20,19 +28,37 @@ export class MongooseRobotRepository implements IRobotRepository {
 
   async create(input: CreateRobotInput): Promise<IRobotDocument> {
     const robot = new RobotModel({
+      robotId: input.robotId.toLowerCase(),
       name: input.name,
       vpnHostname: input.vpnHostname,
       displayName: input.displayName,
-      status: "unassigned",
+      robotSecretEncrypted: input.robotSecretEncrypted,
+      robotSecretHash: input.robotSecretHash,
+      status: "provisioned",
     });
     return robot.save();
   }
 
-  async assignToUser(robotId: string, userId: string): Promise<IRobotDocument | null> {
+  async rotateSecret(
+    id: string,
+    robotSecretEncrypted: IEncryptedSecret,
+    robotSecretHash: string,
+  ): Promise<IRobotDocument | null> {
     return RobotModel.findByIdAndUpdate(
-      robotId,
-      { $set: { assignedTo: userId, status: "assigned" } },
+      id,
+      { $set: { robotSecretEncrypted, robotSecretHash }, $inc: { robotAuthTokenVersion: 1 } },
       { new: true },
     ).exec();
+  }
+
+  async markSeen(robotId: string): Promise<void> {
+    await RobotModel.updateOne(
+      { robotId: robotId.toLowerCase() },
+      { $set: { lastSeenAt: new Date(), status: "active" } },
+    ).exec();
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await RobotModel.deleteOne({ _id: id }).exec();
   }
 }
