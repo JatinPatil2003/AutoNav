@@ -58,10 +58,10 @@ private:
   MotorController left_motor_controller_;
   MotorController right_motor_controller_;
   
-  int left_slave_id_;
-  int right_slave_id_;
-  std::string left_port_;
-  std::string right_port_;
+  int left_slave_id_{2};
+  int right_slave_id_{1};
+  std::string left_port_{"/dev/left_motor"};
+  std::string right_port_{"/dev/right_motor"};
   double hw_start_sec_;
   double hw_stop_sec_;
   std::vector<double> hw_commands_;

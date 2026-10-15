@@ -73,7 +73,7 @@ def generate_launch_description():
 
     lidar = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_rplidar, 'launch', 'rplidar_a2m8_launch.py'),
+            os.path.join(pkg_rplidar, 'launch', 'rplidar_s2_launch.py'),
         ),
         launch_arguments={'serial_port': '/dev/lidar'}.items(),
     )

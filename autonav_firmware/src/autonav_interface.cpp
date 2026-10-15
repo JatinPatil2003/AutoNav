@@ -54,10 +54,34 @@ hardware_interface::CallbackReturn AutonavInterface::on_init(
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
-  left_port_ = info_.hardware_parameters["left_port"];
-  right_port_ = info_.hardware_parameters["right_port"];
-  left_slave_id_ = std::stoi(info_.hardware_parameters["left_slave_id"]);
-  right_slave_id_ = std::stoi(info_.hardware_parameters["right_slave_id"]);
+  if (info_.hardware_parameters.find("left_port") != info_.hardware_parameters.end()) {
+    left_port_ = info_.hardware_parameters.at("left_port");
+  } else {
+    left_port_ = "/dev/left_motor";
+  }
+
+  if (info_.hardware_parameters.find("right_port") != info_.hardware_parameters.end()) {
+    right_port_ = info_.hardware_parameters.at("right_port");
+  } else {
+    right_port_ = "/dev/right_motor";
+  }
+
+  if (info_.hardware_parameters.find("left_slave_id") != info_.hardware_parameters.end()) {
+    left_slave_id_ = std::stoi(info_.hardware_parameters.at("left_slave_id"));
+  } else {
+    left_slave_id_ = 2;
+  }
+
+  if (info_.hardware_parameters.find("right_slave_id") != info_.hardware_parameters.end()) {
+    right_slave_id_ = std::stoi(info_.hardware_parameters.at("right_slave_id"));
+  } else {
+    right_slave_id_ = 1;
+  }
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("AutonavInterface"),
+    "Configured ports: left=%s (slave %d), right=%s (slave %d)",
+    left_port_.c_str(), left_slave_id_, right_port_.c_str(), right_slave_id_);
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -102,11 +126,11 @@ hardware_interface::CallbackReturn AutonavInterface::on_activate(
   }
 
   if (!left_motor_controller_.connect(left_port_, 9600)) {
-    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to left Modbus motor driver");
+    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to left Modbus motor driver on port %s", left_port_.c_str());
     return hardware_interface::CallbackReturn::ERROR;
   }
   if (!right_motor_controller_.connect(right_port_, 9600)) {
-    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to right Modbus motor driver");
+    RCLCPP_ERROR(rclcpp::get_logger("AutonavInterface"), "Failed to connect to right Modbus motor driver on port %s", right_port_.c_str());
     return hardware_interface::CallbackReturn::ERROR;
   }
 

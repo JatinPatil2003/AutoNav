@@ -7,7 +7,7 @@ ARG BASE_IMAGE=jatinvpatil/autonav:base
 FROM ${BASE_IMAGE}
 
 ENV LIDAR_SERIAL_PORT=/dev/lidar
-ENV LIDAR_SERIAL_BAUDRATE=115200
+ENV LIDAR_SERIAL_BAUDRATE=1000000
 ENV LIDAR_FRAME_ID=laser
 
-CMD ["bash", "-c", "ros2 launch rplidar_ros rplidar_a2m8_launch.py serial_port:=${LIDAR_SERIAL_PORT} serial_baudrate:=${LIDAR_SERIAL_BAUDRATE} frame_id:=${LIDAR_FRAME_ID}"]
+CMD ["bash", "-c", "ros2 launch rplidar_ros rplidar_s2_launch.py serial_port:=${LIDAR_SERIAL_PORT} serial_baudrate:=${LIDAR_SERIAL_BAUDRATE} frame_id:=${LIDAR_FRAME_ID}"]

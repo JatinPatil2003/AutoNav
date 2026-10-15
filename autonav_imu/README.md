@@ -39,7 +39,7 @@ ros2 run autonav_imu autonav_imu --ros-args --params-file ./src/autonav_imu/auto
 ### UART Connection
 
 - **connection_type=uart**: Defines UART as sensor connection type; default='uart'
-- **uart_port**: The UART port to use; default='/dev/ttyUSB0'
+- **uart_port**: The UART port to use; default='/dev/imu'
 - **uart_baudrate**: The baud rate to use; default=115200
 - **uart_timeout**: The timeout for UART transmissions in seconds to use; default=0.1
 

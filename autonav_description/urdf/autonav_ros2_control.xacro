@@ -6,8 +6,8 @@
         <!-- ros2_control Gazebo -->
         <hardware>
             <plugin>autonav_firmware/AutonavInterface</plugin>
-            <param name="left_port">/dev/ttyUSB0</param>
-            <param name="right_port">/dev/ttyACM0</param>
+            <param name="left_port">/dev/left_motor</param>
+            <param name="right_port">/dev/right_motor</param>
             <param name="left_slave_id">2</param>
             <param name="right_slave_id">1</param>
         </hardware>

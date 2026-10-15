@@ -1,7 +1,19 @@
-KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", ATTRS{devpath}=="1.1.1", MODE:="0666", SYMLINK+="bno055"
+# IMU
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", ATTRS{devpath}=="4.3", MODE:="0666", SYMLINK+="imu"
 
-KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{devpath}=="1.4", MODE:="0666", SYMLINK+="esp32"
+# ESP32 / Micro-ROS
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{devpath}=="4.1", MODE:="0666", SYMLINK+="esp"
 
-KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{devpath}=="1.2", MODE:="0666", SYMLINK+="lidar"
+# LIDAR
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{devpath}=="1", MODE:="0666", SYMLINK+="lidar"
 
+# Motor Controllers (FTDI FT232R USB to UART)
+# Left Motor (devpath 1.2, ttyUSB0): Serial BG03UBNP
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="BG03UBNP", ATTRS{devpath}=="1.2", MODE:="0666", SYMLINK+="left_motor"
+
+# Right Motor (devpath 1.4, ttyUSB1): Serial BG03WQVA
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="BG03WQVA", ATTRS{devpath}=="1.4", MODE:="0666", SYMLINK+="right_motor"
+
+# Camera
 SUBSYSTEM=="video4linux", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", SYMLINK+="robotcam", MODE="0666"
+

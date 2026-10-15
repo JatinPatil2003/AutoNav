@@ -26,13 +26,13 @@ services:
 
   micro_ros:
     image: microros/micro-ros-agent:kilted
-    command: serial --dev /dev/esp32
+    command: serial --dev /dev/esp
     privileged: true
     network_mode: host
     ipc: host
     user: "1000:1000"
     volumes:
-      - /dev/esp32:/dev/esp32
+      - /dev/esp:/dev/esp
       - ./fastdds.xml:/fastdds.xml
     environment:
       - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
@@ -66,7 +66,7 @@ services:
     privileged: true
     user: "1000:1000"
     volumes:
-      - /dev/bno055:/dev/bno055
+      - /dev/imu:/dev/imu
     restart: unless-stopped
 
   controller:
@@ -81,7 +81,7 @@ services:
     privileged: true
     user: "1000:1000"
     volumes:
-      - /dev/esp32:/dev/esp32
+      - /dev/esp:/dev/esp
     restart: unless-stopped
 
   localization:

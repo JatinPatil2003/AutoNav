@@ -127,7 +127,7 @@ or supplies all four params together.
 
 | Param | Default | Meaning |
 |---|---|---|
-| `serial_port` | `/dev/ttyUSB2` | UART device for the ESP32 |
+| `serial_port` | `/dev/esp` | UART device for the ESP32 |
 | `baud_rate` | `115200` | Must match `board::UART_BAUD` in the firmware |
 | `expected_device_id` | `AUTONAV-001` | Must match `board::DEVICE_ID_DEFAULT` in the firmware (or whatever was later persisted to NVS); empty string accepts any ID |
 | `heartbeat_timeout_sec` | `1.0` | How long without a heartbeat before `~/connected` goes false |
@@ -153,7 +153,7 @@ heartbeat); turn it on for a single run to confirm whether a command is
 actually reaching the ESP32 and whether its ACK is coming back:
 
 ```bash
-# Add -p serial_port:=/dev/ttyUSBx if your board isn't on the default /dev/ttyUSB2
+# Add -p serial_port:=/dev/ttyUSBx if your board isn't on the default /dev/esp
 ros2 run autonav_firmware esp32_bridge_node --ros-args --log-level esp32_serial_transport:=debug
 ```
 

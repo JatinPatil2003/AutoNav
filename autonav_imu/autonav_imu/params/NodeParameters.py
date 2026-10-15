@@ -60,7 +60,7 @@ class NodeParameters:
         # I2C address
         node.declare_parameter('i2c_addr', value=0x28)
         # UART port
-        node.declare_parameter('uart_port', value='/dev/ttyUSB0')
+        node.declare_parameter('uart_port', value='/dev/imu')
         # UART Baud Rate
         node.declare_parameter('uart_baudrate', value=115200)
         # UART Timeout in seconds

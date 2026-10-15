@@ -1,4 +1,4 @@
-# IMU container: runs the autonav_imu driver against /dev/bno055
+# IMU container: runs the autonav_imu driver against /dev/imu
 # (stable udev symlink set up by 99-autonav.rules / install_udev_rules.sh).
 #
 # Defaults to the published base image; override BASE_IMAGE to build

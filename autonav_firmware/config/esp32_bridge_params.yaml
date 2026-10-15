@@ -1,6 +1,6 @@
 esp32_bridge_node:
   ros__parameters:
-    serial_port: "/dev/ttyUSB0"
+    serial_port: "/dev/esp"
     baud_rate: 115200
     expected_device_id: "AUTONAV-001"
     heartbeat_timeout_sec: 1.0

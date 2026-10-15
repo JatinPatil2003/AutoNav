@@ -41,7 +41,7 @@ std::string ackStatusToString(esp32_protocol::AckStatus status)
 Esp32BridgeNode::Esp32BridgeNode()
 : Node("esp32_bridge_node")
 {
-  serial_port_ = declare_parameter<std::string>("serial_port", "/dev/ttyUSB2");
+  serial_port_ = declare_parameter<std::string>("serial_port", "/dev/esp");
   baud_rate_ = declare_parameter<int>("baud_rate", 115200);
   expected_device_id_ = declare_parameter<std::string>("expected_device_id", "");
   heartbeat_timeout_sec_ = declare_parameter<double>("heartbeat_timeout_sec", 1.0);
