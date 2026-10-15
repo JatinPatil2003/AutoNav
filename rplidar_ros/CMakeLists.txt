@@ -1,7 +1,7 @@
 ################################################################################
 # Set minimum required version of cmake, project name and compile options
 ################################################################################
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(rplidar_ros)
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -56,26 +56,25 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
-add_executable(rplidar_node	src/rplidar_node.cpp ${RPLIDAR_SDK_SRC})
-# target_link_libraries(rplidar_node ${ament_cmake_LIBRARIES})
-ament_target_dependencies(rplidar_node
-  rclcpp
-  std_srvs
-  sensor_msgs
+add_executable(rplidar_node src/rplidar_node.cpp ${RPLIDAR_SDK_SRC})
+target_link_libraries(rplidar_node
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  sensor_msgs::sensor_msgs
 )
 
 add_executable(rplidar_composition src/rplidar_node.cpp ${RPLIDAR_SDK_SRC})
-ament_target_dependencies(rplidar_composition
-  rclcpp
-  std_srvs
-  sensor_msgs
+target_link_libraries(rplidar_composition
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  sensor_msgs::sensor_msgs
 )
 
 add_executable(rplidar_client src/rplidar_client.cpp)
-ament_target_dependencies(rplidar_client
-  rclcpp
-  std_srvs
-  sensor_msgs
+target_link_libraries(rplidar_client
+  rclcpp::rclcpp
+  std_srvs::std_srvs
+  sensor_msgs::sensor_msgs
 )
 ################################################################################
 # Install

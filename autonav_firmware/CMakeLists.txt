@@ -18,26 +18,26 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MODBUS REQUIRED libmodbus)
 
-# add_library(${PROJECT_NAME} SHARED
-#   src/autonav_interface.cpp
-#   src/motor_controller.cpp
-# )
+add_library(${PROJECT_NAME} SHARED
+  src/autonav_interface.cpp
+  src/motor_controller.cpp
+)
 
-# target_link_libraries(${PROJECT_NAME}
-#   hardware_interface::hardware_interface
-#   pluginlib::pluginlib
-#   rclcpp::rclcpp
-#   rclcpp_lifecycle::rclcpp_lifecycle
-#   std_msgs::std_msgs
-# )
+target_link_libraries(${PROJECT_NAME}
+  hardware_interface::hardware_interface
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  rclcpp_lifecycle::rclcpp_lifecycle
+  std_msgs::std_msgs
+)
 
-# target_link_libraries(${PROJECT_NAME} ${MODBUS_LIBRARIES})
-# target_include_directories(${PROJECT_NAME} PUBLIC ${MODBUS_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${MODBUS_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${MODBUS_INCLUDE_DIRS})
 
-# install(
-#   TARGETS ${PROJECT_NAME}
-#   DESTINATION lib
-# )
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION lib
+)
 
 install(
   DIRECTORY include
@@ -55,7 +55,12 @@ add_executable(esp32_bridge_node
   src/esp32_serial_transport.cpp
   src/esp32_frame_codec.cpp
 )
-ament_target_dependencies(esp32_bridge_node rclcpp std_msgs std_srvs autonav_msgs)
+target_link_libraries(esp32_bridge_node
+  rclcpp::rclcpp
+  std_msgs::std_msgs
+  std_srvs::std_srvs
+  autonav_msgs::autonav_msgs
+)
 
 install(
   TARGETS esp32_bridge_node
@@ -67,22 +72,22 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-# pluginlib_export_plugin_description_file(hardware_interface autonav_interface.xml)
+pluginlib_export_plugin_description_file(hardware_interface autonav_interface.xml)
 
-# ament_export_include_directories(
-#   include
-# )
+ament_export_include_directories(
+  include
+)
 
-# ament_export_libraries(
-#   ${PROJECT_NAME}
-# )
+ament_export_libraries(
+  ${PROJECT_NAME}
+)
 
-# ament_export_dependencies(
-#   hardware_interface
-#   pluginlib
-#   rclcpp
-#   rclcpp_lifecycle
-# )
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

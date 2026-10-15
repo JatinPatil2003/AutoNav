@@ -162,24 +162,76 @@ strip doesn't change, the frame link is fine and the problem is downstream
 of it (FastLED config, wiring, or the LED hardware itself) — see the
 firmware README's bring-up notes.
 
-### Manual verification
+### Manual verification & LED service calls
+
+#### Link health & device identity
 
 ```bash
-# Confirm identity / link health
 ros2 topic hz /esp32_bridge_node/device_id
+ros2 topic echo /esp32_bridge_node/device_id
 ros2 service call /esp32_bridge_node/get_device_id std_srvs/srv/Trigger
+```
 
-# Try a pattern using its hardcoded default color/speed (no HSV needed)
+#### LED Pattern Reference (`/esp32_bridge_node/led/set_pattern`)
+
+Service type: `autonav_msgs/srv/SetLedPattern`
+
+| `pattern_id` | Name | Default Appearance | Robot Meaning |
+|---|---|---|---|
+| `0` | `kOff` | Strip is dark | Powered off / LEDs disabled |
+| `1` | `kFadeWait` | Amber breathing fade, long pause | Standby / waiting |
+| `2` | `kBreathe` | Slow cyan breathing | Idle / ready |
+| `3` | `kComet` | Blue chasing comet | Active / moving |
+| `4` | `kBlink` | Fast red blink | Alert / attention / warning |
+
+##### Using pattern defaults (`use_custom_params: false`)
+When `use_custom_params` is `false`, the ESP32 automatically applies its built-in default color and speed for the pattern:
+
+```bash
+# Set pattern to Breathe (Cyan, Ready/Idle)
+ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern "{pattern_id: 2, use_custom_params: false}"
+
+# Set pattern to Comet (Blue chasing, Moving/Active)
+ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern "{pattern_id: 3, use_custom_params: false}"
+
+# Set pattern to FadeWait (Amber standby)
+ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern "{pattern_id: 1, use_custom_params: false}"
+
+# Set pattern to Blink (Fast red alert)
+ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern "{pattern_id: 4, use_custom_params: false}"
+
+# Turn LEDs off
+ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern "{pattern_id: 0, use_custom_params: false}"
+```
+
+##### Using custom HSV & speed (`use_custom_params: true`)
+You can supply custom FastLED HSV values (`hue`: 0–255, `sat`: 0–255, `val`: 0–255) and animation speed (`speed_ms` in milliseconds):
+
+```bash
+# Green breathing pattern (hue 96 = green, speed 30 ms)
 ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern \
-  "{pattern_id: 2}"
+  "{pattern_id: 2, use_custom_params: true, hue: 96, sat: 255, val: 255, speed_ms: 30}"
 
-# Or override the color/speed explicitly (use_custom_params must be true)
+# Purple blinking pattern (hue 192 = purple, speed 500 ms)
 ros2 service call /esp32_bridge_node/led/set_pattern autonav_msgs/srv/SetLedPattern \
-  "{pattern_id: 2, use_custom_params: true, hue: 86, sat: 255, val: 255, speed_ms: 50}"
+  "{pattern_id: 4, use_custom_params: true, hue: 192, sat: 255, val: 255, speed_ms: 500}"
+```
 
-ros2 service call /esp32_bridge_node/led/set_brightness autonav_msgs/srv/SetBrightness \
-  "{brightness: 180}"
+#### LED Brightness Reference (`/esp32_bridge_node/led/set_brightness`)
 
+Service type: `autonav_msgs/srv/SetBrightness` (`brightness`: 0–255)
+
+```bash
+# Set brightness to ~50% (128)
+ros2 service call /esp32_bridge_node/led/set_brightness autonav_msgs/srv/SetBrightness "{brightness: 128}"
+
+# Set brightness to maximum (255)
+ros2 service call /esp32_bridge_node/led/set_brightness autonav_msgs/srv/SetBrightness "{brightness: 255}"
+```
+
+#### Emergency Status
+
+```bash
 # Software-triggered emergency (no physical button needed)
 ros2 topic pub /autonav/emergency_status std_msgs/msg/Bool "{data: true}" --once
 ros2 topic echo /autonav/emergency_status
