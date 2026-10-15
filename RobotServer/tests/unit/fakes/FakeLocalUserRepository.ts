@@ -7,42 +7,48 @@ let nextId = 1;
 export class FakeLocalUserRepository implements ILocalUserRepository {
   private users = new Map<string, ILocalUserDocument>();
 
-  async findByEmail(email: string): Promise<ILocalUserDocument | null> {
-    return [...this.users.values()].find((u) => u.email === email.toLowerCase()) ?? null;
+  async findByEmail(email: string, robotId: string): Promise<ILocalUserDocument | null> {
+    return (
+      [...this.users.values()].find(
+        (u) => u.email === email.toLowerCase() && u.robotId === robotId,
+      ) ?? null
+    );
   }
 
-  async listActive(): Promise<ILocalUserDocument[]> {
+  async listActive(robotId: string): Promise<ILocalUserDocument[]> {
     return [...this.users.values()]
-      .filter((u) => u.status === "active")
+      .filter((u) => u.status === "active" && u.robotId === robotId)
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  async replaceAll(entries: RosterEntryDto[]): Promise<void> {
+  async replaceAll(entries: RosterEntryDto[], robotId: string): Promise<void> {
     const seenIds = new Set(entries.map((e) => e.userId));
 
     for (const entry of entries) {
       const existing = [...this.users.values()].find((u) => u.platformUserId === entry.userId);
       if (existing) {
+        existing.robotId = robotId;
         existing.email = entry.email.toLowerCase();
         existing.name = entry.name;
         existing.pinHash = entry.pinHash;
         existing.pinUpdatedCount = entry.pinUpdatedCount;
         existing.status = "active";
       } else {
-        this.create(entry);
+        this.create(entry, robotId);
       }
     }
 
     for (const user of this.users.values()) {
-      if (!seenIds.has(user.platformUserId) && user.status === "active") {
+      if (user.robotId === robotId && !seenIds.has(user.platformUserId) && user.status === "active") {
         user.status = "revoked";
       }
     }
   }
 
-  async applyEntry(entry: RosterEntryDto): Promise<ILocalUserDocument> {
+  async applyEntry(entry: RosterEntryDto, robotId: string): Promise<ILocalUserDocument> {
     const existing = [...this.users.values()].find((u) => u.platformUserId === entry.userId);
     if (existing) {
+      existing.robotId = robotId;
       existing.email = entry.email.toLowerCase();
       existing.name = entry.name;
       existing.pinHash = entry.pinHash;
@@ -50,7 +56,7 @@ export class FakeLocalUserRepository implements ILocalUserRepository {
       existing.status = "active";
       return existing;
     }
-    return this.create(entry);
+    return this.create(entry, robotId);
   }
 
   async recordFailedAttempt(
@@ -75,10 +81,11 @@ export class FakeLocalUserRepository implements ILocalUserRepository {
     }
   }
 
-  private create(entry: RosterEntryDto): ILocalUserDocument {
+  private create(entry: RosterEntryDto, robotId: string): ILocalUserDocument {
     const id = String(nextId++);
     const user = {
       _id: id,
+      robotId,
       platformUserId: entry.userId,
       email: entry.email.toLowerCase(),
       name: entry.name,

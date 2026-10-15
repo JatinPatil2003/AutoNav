@@ -10,10 +10,11 @@ import { IdentifyFormValues, identifyFormSchema } from "./auth.schemas";
 
 interface IdentifyPageProps {
   onIdentified: (email: string, pinSet: boolean, name?: string, avatarUrl?: string) => void;
+  onBack: () => void;
 }
 
 /** First screen: who are you? Branches to PIN login or the PIN-setup wizard. */
-export function IdentifyPage({ onIdentified }: IdentifyPageProps) {
+export function IdentifyPage({ onIdentified, onBack }: IdentifyPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noAccount, setNoAccount] = useState(false);
@@ -74,6 +75,9 @@ export function IdentifyPage({ onIdentified }: IdentifyPageProps) {
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <Button type="submit" isLoading={isSubmitting} className="mt-2">
             Continue
+          </Button>
+          <Button type="button" variant="ghost" onClick={onBack}>
+            Back
           </Button>
         </form>
       </Card>

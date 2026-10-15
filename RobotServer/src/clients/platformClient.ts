@@ -1,4 +1,5 @@
 import { config } from "../config/env";
+import { DeviceIdentityService } from "../ros/deviceIdentity";
 import { IPlatformClient, RosterEntryDto } from "./platformClient.interface";
 
 export { RosterEntryDto } from "./platformClient.interface";
@@ -6,13 +7,15 @@ export { RosterEntryDto } from "./platformClient.interface";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 /**
- * This robot's calls into PlatformServer's /api/robot-auth/* API (direction
- * 1 of the service-to-service auth design). No token exchange/refresh, and
- * no robot id either — the robot's provisioned secret alone is sent as a
- * header on every call, and PlatformServer identifies the robot from it
- * directly (see requireRobotAuth there).
+ * This robot's calls into PlatformServer's /api/robot-auth/* API. No
+ * secret, no token exchange — the VPN is the trust boundary (see root
+ * README), so every call just identifies itself with its own device id
+ * (resolved from the ESP32 bridge, see ros/deviceIdentity.ts) and
+ * PlatformServer resolves the robot record from that id directly.
  */
 export class PlatformClient implements IPlatformClient {
+  constructor(private readonly deviceIdentity: DeviceIdentityService) {}
+
   async checkUserExists(email: string): Promise<boolean> {
     const body = await this.requestJson<{ exists: boolean }>("POST", "/api/robot-auth/check-user", {
       email,
@@ -43,6 +46,11 @@ export class PlatformClient implements IPlatformClient {
   }
 
   private async requestJson<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const robotId = this.deviceIdentity.getRobotId();
+    if (!robotId) {
+      throw new Error("platformClient: device id not resolved yet, cannot call PlatformServer");
+    }
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -52,7 +60,7 @@ export class PlatformClient implements IPlatformClient {
         method,
         headers: {
           "Content-Type": "application/json",
-          "x-robot-secret": config.platform.robotSecret,
+          "x-robot-id": robotId,
         },
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,

@@ -1,15 +1,12 @@
 import { AuthUser } from "./auth.types";
 
-// RobotServer's own trust domains (deliberately separate from each other):
-//   req.user       — a human logged into RobotApp (the local HMI PWA) via PIN
-//   req.isPlatform — this specific request was verified as coming from
-//                    PlatformServer (requirePlatformAuth); never set together
-//                    with req.user, and never trusted from the same cookie.
+// req.user — a human logged into RobotApp (the local HMI PWA) via PIN.
+// Calls from PlatformServer (/api/platform-auth/*) and to it carry no auth
+// of their own — the VPN is the trust boundary (see root README).
 declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
-      isPlatform?: boolean;
     }
   }
 }

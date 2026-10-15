@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { IEncryptedSecret, IRobotDocument, RobotStatus } from "../../../src/modules/robots/robot.model";
+import { IRobotDocument, RobotStatus } from "../../../src/modules/robots/robot.model";
 import { CreateRobotInput, IRobotRepository } from "../../../src/modules/robots/robot.repository.interface";
 
 export class FakeRobotRepository implements IRobotRepository {
@@ -15,10 +15,6 @@ export class FakeRobotRepository implements IRobotRepository {
 
   async findByRobotId(robotId: string): Promise<IRobotDocument | null> {
     return [...this.robots.values()].find((r) => r.robotId === robotId.toLowerCase()) ?? null;
-  }
-
-  async findBySecretHash(robotSecretHash: string): Promise<IRobotDocument | null> {
-    return [...this.robots.values()].find((r) => r.robotSecretHash === robotSecretHash) ?? null;
   }
 
   async listByStatus(status: RobotStatus): Promise<IRobotDocument[]> {
@@ -37,28 +33,12 @@ export class FakeRobotRepository implements IRobotRepository {
       name: input.name,
       vpnHostname: input.vpnHostname,
       displayName: input.displayName,
-      robotSecretEncrypted: input.robotSecretEncrypted,
-      robotSecretHash: input.robotSecretHash,
       status: "provisioned" as RobotStatus,
-      robotAuthTokenVersion: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as unknown as IRobotDocument;
 
     this.robots.set(id.toString(), robot);
-    return robot;
-  }
-
-  async rotateSecret(
-    id: string,
-    robotSecretEncrypted: IEncryptedSecret,
-    robotSecretHash: string,
-  ): Promise<IRobotDocument | null> {
-    const robot = this.robots.get(id);
-    if (!robot) return null;
-    robot.robotSecretEncrypted = robotSecretEncrypted;
-    robot.robotSecretHash = robotSecretHash;
-    robot.robotAuthTokenVersion += 1;
     return robot;
   }
 

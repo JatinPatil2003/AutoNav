@@ -27,8 +27,6 @@ describe("RobotAssignmentService", () => {
       robotId: "bot-1",
       name: "Bot 1",
       vpnHostname: "bot-1.robot",
-      robotSecretEncrypted: { ciphertext: "x", iv: "x", authTag: "x" },
-      robotSecretHash: "x",
     });
     robotId = robot._id.toString();
 
@@ -73,8 +71,6 @@ describe("RobotAssignmentService", () => {
       robotId: "bot-2",
       name: "Bot 2",
       vpnHostname: "bot-2.robot",
-      robotSecretEncrypted: { ciphertext: "x", iv: "x", authTag: "x" },
-      robotSecretHash: "x",
     });
 
     await service.grant(userA._id.toString(), robotId, adminId);

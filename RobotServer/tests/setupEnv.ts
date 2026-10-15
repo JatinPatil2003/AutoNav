@@ -5,7 +5,6 @@ process.env.CORS_ORIGINS = "";
 process.env.MAPS_DIR = "./maps";
 process.env.CAMERA_DEVICE = "/dev/null";
 process.env.PLATFORM_BASE_URL = "http://localhost:4000";
-process.env.PLATFORM_ROBOT_SECRET = "test-robot-secret";
 process.env.ROSTER_SYNC_INTERVAL_MINUTES = "60";
 process.env.ROBOT_SESSION_ACCESS_SECRET = "test-robot-session-access-secret-0123456789";
 process.env.ROBOT_SESSION_REFRESH_SECRET = "test-robot-session-refresh-secret-0123456789";

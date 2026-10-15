@@ -3,15 +3,15 @@ import { ILocalUserDocument, LocalUserModel } from "./localUser.model";
 import { ILocalUserRepository } from "./localUser.repository.interface";
 
 export class MongooseLocalUserRepository implements ILocalUserRepository {
-  async findByEmail(email: string): Promise<ILocalUserDocument | null> {
-    return LocalUserModel.findOne({ email: email.toLowerCase() }).exec();
+  async findByEmail(email: string, robotId: string): Promise<ILocalUserDocument | null> {
+    return LocalUserModel.findOne({ email: email.toLowerCase(), robotId }).exec();
   }
 
-  async listActive(): Promise<ILocalUserDocument[]> {
-    return LocalUserModel.find({ status: "active" }).sort({ name: 1 }).exec();
+  async listActive(robotId: string): Promise<ILocalUserDocument[]> {
+    return LocalUserModel.find({ status: "active", robotId }).sort({ name: 1 }).exec();
   }
 
-  async replaceAll(entries: RosterEntryDto[]): Promise<void> {
+  async replaceAll(entries: RosterEntryDto[], robotId: string): Promise<void> {
     const seenIds = entries.map((e) => e.userId);
 
     await Promise.all(
@@ -20,6 +20,7 @@ export class MongooseLocalUserRepository implements ILocalUserRepository {
           { platformUserId: entry.userId },
           {
             $set: {
+              robotId,
               email: entry.email.toLowerCase(),
               name: entry.name,
               avatarUrl: entry.avatarUrl,
@@ -34,20 +35,22 @@ export class MongooseLocalUserRepository implements ILocalUserRepository {
       ),
     );
 
-    // Anyone cached locally but no longer in the active roster (revoked,
-    // reassigned, etc.) is marked revoked rather than deleted, preserving
-    // the lockout/attempt history if they're ever re-granted access.
+    // Anyone cached locally for this robot but no longer in the active
+    // roster (revoked, reassigned, etc.) is marked revoked rather than
+    // deleted, preserving the lockout/attempt history if they're ever
+    // re-granted access.
     await LocalUserModel.updateMany(
-      { platformUserId: { $nin: seenIds }, status: "active" },
+      { robotId, platformUserId: { $nin: seenIds }, status: "active" },
       { $set: { status: "revoked", syncedAt: new Date() } },
     ).exec();
   }
 
-  async applyEntry(entry: RosterEntryDto): Promise<ILocalUserDocument> {
+  async applyEntry(entry: RosterEntryDto, robotId: string): Promise<ILocalUserDocument> {
     const updated = await LocalUserModel.findOneAndUpdate(
       { platformUserId: entry.userId },
       {
         $set: {
+          robotId,
           email: entry.email.toLowerCase(),
           name: entry.name,
           avatarUrl: entry.avatarUrl,

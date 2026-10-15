@@ -10,7 +10,7 @@ declare global {
     interface User extends AuthUser {}
 
     interface Request {
-      // Set by requireRobotAuth for robot-facing service-to-service routes.
+      // Set by resolveRobot for robot-facing service-to-service routes.
       // Distinct from `user` (human sessions) so the two auth domains can
       // never be confused by a handler checking the wrong field.
       robot?: AuthRobot;

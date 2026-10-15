@@ -1,4 +1,5 @@
 import { IPlatformClient } from "../../clients/platformClient.interface";
+import { DeviceIdentityService } from "../../ros/deviceIdentity";
 import { ILocalUserRepository } from "./localUser.repository.interface";
 import { logger } from "../../common/utils/logger.util";
 
@@ -13,11 +14,18 @@ export class RosterSyncService {
   constructor(
     private readonly platformClient: IPlatformClient,
     private readonly localUserRepository: ILocalUserRepository,
+    private readonly deviceIdentity: DeviceIdentityService,
   ) {}
 
   async sync(): Promise<void> {
+    const robotId = await this.deviceIdentity.resolve();
+    if (!robotId) {
+      logger.warn("rosterSync: device id not resolved yet, skipping sync");
+      return;
+    }
+
     const entries = await this.platformClient.fetchRoster();
-    await this.localUserRepository.replaceAll(entries);
-    logger.info({ count: entries.length }, "rosterSync: local roster cache refreshed");
+    await this.localUserRepository.replaceAll(entries, robotId);
+    logger.info({ count: entries.length, robotId }, "rosterSync: local roster cache refreshed");
   }
 }

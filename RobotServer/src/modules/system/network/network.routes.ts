@@ -1,20 +1,12 @@
 import { Router } from "express";
-import { NotImplementedError } from "../../../common/errors";
+import { validate } from "../../../common/middleware/validate.middleware";
 import { asyncHandler } from "../../../common/utils/asyncHandler.util";
+import { NetworkController } from "./network.controller";
+import { vpnControlSchema, wifiConnectSchema } from "./network.validation";
 
-/**
- * Mounted at /api/system/network — WiFi + VPN control. Deliberately
- * stubbed (501) in this pass: the old WebServer's `nmcli`/`systemctl`
- * shell-outs are being redesigned, not ported as-is — see
- * RobotServer/README.md. The route shape is fixed now so clients have a
- * stable contract to build against ahead of the real implementation.
- */
-export function createNetworkRouter(): Router {
+/** Mounted at /api/system/network — WiFi + VPN control via nmcli/systemctl. */
+export function createNetworkRouter(networkController: NetworkController): Router {
   const router = Router();
-
-  const notImplemented = asyncHandler(async () => {
-    throw new NotImplementedError("Network management is not implemented yet");
-  });
 
   /**
    * @openapi
@@ -23,20 +15,22 @@ export function createNetworkRouter(): Router {
    *     summary: List visible WiFi networks
    *     tags: [System/Network]
    *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
+   *       200:
+   *         description: Visible networks, strongest signal not guaranteed to be first
    */
-  router.get("/wifi", notImplemented);
+  router.get("/wifi", asyncHandler(networkController.listWifiNetworks));
 
   /**
    * @openapi
    * /api/system/network/wifi/current:
    *   get:
-   *     summary: Get the currently connected WiFi network
+   *     summary: Get the currently connected WiFi network, if any
    *     tags: [System/Network]
    *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
+   *       200:
+   *         description: Current connection state
    */
-  router.get("/wifi/current", notImplemented);
+  router.get("/wifi/current", asyncHandler(networkController.getCurrentWifi));
 
   /**
    * @openapi
@@ -44,21 +38,52 @@ export function createNetworkRouter(): Router {
    *   post:
    *     summary: Connect to a WiFi network
    *     tags: [System/Network]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               ssid: { type: string }
+   *               password: { type: string, description: "Omit for an open network" }
+   *             required: [ssid]
    *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
+   *       200:
+   *         description: Connected
+   *       400: { $ref: '#/components/responses/ValidationError' }
+   *       502:
+   *         description: nmcli rejected the connection (wrong password, network out of range, etc.)
    */
-  router.post("/wifi/connect", notImplemented);
+  router.post(
+    "/wifi/connect",
+    validate({ body: wifiConnectSchema }),
+    asyncHandler(networkController.connectWifi),
+  );
 
   /**
    * @openapi
    * /api/system/network/vpn:
    *   post:
-   *     summary: Control the OpenVPN connection
+   *     summary: Start or stop the OpenVPN connection
    *     tags: [System/Network]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               action: { type: string, enum: [connect, disconnect] }
+   *             required: [action]
    *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
+   *       200:
+   *         description: VPN state changed
+   *       400: { $ref: '#/components/responses/ValidationError' }
+   *       502:
+   *         description: systemctl rejected the request
    */
-  router.post("/vpn", notImplemented);
+  router.post("/vpn", validate({ body: vpnControlSchema }), asyncHandler(networkController.controlVpn));
 
   return router;
 }

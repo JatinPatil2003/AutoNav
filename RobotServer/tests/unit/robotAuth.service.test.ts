@@ -1,21 +1,34 @@
 import bcrypt from "bcryptjs";
 import { RobotAuthService } from "../../src/modules/robot-auth/robotAuth.service";
 import { RosterSyncService } from "../../src/modules/robot-auth/rosterSync.service";
+import { DeviceIdentityService } from "../../src/ros/deviceIdentity";
 import { UnauthorizedError } from "../../src/common/errors";
 import { FakeLocalUserRepository } from "./fakes/FakeLocalUserRepository";
 import { FakePlatformClient } from "./fakes/FakePlatformClient";
+import { FakeRosServiceGateway } from "./fakes/FakeRosServiceGateway";
+
+const TEST_ROBOT_ID = "test-robot-01";
 
 describe("RobotAuthService", () => {
   let localUserRepository: FakeLocalUserRepository;
   let platformClient: FakePlatformClient;
+  let deviceIdentity: DeviceIdentityService;
   let service: RobotAuthService;
   let rosterSync: RosterSyncService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const serviceGateway = new FakeRosServiceGateway();
+    serviceGateway.setResponse("/esp32_bridge_node/get_device_id", {
+      success: true,
+      message: TEST_ROBOT_ID,
+    });
+    deviceIdentity = new DeviceIdentityService(serviceGateway);
+    await deviceIdentity.resolve();
+
     localUserRepository = new FakeLocalUserRepository();
     platformClient = new FakePlatformClient();
-    service = new RobotAuthService(localUserRepository, platformClient);
-    rosterSync = new RosterSyncService(platformClient, localUserRepository);
+    service = new RobotAuthService(localUserRepository, platformClient, deviceIdentity);
+    rosterSync = new RosterSyncService(platformClient, localUserRepository, deviceIdentity);
   });
 
   it("identify reports pinSet=false for a user with no pin cached yet", async () => {

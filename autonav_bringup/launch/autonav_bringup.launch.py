@@ -26,7 +26,7 @@ def generate_launch_description():
     autonav_localization_dir = get_package_share_directory('autonav_localization')
     pkg_autonav_imu = get_package_share_directory('autonav_imu')
     pkg_autonav_firmware = get_package_share_directory('autonav_firmware')
-    pkg_rplidar = get_package_share_directory('rplidar_ros')
+    pkg_rplidar = get_package_share_directory('autonav_lidar')
 
     use_rviz_arg = DeclareLaunchArgument(
         'rviz',

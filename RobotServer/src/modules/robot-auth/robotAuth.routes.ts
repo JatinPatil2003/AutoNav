@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { requireAuth } from "../../common/middleware/auth.middleware";
-import { requirePlatformAuth } from "../../common/middleware/requirePlatformAuth.middleware";
 import { validate } from "../../common/middleware/validate.middleware";
 import { asyncHandler } from "../../common/utils/asyncHandler.util";
 import { RobotAuthController } from "./robotAuth.controller";
@@ -52,13 +51,12 @@ export function createHmiAuthRouter(controller: RobotAuthController): Router {
 }
 
 /**
- * Mounted at /api/platform-auth — called only by PlatformServer itself
- * (requirePlatformAuth), never by RobotApp or any browser.
+ * Mounted at /api/platform-auth — called only by PlatformServer itself,
+ * never by RobotApp or any browser. No auth: the VPN is the trust
+ * boundary (see root README), same as every other robot<->platform call.
  */
 export function createPlatformAuthRouter(rosterSyncService: RosterSyncService): Router {
   const router = Router();
-
-  router.use(requirePlatformAuth);
 
   /**
    * @openapi

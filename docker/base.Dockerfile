@@ -28,7 +28,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-xacro \
     ros-${ROS_DISTRO}-cartographer-ros \
     ros-${ROS_DISTRO}-rviz2 \
-    ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-tf-transformations \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     python3-pip \
@@ -37,27 +36,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     network-manager \
-    docker.io \
     libusb-1.0-0 \
     libmodbus-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
-# Python virtual environment (FastAPI bridge deps)
+# Python virtual environment (autonav_imu's sensor driver deps)
 # -----------------------------
 RUN python3 -m venv /opt/venv --system-site-packages \
     && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
     && /opt/venv/bin/pip install --no-cache-dir \
-        fastapi \
-        pymongo \
         pyserial==3.4 \
         smbus \
-        transforms3d \
-        "uvicorn[standard]" \
-        aiortc \
-        websockets \
-        opencv-python \
-        av
+        transforms3d
 
 RUN python3 -m pip install --break-system-packages \
         smbus2 \
@@ -77,7 +68,7 @@ COPY autonav_firmware src/autonav_firmware
 COPY autonav_imu src/autonav_imu
 COPY autonav_localization src/autonav_localization
 COPY autonav_navigation src/autonav_navigation
-COPY rplidar_ros src/rplidar_ros
+COPY autonav_lidar src/autonav_lidar
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
     && colcon build --symlink-install

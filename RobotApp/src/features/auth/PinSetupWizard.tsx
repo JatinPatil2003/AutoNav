@@ -141,6 +141,9 @@ export function PinSetupWizard({ email, name, avatarUrl, onBack, onPinSet }: Pin
               <Button type="submit" isLoading={isSubmitting} className="mt-2">
                 Set PIN
               </Button>
+              <Button type="button" variant="ghost" onClick={() => setStep("otp")}>
+                Back
+              </Button>
             </form>
           </>
         )}

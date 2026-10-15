@@ -21,12 +21,6 @@ export interface CreateRobotRequest {
   displayName?: string;
 }
 
-/** The plaintext robotSecret is only ever present in this one response — never retrievable again. */
-export interface CreateRobotResult {
-  robot: AdminRobot;
-  robotSecret: string;
-}
-
 export interface RobotAssignment {
   id: string;
   user?: { id: string; email: string; name: string };

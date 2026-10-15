@@ -4,7 +4,7 @@ import { asyncHandler } from "../../common/utils/asyncHandler.util";
 import { MappingController } from "./mapping.controller";
 import { saveMapSchema, waypointSchema } from "./mapping.validation";
 
-/** Mounted at /api/mapping — SLAM session lifecycle and the save-map workflow. Manual drive during mapping goes through /api/teleop, not duplicated here. */
+/** Mounted at /api/mapping — SLAM session lifecycle and the save-map workflow. Manual drive during mapping is a future milestone's concern, not duplicated here. */
 export function createMappingRouter(mappingController: MappingController): Router {
   const router = Router();
 

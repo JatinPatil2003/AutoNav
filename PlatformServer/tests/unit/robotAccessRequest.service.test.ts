@@ -31,8 +31,6 @@ describe("RobotAccessRequestService", () => {
       robotId: "test-bot",
       name: "Test Bot",
       vpnHostname: "test-bot.robot",
-      robotSecretEncrypted: { ciphertext: "x", iv: "x", authTag: "x" },
-      robotSecretHash: "x",
     });
     robotId = robot._id.toString();
   });
@@ -76,8 +74,6 @@ describe("RobotAccessRequestService", () => {
       robotId: "test-bot-2",
       name: "Test Bot 2",
       vpnHostname: "test-bot-2.robot",
-      robotSecretEncrypted: { ciphertext: "x", iv: "x", authTag: "x" },
-      robotSecretHash: "x",
     });
 
     await service.createRequest(user._id.toString(), robotId);

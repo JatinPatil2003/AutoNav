@@ -22,7 +22,7 @@ export class RobotAuthService {
    * Deliberately NOT anti-enumeration like forgotPassword — RobotApp needs
    * to tell "no such account, go sign up" apart from "account exists but
    * isn't assigned to this robot, contact your admin", and this is gated
-   * behind requireRobotAuth (a provisioned robot's own credential), not a
+   * behind resolveRobot (a provisioned robot's own identity), not a
    * public endpoint, so the exposure is to robots we already trust.
    */
   async checkUserExists(email: string): Promise<boolean> {

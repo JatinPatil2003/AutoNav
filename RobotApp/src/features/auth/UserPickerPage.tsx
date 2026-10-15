@@ -10,6 +10,7 @@ import { maskEmail } from "../../utils/maskEmail";
 interface UserPickerPageProps {
   onPickUser: (email: string, name: string, avatarUrl?: string) => void;
   onNewUser: () => void;
+  onOpenWifi: () => void;
 }
 
 /**
@@ -18,7 +19,7 @@ interface UserPickerPageProps {
  * "+ New user" still falls back to the email-based identify flow for
  * someone not yet in the cached roster.
  */
-export function UserPickerPage({ onPickUser, onNewUser }: UserPickerPageProps) {
+export function UserPickerPage({ onPickUser, onNewUser, onOpenWifi }: UserPickerPageProps) {
   const [users, setUsers] = useState<RosterUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +72,9 @@ export function UserPickerPage({ onPickUser, onNewUser }: UserPickerPageProps) {
 
         <Button variant="secondary" className="w-full" onClick={onNewUser}>
           + New user
+        </Button>
+        <Button variant="ghost" className="mt-2 w-full" onClick={onOpenWifi}>
+          Wifi settings
         </Button>
       </Card>
     </div>

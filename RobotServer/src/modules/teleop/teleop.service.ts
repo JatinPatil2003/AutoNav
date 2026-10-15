@@ -1,5 +1,9 @@
 import { TopicGateway } from "../../ros/rosTopicGateway";
-import { VelocityDto } from "./teleop.validation";
+
+export interface VelocityDto {
+  linear: number;
+  angular: number;
+}
 
 const PUBLISH_PERIOD_MS = 50; // 20Hz, matches the old WebServer's cmd_vel republish rate
 const PUBLISH_PERIOD_NS = BigInt(PUBLISH_PERIOD_MS) * 1_000_000n;

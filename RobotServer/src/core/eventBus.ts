@@ -11,6 +11,7 @@ export interface RobotEvents {
   map: MapUpdate;
   location: LocationUpdate;
   navStatus: NavStatusUpdate;
+  robotStatus: RobotStatusUpdate;
 }
 
 export interface MapUpdate {
@@ -34,6 +35,10 @@ export interface LocationUpdate {
 
 export interface NavStatusUpdate {
   status: string;
+}
+
+export interface RobotStatusUpdate {
+  internetConnectivity: boolean;
 }
 
 class TypedEventBus {

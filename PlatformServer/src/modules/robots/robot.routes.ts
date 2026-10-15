@@ -8,8 +8,10 @@ import { createRobotSchema } from "./robot.validation";
 
 /**
  * Mounted at /api/admin/robots — robot provisioning is an admin-only
- * operation in this milestone (no self-registration from the robot side yet;
- * robots authenticate with the secret issued here, see the robot-auth module).
+ * operation in this milestone (no self-registration from the robot side
+ * yet). A robot identifies itself to PlatformServer with its own device
+ * id (robotId), not a secret — the VPN is the trust boundary (see root
+ * README and the robot-auth module).
  */
 export function createRobotRouter(robotController: RobotController): Router {
   const router = Router();
@@ -43,26 +45,12 @@ export function createRobotRouter(robotController: RobotController): Router {
    *     responses:
    *       201:
    *         description: >
-   *           Robot created. The response includes the plaintext robotSecret
-   *           exactly once — it must be copied into the robot's own
-   *           RobotServer config now; it cannot be retrieved again.
+   *           Robot created. No secret is issued — the robot identifies
+   *           itself to PlatformServer with its own device id (robotId),
+   *           resolved on its side from the ESP32 bridge; just make sure
+   *           the robotId here matches that device's id.
    */
   router.post("/", validate({ body: createRobotSchema }), asyncHandler(robotController.createRobot));
-
-  /**
-   * @openapi
-   * /api/admin/robots/{id}/rotate-secret:
-   *   post:
-   *     summary: Rotate a robot's service-auth secret (admin only)
-   *     tags: [Admin, Robots]
-   *     security: [{ cookieAuth: [] }]
-   *     responses:
-   *       200:
-   *         description: >
-   *           A new plaintext robotSecret, shown exactly once. All of this
-   *           robot's outstanding service refresh tokens are invalidated.
-   */
-  router.post("/:id/rotate-secret", asyncHandler(robotController.rotateSecret));
 
   /**
    * @openapi

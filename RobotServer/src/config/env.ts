@@ -13,10 +13,16 @@ const envSchema = z.object({
 
   CAMERA_DEVICE: z.string().default("/dev/robotcam"),
 
-  // --- Service-to-service auth (this robot <-> PlatformServer) ---
+  // --- Service-to-service (this robot <-> PlatformServer) ---
+  // No secret: the VPN is the trust boundary (see root README). This robot
+  // identifies itself to PlatformServer with its own device id, resolved
+  // from the ESP32 bridge at boot (see ros/deviceIdentity.ts) — never from
+  // config, except for local dev below.
   PLATFORM_BASE_URL: z.string().url(),
-  PLATFORM_ROBOT_SECRET: z.string().min(1, "PLATFORM_ROBOT_SECRET is required"),
   ROSTER_SYNC_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
+
+  // --- Local dev only: lets RobotServer boot without a real ESP32 attached ---
+  DEV_DEVICE_ID_OVERRIDE: z.string().optional(),
 
   // --- RobotApp (local HMI PWA) human session ---
   ROBOT_SESSION_ACCESS_SECRET: z.string().min(16, "ROBOT_SESSION_ACCESS_SECRET must be at least 16 characters"),
@@ -60,9 +66,10 @@ function loadConfig() {
 
     platform: {
       baseUrl: env.PLATFORM_BASE_URL,
-      robotSecret: env.PLATFORM_ROBOT_SECRET,
     },
     rosterSyncIntervalMinutes: env.ROSTER_SYNC_INTERVAL_MINUTES,
+
+    devDeviceIdOverride: env.DEV_DEVICE_ID_OVERRIDE,
 
     robotSession: {
       accessSecret: env.ROBOT_SESSION_ACCESS_SECRET,

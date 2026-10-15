@@ -18,14 +18,14 @@ import { LaunchManager } from "./ros/launchManager";
 import { RosTopicGateway } from "./ros/rosTopicGateway";
 import { RosServiceGateway } from "./ros/rosServiceGateway";
 import { RosActionGateway } from "./ros/rosActionGateway";
+import { DeviceIdentityService } from "./ros/deviceIdentity";
 
 import { MongooseGoalRepository } from "./modules/goals/goal.repository";
 import { GridFsMapRepository } from "./modules/maps/map.repository";
 
+// TeleopService has no public API anymore (see Phase 4 of the refactor) —
+// kept only as NavigationService's internal in-place-rotate dependency.
 import { TeleopService } from "./modules/teleop/teleop.service";
-import { TeleopController } from "./modules/teleop/teleop.controller";
-import { createTeleopRouter } from "./modules/teleop/teleop.routes";
-import { registerTeleopWebSocket } from "./modules/teleop/teleop.wsServer";
 
 import { NavigationService } from "./modules/navigation/navigation.service";
 import { NavigationController } from "./modules/navigation/navigation.controller";
@@ -35,8 +35,9 @@ import { MappingService } from "./modules/mapping/mapping.service";
 import { MappingController } from "./modules/mapping/mapping.controller";
 import { createMappingRouter } from "./modules/mapping/mapping.routes";
 
-import { registerTelemetryWebSocket } from "./modules/telemetry/telemetry.wsServer";
+import { registerTopicsWebSocket } from "./modules/telemetry/topics.wsServer";
 import { registerTelemetryBroadcast } from "./modules/telemetry/telemetry.broadcaster";
+import { registerConnectivityBroadcast } from "./modules/telemetry/connectivity.broadcaster";
 
 import { FfmpegVideoSource } from "./modules/video/ffmpegVideoSource";
 import { registerVideoWebSocket } from "./modules/video/video.wsServer";
@@ -45,6 +46,8 @@ import { FirmwareService } from "./modules/firmware/firmware.service";
 import { FirmwareController } from "./modules/firmware/firmware.controller";
 import { createFirmwareRouter } from "./modules/firmware/firmware.routes";
 
+import { NetworkService } from "./modules/system/network/network.service";
+import { NetworkController } from "./modules/system/network/network.controller";
 import { createNetworkRouter } from "./modules/system/network/network.routes";
 import { createDiagnosticsRouter } from "./modules/system/diagnostics/diagnostics.routes";
 import { createMaintenanceRouter } from "./modules/system/maintenance/maintenance.routes";
@@ -69,7 +72,7 @@ export interface RobotApp {
  * swap any gateway/repository for a fake without touching the layer that
  * uses it (see tests/unit).
  */
-export function createApp(rosNode: rclnodejs.Node): RobotApp {
+export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentityService): RobotApp {
   const app = express();
 
   app.use(helmet());
@@ -116,20 +119,22 @@ export function createApp(rosNode: rclnodejs.Node): RobotApp {
   );
   const mappingService = new MappingService(topicGateway, goalRepository, mapRepository, launchManager, config.mapsDir);
   const firmwareService = new FirmwareService(serviceGateway);
+  const networkService = new NetworkService();
 
   registerTelemetryBroadcast(topicGateway, navigationService);
+  registerConnectivityBroadcast();
 
-  // --- Robot-auth (human HMI session + inter-service auth with PlatformServer) ---
-  const platformClient = new PlatformClient();
+  // --- Robot-auth (human HMI session + robot<->PlatformServer calls) ---
+  const platformClient = new PlatformClient(deviceIdentity);
   const localUserRepository = new MongooseLocalUserRepository();
-  const rosterSyncService = new RosterSyncService(platformClient, localUserRepository);
-  const robotAuthService = new RobotAuthService(localUserRepository, platformClient);
+  const rosterSyncService = new RosterSyncService(platformClient, localUserRepository, deviceIdentity);
+  const robotAuthService = new RobotAuthService(localUserRepository, platformClient, deviceIdentity);
 
   // --- Controllers ---
-  const teleopController = new TeleopController(teleopService);
   const navigationController = new NavigationController(navigationService);
   const mappingController = new MappingController(mappingService);
   const firmwareController = new FirmwareController(firmwareService);
+  const networkController = new NetworkController(networkService);
   const robotAuthController = new RobotAuthController(robotAuthService);
 
   app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
@@ -139,12 +144,15 @@ export function createApp(rosNode: rclnodejs.Node): RobotApp {
   app.use("/api/hmi-auth", createHmiAuthRouter(robotAuthController));
   app.use("/api/platform-auth", createPlatformAuthRouter(rosterSyncService));
 
+  // Unauthenticated, same as /api/hmi-auth's pre-login routes: a robot may
+  // need its wifi configured before anyone can even log in (no internet
+  // yet to reach PlatformServer), so this can't sit behind requireAuth.
+  app.use("/api/system/network", createNetworkRouter(networkController));
+
   // Every operational endpoint below requires a logged-in RobotApp session.
-  app.use("/api/teleop", requireAuth, createTeleopRouter(teleopController));
   app.use("/api/navigation", requireAuth, createNavigationRouter(navigationController));
   app.use("/api/mapping", requireAuth, createMappingRouter(mappingController));
   app.use("/api/firmware", requireAuth, createFirmwareRouter(firmwareController));
-  app.use("/api/system/network", requireAuth, createNetworkRouter());
   app.use("/api/system/diagnostics", requireAuth, createDiagnosticsRouter());
   app.use("/api/system/maintenance", requireAuth, createMaintenanceRouter());
 
@@ -163,8 +171,7 @@ export function createApp(rosNode: rclnodejs.Node): RobotApp {
   app.use(errorHandler);
 
   const registerWebSockets = (wsRouter: WsRouter): void => {
-    registerTelemetryWebSocket(wsRouter);
-    registerTeleopWebSocket(wsRouter, teleopService);
+    registerTopicsWebSocket(wsRouter);
     registerVideoWebSocket(wsRouter, new FfmpegVideoSource(config.cameraDevice));
   };
 

@@ -4,6 +4,7 @@ import { comparePin } from "../../common/utils/pin.util";
 import { signSessionAccessToken, signSessionRefreshToken, verifySessionRefreshToken } from "../../common/utils/jwt.util";
 import { RobotSessionTokenPair } from "../../common/types/auth.types";
 import { IPlatformClient } from "../../clients/platformClient.interface";
+import { DeviceIdentityService } from "../../ros/deviceIdentity";
 import { ILocalUserRepository } from "./localUser.repository.interface";
 import { logger } from "../../common/utils/logger.util";
 
@@ -30,16 +31,21 @@ export class RobotAuthService {
   constructor(
     private readonly localUserRepository: ILocalUserRepository,
     private readonly platformClient: IPlatformClient,
+    private readonly deviceIdentity: DeviceIdentityService,
   ) {}
 
   /** The lock-screen roster — who can log into this robot right now. */
   async listActiveUsers(): Promise<RosterUserSummary[]> {
-    const users = await this.localUserRepository.listActive();
+    const robotId = this.deviceIdentity.getRobotId();
+    if (!robotId) return [];
+
+    const users = await this.localUserRepository.listActive(robotId);
     return users.map((u) => ({ email: u.email, name: u.name, avatarUrl: u.avatarUrl }));
   }
 
   async identify(email: string): Promise<IdentifyResult> {
-    const user = await this.localUserRepository.findByEmail(email);
+    const robotId = this.deviceIdentity.getRobotId();
+    const user = robotId ? await this.localUserRepository.findByEmail(email, robotId) : null;
     if (user && user.status === "active") {
       return { status: "has-access", pinSet: !!user.pinHash, name: user.name, avatarUrl: user.avatarUrl };
     }
@@ -49,7 +55,8 @@ export class RobotAuthService {
   }
 
   async loginWithPin(email: string, pin: string): Promise<RobotSessionTokenPair> {
-    const user = await this.localUserRepository.findByEmail(email);
+    const robotId = this.deviceIdentity.getRobotId();
+    const user = robotId ? await this.localUserRepository.findByEmail(email, robotId) : null;
     if (!user || user.status !== "active") {
       throw new UnauthorizedError("Invalid email or PIN");
     }
@@ -103,7 +110,10 @@ export class RobotAuthService {
    */
   async confirmPinSetup(pinSetupToken: string, pin: string): Promise<{ email: string }> {
     const entry = await this.platformClient.confirmPinSetup(pinSetupToken, pin);
-    await this.localUserRepository.applyEntry(entry);
+    const robotId = this.deviceIdentity.getRobotId();
+    if (robotId) {
+      await this.localUserRepository.applyEntry(entry, robotId);
+    }
     logger.debug({ userId: entry.userId }, "robotAuth.confirmPinSetup: pin cached locally");
     return { email: entry.email };
   }

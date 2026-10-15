@@ -7,9 +7,10 @@ import { PinSetupWizard } from "./features/auth/PinSetupWizard";
 import { useSession } from "./features/auth/useSession";
 import { RobotAppHomePage } from "./features/home/RobotAppHomePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
+import { WifiSettingsPage } from "./features/settings/WifiSettingsPage";
 
-type UnauthFlow = "picker" | "identify" | "pin-login" | "pin-setup";
-type AuthedView = "home" | "settings";
+type UnauthFlow = "picker" | "identify" | "pin-login" | "pin-setup" | "wifi";
+type AuthedView = "home" | "settings" | "wifi";
 
 export function App() {
   const { status, user, refresh, logout } = useSession();
@@ -25,8 +26,13 @@ export function App() {
   }
 
   if (status === "authenticated" && user) {
+    if (authedView === "wifi") {
+      return <WifiSettingsPage onBack={() => setAuthedView("settings")} />;
+    }
     if (authedView === "settings") {
-      return <SettingsPage onBack={() => setAuthedView("home")} />;
+      return (
+        <SettingsPage onBack={() => setAuthedView("home")} onOpenWifi={() => setAuthedView("wifi")} />
+      );
     }
     return (
       <RobotAppHomePage
@@ -40,6 +46,10 @@ export function App() {
     );
   }
 
+  if (flow === "wifi") {
+    return <WifiSettingsPage onBack={() => setFlow("picker")} />;
+  }
+
   if (flow === "picker") {
     return (
       <UserPickerPage
@@ -51,6 +61,7 @@ export function App() {
           setFlow("pin-login");
         }}
         onNewUser={() => setFlow("identify")}
+        onOpenWifi={() => setFlow("wifi")}
       />
     );
   }
@@ -65,6 +76,7 @@ export function App() {
           setPinLoginNotice(undefined);
           setFlow(pinSet ? "pin-login" : "pin-setup");
         }}
+        onBack={() => setFlow("picker")}
       />
     );
   }

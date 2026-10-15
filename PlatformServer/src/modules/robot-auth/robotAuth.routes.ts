@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createRequireRobotAuth } from "../../common/middleware/requireRobotAuth.middleware";
+import { createResolveRobot } from "../../common/middleware/resolveRobot.middleware";
 import { validate } from "../../common/middleware/validate.middleware";
 import { robotAuthRateLimiter, robotOtpRateLimiter } from "../../common/middleware/rateLimiter.middleware";
 import { asyncHandler } from "../../common/utils/asyncHandler.util";
@@ -14,9 +14,9 @@ import {
 
 /**
  * Mounted at /api/robot-auth — the robot-facing service-to-service API.
- * Every route here requires the robot's provisioned `x-robot-id`/
- * `x-robot-secret` headers (see requireRobotAuth.middleware.ts) — there's
- * no separate token-issuance step to call first.
+ * Every route here requires only the calling robot's own `x-robot-id`
+ * header (see resolveRobot.middleware.ts) — no secret, the VPN is the
+ * trust boundary (see root README).
  */
 export function createRobotAuthRouter(
   controller: RobotAuthController,
@@ -24,7 +24,7 @@ export function createRobotAuthRouter(
 ): Router {
   const router = Router();
 
-  router.use(robotAuthRateLimiter, createRequireRobotAuth(robotRepository));
+  router.use(robotAuthRateLimiter, createResolveRobot(robotRepository));
 
   /**
    * @openapi

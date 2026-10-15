@@ -6,6 +6,7 @@ import { LED_PATTERN_IDLE, LED_PATTERN_OFF, firmwareClient } from "../../api/fir
 
 interface SettingsPageProps {
   onBack: () => void;
+  onOpenWifi: () => void;
 }
 
 /**
@@ -14,7 +15,7 @@ interface SettingsPageProps {
  * There's no "get current state" endpoint on the firmware bridge, so this
  * page tracks light/brightness optimistically rather than reading them back.
  */
-export function SettingsPage({ onBack }: SettingsPageProps) {
+export function SettingsPage({ onBack, onOpenWifi }: SettingsPageProps) {
   const [lightOn, setLightOn] = useState(false);
   const [brightness, setBrightness] = useState(80);
   const [isLightLoading, setIsLightLoading] = useState(false);
@@ -83,6 +84,10 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             className="w-full accent-brand-600"
           />
         </div>
+
+        <Button variant="secondary" className="mb-3 w-full" onClick={onOpenWifi}>
+          Wifi settings
+        </Button>
 
         <Button variant="ghost" className="w-full" onClick={onBack}>
           Back

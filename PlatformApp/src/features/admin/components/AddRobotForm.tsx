@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { getApiErrorMessage } from "../../../app/apiError";
 import { useCreateRobotMutation } from "../adminApi";
+import { AdminRobot } from "../admin.types";
 import { CreateRobotFormValues, createRobotFormSchema } from "../admin.schemas";
 
 /**
@@ -14,7 +15,7 @@ import { CreateRobotFormValues, createRobotFormSchema } from "../admin.schemas";
  */
 export function AddRobotForm() {
   const [createRobot, { isLoading, error }] = useCreateRobotMutation();
-  const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
+  const [created, setCreated] = useState<AdminRobot | null>(null);
   const {
     register,
     handleSubmit,
@@ -24,33 +25,31 @@ export function AddRobotForm() {
 
   async function onSubmit(values: CreateRobotFormValues) {
     try {
-      const result = await createRobot({
+      const robot = await createRobot({
         robotId: values.robotId,
         name: values.name,
         vpnHostname: values.vpnHostname,
         displayName: values.displayName || undefined,
       }).unwrap();
-      setRevealedSecret(result.robotSecret);
+      setCreated(robot);
       reset();
     } catch {
       // error state is surfaced below via the mutation's `error` field
     }
   }
 
-  if (revealedSecret) {
+  if (created) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
-          <p className="mb-2 font-medium">Copy this robot secret now — it won't be shown again.</p>
-          <code className="block select-all break-all rounded bg-white px-2 py-1.5 text-xs dark:bg-slate-900">
-            {revealedSecret}
-          </code>
-          <p className="mt-2 text-xs">
-            Paste it into this robot's <code>RobotServer/.env</code> as{" "}
-            <code>PLATFORM_ROBOT_SECRET</code>, alongside the matching <code>PLATFORM_ROBOT_ID</code>.
+        <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-200">
+          <p className="mb-2 font-medium">Robot "{created.name}" created.</p>
+          <p className="text-xs">
+            No secret to copy — this robot identifies itself to PlatformServer with its own
+            device id. Just make sure its ESP32 bridge's device id matches{" "}
+            <code className="rounded bg-white px-1 py-0.5 dark:bg-slate-900">{created.robotId}</code>.
           </p>
         </div>
-        <Button variant="secondary" onClick={() => setRevealedSecret(null)}>
+        <Button variant="secondary" onClick={() => setCreated(null)}>
           Add another robot
         </Button>
       </div>

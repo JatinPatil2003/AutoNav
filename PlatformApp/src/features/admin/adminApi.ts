@@ -4,7 +4,6 @@ import {
   AdminRobot,
   AdminUser,
   CreateRobotRequest,
-  CreateRobotResult,
   RobotAccessRequest,
   RobotAssignment,
 } from "./admin.types";
@@ -34,8 +33,9 @@ export const adminApi = baseApi.injectEndpoints({
       transformResponse: (response: { request: RobotAccessRequest }) => response.request,
       invalidatesTags: ["AdminRobotAccessRequests"],
     }),
-    createRobot: builder.mutation<CreateRobotResult, CreateRobotRequest>({
+    createRobot: builder.mutation<AdminRobot, CreateRobotRequest>({
       query: (body) => ({ url: "/admin/robots", method: "POST", body }),
+      transformResponse: (response: { robot: AdminRobot }) => response.robot,
       invalidatesTags: ["AdminRobots"],
     }),
     listAllRobots: builder.query<AdminRobot[], void>({

@@ -1,6 +1,5 @@
 import rateLimit from "express-rate-limit";
 import { Request } from "express";
-import { hashSecretForLookup } from "../utils/secretCrypto.util";
 
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -32,14 +31,11 @@ export const otpRateLimiter = rateLimit({
 
 /**
  * Many robots share one VPN egress IP, so robot-facing limiters key by the
- * claimed secret's fingerprint (hashed, never the plaintext) instead of IP
- * — otherwise one noisy robot would exhaust the budget for every other
- * robot behind the same tunnel, and a brute-force attempt stays bounded
- * per claimed secret rather than resetting with each guess.
+ * claimed robot id instead of IP — otherwise one noisy robot would exhaust
+ * the budget for every other robot behind the same tunnel.
  */
-function keyBySecretFingerprint(req: Request): string {
-  const secret = req.header("x-robot-secret");
-  return secret ? hashSecretForLookup(secret) : (req.ip ?? "unknown");
+function keyByRobotId(req: Request): string {
+  return req.header("x-robot-id") ?? (req.ip ?? "unknown");
 }
 
 export const robotAuthRateLimiter = rateLimit({
@@ -47,7 +43,7 @@ export const robotAuthRateLimiter = rateLimit({
   limit: 60,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: keyBySecretFingerprint,
+  keyGenerator: keyByRobotId,
   message: {
     error: "TooManyRequests",
     message: "Too many robot authentication attempts. Please try again later.",

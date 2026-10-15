@@ -40,8 +40,6 @@ describe("AdminService", () => {
       robotId: "bot-1",
       name: "Bot 1",
       vpnHostname: "bot-1.robot",
-      robotSecretEncrypted: { ciphertext: "x", iv: "x", authTag: "x" },
-      robotSecretHash: "x",
     });
     robotId = robot._id.toString();
 
@@ -49,8 +47,6 @@ describe("AdminService", () => {
       robotId: "bot-2",
       name: "Bot 2",
       vpnHostname: "bot-2.robot",
-      robotSecretEncrypted: { ciphertext: "x", iv: "x", authTag: "x" },
-      robotSecretHash: "x",
     });
     otherRobotId = otherRobot._id.toString();
   });

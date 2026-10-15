@@ -1,17 +1,14 @@
 import { config } from "../../config/env";
 import { logger } from "../../common/utils/logger.util";
-import { decryptSecret } from "../../common/utils/secretCrypto.util";
-import { signPlatformToRobotToken } from "../../common/utils/jwt.util";
 import { IRobotRepository } from "../robots/robot.repository.interface";
 import { IRobotNotifier } from "./robotNotifier.interface";
 
 /**
- * Direction 2 of the service-to-service JWT design: PlatformServer signs a
- * fresh, short-lived token using *that specific robot's* own plaintext
- * secret as the HMAC key, then calls its RobotServer directly over the VPN
- * by vpnHostname. No session/refresh machinery — each call mints its own
- * token. Failures are the caller's concern to swallow (this is always a
- * best-effort push; RobotServer self-corrects via its own periodic resync).
+ * PlatformServer calling a robot's own RobotServer directly over the VPN
+ * by vpnHostname, to push a best-effort roster-invalidate signal after a
+ * grant/revoke. No auth of its own — the VPN is the trust boundary (see
+ * root README) — and failures are the caller's concern to swallow;
+ * RobotServer self-corrects via its own periodic resync regardless.
  */
 export class HttpRobotNotifier implements IRobotNotifier {
   constructor(private readonly robotRepository: IRobotRepository) {}
@@ -23,8 +20,6 @@ export class HttpRobotNotifier implements IRobotNotifier {
       return;
     }
 
-    const secret = decryptSecret(robot.robotSecretEncrypted);
-    const token = signPlatformToRobotToken(secret, robot.robotId);
     const url = `${config.robotCall.scheme}://${robot.vpnHostname}/api/platform-auth/roster/invalidate`;
 
     const controller = new AbortController();
@@ -33,7 +28,6 @@ export class HttpRobotNotifier implements IRobotNotifier {
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal,
       });
       if (!response.ok) {

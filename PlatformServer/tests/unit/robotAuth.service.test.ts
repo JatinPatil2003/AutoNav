@@ -1,6 +1,5 @@
 import { RobotAuthService } from "../../src/modules/robot-auth/robotAuth.service";
 import { RobotAssignmentService } from "../../src/modules/robot-assignments/robotAssignment.service";
-import { encryptSecret, hashSecretForLookup } from "../../src/common/utils/secretCrypto.util";
 import { UnauthorizedError } from "../../src/common/errors";
 import { FakeUserRepository } from "./fakes/FakeUserRepository";
 import { FakeRobotRepository } from "./fakes/FakeRobotRepository";
@@ -37,8 +36,6 @@ describe("RobotAuthService", () => {
       robotId: "bot-1",
       name: "Bot 1",
       vpnHostname: "bot-1.robot",
-      robotSecretEncrypted: encryptSecret("correct-secret"),
-      robotSecretHash: hashSecretForLookup("correct-secret"),
     });
     robotId = robot.robotId;
     robotMongoId = robot._id.toString();
@@ -103,8 +100,6 @@ describe("RobotAuthService", () => {
       robotId: "bot-2",
       name: "Bot 2",
       vpnHostname: "bot-2.robot",
-      robotSecretEncrypted: encryptSecret("bot-2-secret"),
-      robotSecretHash: hashSecretForLookup("bot-2-secret"),
     });
     await assignmentService.grant(user._id.toString(), robotMongoId, admin._id.toString());
 

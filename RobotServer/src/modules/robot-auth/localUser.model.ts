@@ -3,6 +3,8 @@ import { Document, Model, Schema, model } from "mongoose";
 export type LocalUserStatus = "active" | "revoked";
 
 export interface ILocalUser {
+  /** This robot's own device id at the time this row was last synced — see ros/deviceIdentity.ts. */
+  robotId: string;
   platformUserId: string;
   email: string;
   name: string;
@@ -22,6 +24,7 @@ export interface ILocalUserDocument extends ILocalUser, Document {
 
 const localUserSchema = new Schema<ILocalUserDocument>(
   {
+    robotId: { type: String, required: true, index: true },
     platformUserId: { type: String, required: true, unique: true },
     email: { type: String, required: true, index: true, lowercase: true, trim: true },
     name: { type: String, required: true },

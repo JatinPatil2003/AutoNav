@@ -1,4 +1,4 @@
-import { IEncryptedSecret, IRobotDocument, RobotModel, RobotStatus } from "./robot.model";
+import { IRobotDocument, RobotModel, RobotStatus } from "./robot.model";
 import { CreateRobotInput, IRobotRepository } from "./robot.repository.interface";
 
 export class MongooseRobotRepository implements IRobotRepository {
@@ -12,10 +12,6 @@ export class MongooseRobotRepository implements IRobotRepository {
 
   async findByRobotId(robotId: string): Promise<IRobotDocument | null> {
     return RobotModel.findOne({ robotId: robotId.toLowerCase() }).exec();
-  }
-
-  async findBySecretHash(robotSecretHash: string): Promise<IRobotDocument | null> {
-    return RobotModel.findOne({ robotSecretHash }).exec();
   }
 
   async listByStatus(status: RobotStatus): Promise<IRobotDocument[]> {
@@ -32,23 +28,9 @@ export class MongooseRobotRepository implements IRobotRepository {
       name: input.name,
       vpnHostname: input.vpnHostname,
       displayName: input.displayName,
-      robotSecretEncrypted: input.robotSecretEncrypted,
-      robotSecretHash: input.robotSecretHash,
       status: "provisioned",
     });
     return robot.save();
-  }
-
-  async rotateSecret(
-    id: string,
-    robotSecretEncrypted: IEncryptedSecret,
-    robotSecretHash: string,
-  ): Promise<IRobotDocument | null> {
-    return RobotModel.findByIdAndUpdate(
-      id,
-      { $set: { robotSecretEncrypted, robotSecretHash }, $inc: { robotAuthTokenVersion: 1 } },
-      { new: true },
-    ).exec();
   }
 
   async markSeen(robotId: string): Promise<void> {

@@ -28,14 +28,8 @@ const envSchema = z.object({
   RESET_TOKEN_SECRET: z.string().min(16, "RESET_TOKEN_SECRET must be at least 16 characters"),
   RESET_TOKEN_TTL: z.string().default("10m"),
 
-  ROBOT_SECRET_ENC_KEY: z
-    .string()
-    .refine((v) => Buffer.from(v, "base64").length === 32, {
-      message: "ROBOT_SECRET_ENC_KEY must be a base64-encoded 32-byte key",
-    }),
   PIN_SETUP_TOKEN_SECRET: z.string().min(16, "PIN_SETUP_TOKEN_SECRET must be at least 16 characters"),
   PIN_SETUP_TOKEN_TTL: z.string().default("10m"),
-  PLATFORM_TO_ROBOT_TOKEN_TTL: z.string().default("60s"),
   ROBOT_CALL_SCHEME: z.enum(["http", "https"]).default("https"),
   ROBOT_CALL_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
 });
@@ -94,14 +88,10 @@ function loadConfig() {
       ttl: env.RESET_TOKEN_TTL,
     },
 
-    robotSecretEncKey: env.ROBOT_SECRET_ENC_KEY,
-
     pinSetupToken: {
       secret: env.PIN_SETUP_TOKEN_SECRET,
       ttl: env.PIN_SETUP_TOKEN_TTL,
     },
-
-    platformToRobotTokenTtl: env.PLATFORM_TO_ROBOT_TOKEN_TTL,
 
     robotCall: {
       scheme: env.ROBOT_CALL_SCHEME,
