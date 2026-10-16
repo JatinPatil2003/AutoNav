@@ -50,6 +50,21 @@ export class RosTopicGateway {
     return this.node.createTimer(periodNs, callback);
   }
 
+  /**
+   * Cheap liveness probe for the underlying rclnodejs node — used by
+   * teleopLink.handler's `health.query` reply so that check can stay a
+   * TopicGateway caller (never importing rclnodejs directly) instead of
+   * reaching past this primitive gateway.
+   */
+  isNodeAlive(): boolean {
+    try {
+      this.node.name();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private getOrCreatePublisher(type: string, topicName: string): rclnodejs.Publisher<AnyMessageType> {
     let publisher = this.publishers.get(topicName);
     if (!publisher) {
@@ -69,4 +84,4 @@ export class RosTopicGateway {
  * necessity, not a reintroduction of the per-feature gateway interfaces
  * this refactor removed.
  */
-export type TopicGateway = Pick<RosTopicGateway, "publish" | "subscribe" | "getLatest" | "createTimer">;
+export type TopicGateway = Pick<RosTopicGateway, "publish" | "subscribe" | "getLatest" | "createTimer" | "isNodeAlive">;

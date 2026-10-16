@@ -9,6 +9,8 @@ export interface IRobot {
   displayName?: string;
   status: RobotStatus;
   lastSeenAt?: Date;
+  /** sha256 hex digest of the robot-link secret — never store the plaintext. */
+  linkSecretHash?: string;
 }
 
 export interface IRobotDocument extends IRobot, Document {
@@ -30,6 +32,7 @@ const robotSchema = new Schema<IRobotDocument>(
       default: "provisioned",
     },
     lastSeenAt: { type: Date },
+    linkSecretHash: { type: String, select: false },
   },
   { timestamps: true },
 );

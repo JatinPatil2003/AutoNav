@@ -11,6 +11,7 @@ The EC2 host already runs OpenVPN Access Server + nginx for `vpn.autonav.in`, `v
 | Path | Purpose |
 | --- | --- |
 | `nginx/dashboard.autonav.in.conf` | nginx server blocks (80→443 redirect, then path-based proxy to the frontend/backend containers) |
+| `nginx/platform-server.autonav.in.dev.conf`, `nginx/dashboard.autonav.in.dev.conf` | dev-mode variants that proxy to the developer's laptop over the VPN instead of the local containers — see [Development mode](#development-mode) below |
 | `docker-compose.platform.yml` | `platform-mongo`, `platform-backend`, `platform-frontend` services (bridge networking, explicit port mapping — no host networking/privileged mode, since these don't touch robot hardware) |
 | `.env.example` | Env var template consumed by `docker-compose.platform.yml` |
 | `deploy.sh` | `docker compose pull && up -d`, idempotent, run via SSH by CI or by hand |
@@ -52,6 +53,10 @@ crontab -e
 ```
 
 (Not a `logrotate` job on purpose — `pino-roll`'s active file is also named with a date/count pattern, so a `logrotate` glob can't reliably tell "active" from "already rotated away." The script instead only touches files untouched for 24h+, which `pino-roll` will have already rolled past by then.)
+
+## Development mode
+
+`platform-mongo`'s port (27017) is published so a laptop-hosted `PlatformServer` can connect to it directly at `platform-mongodb.autonav.in:27017`, and `nginx/*.dev.conf` let EC2 nginx reverse-proxy `dashboard.autonav.in`/`platform-server.autonav.in` to a laptop running `PlatformApp`/`PlatformServer` locally over the OpenVPN tunnel, instead of to the EC2 containers. See `docs/Development Mode - Laptop Reverse Proxy + Remote MongoDB.md` for the full setup, the Mongo connection string, and how to switch the nginx symlinks between dev and prod. Remember to switch back to the non-`.dev` confs when done.
 
 ## Why a separate Mongo from the robot's
 

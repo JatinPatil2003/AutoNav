@@ -1,0 +1,49 @@
+import { Link, useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
+import { Card } from "../../../components/ui/Card";
+import { AuthShell } from "../../../components/ui/AuthShell";
+import { LoginForm } from "../components/LoginForm";
+import { GoogleSignInButton } from "../components/GoogleSignInButton";
+
+export function LoginPage() {
+  const navigate = useNavigate();
+
+  return (
+    <AuthShell>
+      <Card className="border-0 bg-transparent p-7 shadow-none dark:bg-transparent">
+        <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-md shadow-brand-900/20">
+          <Sparkles className="h-5 w-5 text-white" />
+        </span>
+        <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+          Sign in to AutoNav
+        </h1>
+        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
+          Operate your assigned robot from anywhere.
+        </p>
+
+        <LoginForm onSuccess={() => navigate("/", { replace: true })} />
+
+        <p className="mt-3 text-right text-sm">
+          <Link to="/forgot-password" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">
+            Forgot password?
+          </Link>
+        </p>
+
+        <div className="my-4 flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+          <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          OR
+          <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+        </div>
+
+        <GoogleSignInButton onSuccess={() => navigate("/", { replace: true })} />
+
+        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+          Don&apos;t have an account?{" "}
+          <Link to="/signup" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">
+            Sign up
+          </Link>
+        </p>
+      </Card>
+    </AuthShell>
+  );
+}

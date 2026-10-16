@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+
+# Env files (never commit real secrets/backend URLs for a given environment)
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Capacitor native project (android/) IS committed — it carries hand-made
+# native customizations (network security config, manifest permissions,
+# google-services.json placeholder) that `npx cap sync` won't regenerate.
+# Only its generated build output/local machine config is ignored:
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/*.keystore
+android/*.jks
+ios/
+

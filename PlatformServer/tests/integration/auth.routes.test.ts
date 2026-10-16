@@ -14,7 +14,7 @@ beforeAll(async () => {
 
   // Imported after MONGO_URI is set so config/env.ts validates against it.
   const { createApp } = await import("../../src/app");
-  app = createApp();
+  app = createApp().app;
 });
 
 afterAll(async () => {

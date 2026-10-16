@@ -6,8 +6,14 @@ export class RobotController {
   constructor(private readonly robotService: RobotService) {}
 
   createRobot = async (req: Request, res: Response): Promise<void> => {
-    const robot = await this.robotService.createRobot(req.body);
-    res.status(201).json({ robot });
+    const { robot, linkSecret } = await this.robotService.createRobot(req.body);
+    res.status(201).json({ robot, linkSecret });
+  };
+
+  rotateLinkSecret = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { linkSecret } = await this.robotService.rotateLinkSecret(id);
+    res.status(200).json({ linkSecret });
   };
 
   listRobots = async (req: Request, res: Response): Promise<void> => {

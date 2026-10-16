@@ -7,8 +7,14 @@ services:
     volumes:
       - platform-mongo-data:/data/db
     env_file: .env
-    # No host port published — only reachable from platform-backend over the
-    # internal bridge network, reducing attack surface on the public EC2 host.
+    ports:
+      - "27017:27017"
+    # Published for remote dev access (laptop-hosted PlatformServer connects
+    # to platform-mongodb.autonav.in:27017 while developing — see
+    # docs/Development Mode - Laptop Reverse Proxy + Remote MongoDB.md).
+    # Auth is already enforced via MONGO_INITDB_ROOT_USERNAME/PASSWORD above,
+    # but the EC2 security group should still scope inbound 27017 to known
+    # IPs rather than leaving it open to 0.0.0.0/0.
 
   platform-backend:
     image: ${DOCKER_USERNAME}/autonav:platform-backend

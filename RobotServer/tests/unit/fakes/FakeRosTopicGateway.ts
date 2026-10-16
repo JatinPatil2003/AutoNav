@@ -8,7 +8,12 @@ export interface PublishedMessage {
 
 export class FakeRosTopicGateway {
   published: PublishedMessage[] = [];
+  nodeAlive = true;
   private readonly latest = new Map<string, unknown>();
+
+  isNodeAlive(): boolean {
+    return this.nodeAlive;
+  }
 
   publish<T>(type: string, topicName: string, message: T): void {
     this.published.push({ type, topicName, message });

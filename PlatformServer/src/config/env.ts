@@ -32,6 +32,17 @@ const envSchema = z.object({
   PIN_SETUP_TOKEN_TTL: z.string().default("10m"),
   ROBOT_CALL_SCHEME: z.enum(["http", "https"]).default("https"),
   ROBOT_CALL_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+
+  // Defense-in-depth clamps on the control relay — mirrors the authoritative
+  // clamp enforced by RobotServer's TeleopService; kept here too so a
+  // misbehaving/compromised client can't rely on the robot-side check alone.
+  // Defense-in-depth clamp only — RobotServer is the final authority and
+  // clamps to this same envelope (it's Nav2's own DWB max_velocity/
+  // min_velocity tuning in autonav_navigation/config/navigation.yaml, so
+  // remote teleop can never exceed what the robot does autonomously).
+  TELEOP_MAX_LINEAR: z.coerce.number().positive().default(0.4),
+  TELEOP_MAX_ANGULAR: z.coerce.number().positive().default(1.1),
+  HEALTH_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().default(2000),
 });
 
 function loadConfig() {
@@ -97,6 +108,13 @@ function loadConfig() {
       scheme: env.ROBOT_CALL_SCHEME,
       timeoutMs: env.ROBOT_CALL_TIMEOUT_MS,
     },
+
+    teleop: {
+      maxLinear: env.TELEOP_MAX_LINEAR,
+      maxAngular: env.TELEOP_MAX_ANGULAR,
+    },
+
+    healthQueryTimeoutMs: env.HEALTH_QUERY_TIMEOUT_MS,
   };
 }
 

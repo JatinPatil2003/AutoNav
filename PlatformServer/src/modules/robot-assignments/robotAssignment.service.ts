@@ -97,4 +97,15 @@ export class RobotAssignmentService {
     const assignment = await this.assignmentRepository.findActiveByUserAndRobot(userId, robotId);
     return !!assignment;
   }
+
+  /**
+   * Like hasActiveAssignment, but additionally requires platformAccess —
+   * the gate for anything reached over PlatformServer itself (the WS
+   * control relay, the robot health check), as opposed to hmiAccess
+   * (the robot's own kiosk PIN login).
+   */
+  async hasActivePlatformAccess(userId: string, robotId: string): Promise<boolean> {
+    const assignment = await this.assignmentRepository.findActiveByUserAndRobot(userId, robotId);
+    return !!assignment && assignment.platformAccess;
+  }
 }

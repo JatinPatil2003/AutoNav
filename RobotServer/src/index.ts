@@ -8,6 +8,7 @@ import { RosServiceGateway } from "./ros/rosServiceGateway";
 import { DeviceIdentityService } from "./ros/deviceIdentity";
 import { wsRouter } from "./core/wsRouter";
 import { verifyAccessTokenFromCookieHeader } from "./common/middleware/auth.middleware";
+import { PlatformLinkClient } from "./clients/platformLink.client";
 
 const DEVICE_ID_BOOT_ATTEMPTS = 3;
 
@@ -25,11 +26,22 @@ async function bootstrap(): Promise<void> {
     logger.warn("Device id not resolved at boot — continuing degraded until the ESP32 bridge responds");
   }
 
-  const { app, registerWebSockets, rosterSyncService } = createApp(rosNode, deviceIdentity);
+  const { app, registerWebSockets, registerPlatformLink, teleopService, rosterSyncService } = createApp(
+    rosNode,
+    deviceIdentity,
+  );
   const server = http.createServer(app);
 
   registerWebSockets(wsRouter);
   wsRouter.attach(server, (request) => !!verifyAccessTokenFromCookieHeader(request.headers.cookie));
+
+  // Persistent outbound link to PlatformServer's /ws/robot-link — this is
+  // what makes "robot online" a push-based fact there. Wired to
+  // teleopLink.handler via registerPlatformLink so a lost/never-made link
+  // fails safe through teleopService.stop() (see platformLink.client.ts).
+  const platformLink = new PlatformLinkClient(deviceIdentity, teleopService);
+  registerPlatformLink(platformLink);
+  platformLink.start();
 
   // Best-effort — if PlatformServer/the VPN is unreachable at boot, ROS
   // functionality must still come up; PIN login just keeps serving
@@ -51,6 +63,7 @@ async function bootstrap(): Promise<void> {
 
   const shutdown = async (): Promise<void> => {
     logger.info("Shutting down RobotServer");
+    platformLink.stop();
     server.close();
     await shutdownRosNode();
     process.exit(0);

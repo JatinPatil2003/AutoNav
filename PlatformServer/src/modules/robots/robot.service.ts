@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { ConflictError, NotFoundError } from "../../common/errors";
 import { IRobotRepository } from "./robot.repository.interface";
 import { RobotStatus } from "./robot.model";
@@ -6,6 +7,13 @@ import { CreateRobotDto } from "./robot.validation";
 import { IRobotAssignmentRepository } from "../robot-assignments/robotAssignment.repository.interface";
 import { IRobotAccessRequestRepository } from "../robot-access-requests/robotAccessRequest.repository.interface";
 
+/** Hex length of the bearer secret handed to a robot at provisioning/rotation (32 random bytes). */
+const LINK_SECRET_BYTES = 32;
+
+function hashLinkSecret(secret: string): string {
+  return crypto.createHash("sha256").update(secret).digest("hex");
+}
+
 export class RobotService {
   constructor(
     private readonly robotRepository: IRobotRepository,
@@ -13,7 +21,8 @@ export class RobotService {
     private readonly requestRepository: IRobotAccessRequestRepository,
   ) {}
 
-  async createRobot(input: CreateRobotDto): Promise<RobotDto> {
+  /** Returns the created robot plus the plaintext robot-link secret — shown exactly once. */
+  async createRobot(input: CreateRobotDto): Promise<{ robot: RobotDto; linkSecret: string }> {
     const [existingByName, existingByRobotId] = await Promise.all([
       this.robotRepository.findByName(input.name),
       this.robotRepository.findByRobotId(input.robotId),
@@ -26,7 +35,21 @@ export class RobotService {
     }
 
     const robot = await this.robotRepository.create(input);
-    return toRobotDto(robot);
+    const linkSecret = crypto.randomBytes(LINK_SECRET_BYTES).toString("hex");
+    await this.robotRepository.setLinkSecretHash(robot._id.toString(), hashLinkSecret(linkSecret));
+
+    return { robot: toRobotDto(robot), linkSecret };
+  }
+
+  /** Rotates a robot's link secret, invalidating its current persistent connection going forward. */
+  async rotateLinkSecret(robotId: string): Promise<{ linkSecret: string }> {
+    const robot = await this.robotRepository.findById(robotId);
+    if (!robot) throw new NotFoundError("Robot not found");
+
+    const linkSecret = crypto.randomBytes(LINK_SECRET_BYTES).toString("hex");
+    await this.robotRepository.setLinkSecretHash(robot._id.toString(), hashLinkSecret(linkSecret));
+
+    return { linkSecret };
   }
 
   async listByStatus(status: RobotStatus): Promise<RobotDto[]> {

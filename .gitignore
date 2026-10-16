@@ -7,3 +7,5 @@ test
 
 WebServer/maps/*
 __pycache__/
+
+env_backups/

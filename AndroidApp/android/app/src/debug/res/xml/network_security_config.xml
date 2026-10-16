@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only override (resource merging gives this priority over
+  src/main's version for debug builds): permits cleartext HTTP so local
+  dev against a plain-HTTP LAN backend (no TLS — that's dev-only) works.
+  Never bundled into a release build, which keeps src/main's HTTPS-only
+  config.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

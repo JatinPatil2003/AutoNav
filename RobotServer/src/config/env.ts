@@ -21,8 +21,24 @@ const envSchema = z.object({
   PLATFORM_BASE_URL: z.string().url(),
   ROSTER_SYNC_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
 
+  // --- Robot-link (this robot <-> PlatformServer's /ws/robot-link, see
+  // clients/platformLink.client.ts) — the one call that DOES need a secret,
+  // since it's what makes "robot online" a trusted, push-based fact rather
+  // than a VPN-membership guess. Plaintext value issued once by
+  // `POST /api/admin/robots` at provisioning time; only its sha256 hash is
+  // ever stored on PlatformServer.
+  ROBOT_LINK_SECRET: z.string().min(1, "ROBOT_LINK_SECRET is required"),
+
   // --- Local dev only: lets RobotServer boot without a real ESP32 attached ---
   DEV_DEVICE_ID_OVERRIDE: z.string().optional(),
+
+  // --- Teleop safety limits (see modules/teleop/teleop.service.ts) ---
+  // Defaults match autonav_navigation/config/navigation.yaml's DWB
+  // max_velocity: [0.4, 0.0, 1.1] — the same safe envelope Nav2 itself is
+  // configured to stay inside, so remote teleop can't exceed what the
+  // robot is already tuned to do autonomously.
+  TELEOP_MAX_LINEAR: z.coerce.number().positive().default(0.4),
+  TELEOP_MAX_ANGULAR: z.coerce.number().positive().default(1.1),
 
   // --- RobotApp (local HMI PWA) human session ---
   ROBOT_SESSION_ACCESS_SECRET: z.string().min(16, "ROBOT_SESSION_ACCESS_SECRET must be at least 16 characters"),
@@ -69,7 +85,14 @@ function loadConfig() {
     },
     rosterSyncIntervalMinutes: env.ROSTER_SYNC_INTERVAL_MINUTES,
 
+    robotLinkSecret: env.ROBOT_LINK_SECRET,
+
     devDeviceIdOverride: env.DEV_DEVICE_ID_OVERRIDE,
+
+    teleop: {
+      maxLinear: env.TELEOP_MAX_LINEAR,
+      maxAngular: env.TELEOP_MAX_ANGULAR,
+    },
 
     robotSession: {
       accessSecret: env.ROBOT_SESSION_ACCESS_SECRET,

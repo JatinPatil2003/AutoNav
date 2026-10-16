@@ -14,6 +14,12 @@ export class MongooseRobotRepository implements IRobotRepository {
     return RobotModel.findOne({ robotId: robotId.toLowerCase() }).exec();
   }
 
+  async findByRobotIdWithLinkSecret(robotId: string): Promise<IRobotDocument | null> {
+    return RobotModel.findOne({ robotId: robotId.toLowerCase() })
+      .select("+linkSecretHash")
+      .exec();
+  }
+
   async listByStatus(status: RobotStatus): Promise<IRobotDocument[]> {
     return RobotModel.find({ status }).sort({ createdAt: -1 }).exec();
   }
@@ -40,7 +46,18 @@ export class MongooseRobotRepository implements IRobotRepository {
     ).exec();
   }
 
+  async touchLastSeen(robotId: string): Promise<void> {
+    await RobotModel.updateOne(
+      { robotId: robotId.toLowerCase() },
+      { $set: { lastSeenAt: new Date() } },
+    ).exec();
+  }
+
   async deleteById(id: string): Promise<void> {
     await RobotModel.deleteOne({ _id: id }).exec();
+  }
+
+  async setLinkSecretHash(id: string, linkSecretHash: string): Promise<void> {
+    await RobotModel.updateOne({ _id: id }, { $set: { linkSecretHash } }).exec();
   }
 }

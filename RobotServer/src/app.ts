@@ -23,9 +23,9 @@ import { DeviceIdentityService } from "./ros/deviceIdentity";
 import { MongooseGoalRepository } from "./modules/goals/goal.repository";
 import { GridFsMapRepository } from "./modules/maps/map.repository";
 
-// TeleopService has no public API anymore (see Phase 4 of the refactor) —
-// kept only as NavigationService's internal in-place-rotate dependency.
 import { TeleopService } from "./modules/teleop/teleop.service";
+import { registerTeleopLinkHandler } from "./modules/teleop/teleopLink.handler";
+import { IPlatformLink } from "./clients/platformLink.interface";
 
 import { NavigationService } from "./modules/navigation/navigation.service";
 import { NavigationController } from "./modules/navigation/navigation.controller";
@@ -63,6 +63,9 @@ import { createHmiAuthRouter, createPlatformAuthRouter } from "./modules/robot-a
 export interface RobotApp {
   app: Express;
   registerWebSockets: (wsRouter: WsRouter) => void;
+  /** Wires teleopLink.handler up to the given robot-link connection — called from index.ts once the link client exists. */
+  registerPlatformLink: (link: IPlatformLink) => void;
+  teleopService: TeleopService;
   rosterSyncService: RosterSyncService;
 }
 
@@ -106,7 +109,7 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
   const mapRepository = new GridFsMapRepository();
 
   // --- Services ---
-  const teleopService = new TeleopService(topicGateway);
+  const teleopService = new TeleopService(topicGateway, config.teleop.maxLinear, config.teleop.maxAngular);
   const navigationService = new NavigationService(
     actionGateway,
     serviceGateway,
@@ -117,6 +120,11 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
     launchManager,
     config.mapsDir,
   );
+  // TeleopService needs to know when Nav2 is actively navigating (to not
+  // fight its cmd_vel publishing), but NavigationService depends on
+  // teleopService above — wiring it back in after both exist avoids a
+  // constructor cycle. See TeleopService's getNavigationStatus doc comment.
+  teleopService.bindNavigationStatus(() => navigationService.getStatus());
   const mappingService = new MappingService(topicGateway, goalRepository, mapRepository, launchManager, config.mapsDir);
   const firmwareService = new FirmwareService(serviceGateway);
   const networkService = new NetworkService();
@@ -175,5 +183,9 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
     registerVideoWebSocket(wsRouter, new FfmpegVideoSource(config.cameraDevice));
   };
 
-  return { app, registerWebSockets, rosterSyncService };
+  const registerPlatformLink = (link: IPlatformLink): void => {
+    registerTeleopLinkHandler({ link, teleopService, navigationService, deviceIdentity, topicGateway });
+  };
+
+  return { app, registerWebSockets, registerPlatformLink, teleopService, rosterSyncService };
 }

@@ -17,6 +17,10 @@ export class FakeRobotRepository implements IRobotRepository {
     return [...this.robots.values()].find((r) => r.robotId === robotId.toLowerCase()) ?? null;
   }
 
+  async findByRobotIdWithLinkSecret(robotId: string): Promise<IRobotDocument | null> {
+    return this.findByRobotId(robotId);
+  }
+
   async listByStatus(status: RobotStatus): Promise<IRobotDocument[]> {
     return [...this.robots.values()].filter((r) => r.status === status);
   }
@@ -50,7 +54,21 @@ export class FakeRobotRepository implements IRobotRepository {
     }
   }
 
+  async touchLastSeen(robotId: string): Promise<void> {
+    const robot = [...this.robots.values()].find((r) => r.robotId === robotId.toLowerCase());
+    if (robot) {
+      robot.lastSeenAt = new Date();
+    }
+  }
+
   async deleteById(id: string): Promise<void> {
     this.robots.delete(id);
+  }
+
+  async setLinkSecretHash(id: string, linkSecretHash: string): Promise<void> {
+    const robot = this.robots.get(id);
+    if (robot) {
+      robot.linkSecretHash = linkSecretHash;
+    }
   }
 }

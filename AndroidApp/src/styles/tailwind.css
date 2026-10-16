@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* Capacitor's WebView doesn't auto-inset for notches/status bars like a
+     native layout would — every full-screen surface pads itself instead. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  overscroll-behavior: none;
+}
+
+::selection {
+  background-color: theme("colors.brand.200");
+  color: theme("colors.brand.900");
+}
+
+.dark ::selection {
+  background-color: theme("colors.brand.800");
+  color: theme("colors.brand.50");
+}
+
+@layer base {
+  :root {
+    --app-bg: radial-gradient(1200px 800px at 15% -10%, rgba(18, 177, 152, 0.16), transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, rgba(53, 205, 177, 0.12), transparent 50%),
+      radial-gradient(900px 900px at 50% 120%, rgba(10, 141, 124, 0.12), transparent 55%), #f3f6f8;
+  }
+
+  .dark {
+    --app-bg: radial-gradient(1200px 800px at 15% -10%, rgba(18, 177, 152, 0.16), transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, rgba(53, 205, 177, 0.1), transparent 50%),
+      radial-gradient(900px 900px at 50% 120%, rgba(10, 141, 124, 0.14), transparent 55%), #070b0d;
+  }
+}
+
+@layer components {
+  .app-canvas {
+    background-image: var(--app-bg);
+  }
+
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-[0_8px_40px_-12px_rgba(10,60,55,0.25)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60;
+  }
+
+  .glass-panel {
+    @apply rounded-xl border border-slate-200/70 bg-white/70 backdrop-blur-sm dark:border-slate-700/60 dark:bg-slate-800/50;
+  }
+
+  /* AuthShell's drifting background blobs — referenced there but never
+     actually defined until now, so the login page's blobs were static. */
+  .animate-blob {
+    animation: blob ease-in-out infinite alternate;
+  }
+
+  /* Brand-colored <input type="range">, cross-browser (WebKit/Blink +
+     Firefox need separate pseudo-element rules — no shared shorthand). */
+  .range-brand {
+    @apply h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 dark:bg-slate-700;
+  }
+  .range-brand::-webkit-slider-thumb {
+    @apply h-5 w-5 appearance-none rounded-full border-2 border-white bg-brand-600 shadow-md dark:border-slate-900;
+  }
+  .range-brand::-moz-range-thumb {
+    @apply h-5 w-5 rounded-full border-2 border-white bg-brand-600 shadow-md dark:border-slate-900;
+  }
+  .range-brand::-moz-range-progress {
+    @apply rounded-full bg-brand-500;
+  }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(4%, 6%) scale(1.08);
+  }
+  100% {
+    transform: translate(-4%, -3%) scale(0.96);
+  }
+}

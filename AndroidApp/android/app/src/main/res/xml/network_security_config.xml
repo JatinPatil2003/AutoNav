@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default (used by release and any build type without its own override):
+  HTTPS-only, matching the production backend being fully TLS-terminated.
+  The debug variant overrides this with a cleartext-permitting version at
+  src/debug/res/xml/network_security_config.xml for local dev against a
+  plain-HTTP LAN backend.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

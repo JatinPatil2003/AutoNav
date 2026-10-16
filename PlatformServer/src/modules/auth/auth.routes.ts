@@ -7,6 +7,7 @@ import { asyncHandler } from "../../common/utils/asyncHandler.util";
 import { AuthController } from "./auth.controller";
 import {
   forgotPasswordSchema,
+  googleTokenSchema,
   loginSchema,
   resetPasswordSchema,
   setPasswordSchema,
@@ -81,6 +82,24 @@ export function createAuthRouter(authController: AuthController): Router {
   router.get("/google/failure", (_req, res) => {
     res.status(401).json({ error: "Unauthorized", message: "Google authentication failed" });
   });
+
+  /**
+   * @openapi
+   * /api/auth/google/token:
+   *   post:
+   *     summary: Native-client Google sign-in — exchange a Google ID token (from the device's own Google Sign-In SDK) for an AutoNav session
+   *     tags: [Auth]
+   *     responses:
+   *       200:
+   *         description: Auth cookies set; mobile clients (header X-Client=mobile) also get the token pair in the body
+   *       401:
+   *         description: Invalid or unverifiable Google ID token
+   */
+  router.post(
+    "/google/token",
+    validate({ body: googleTokenSchema }),
+    asyncHandler(authController.googleToken),
+  );
 
   /**
    * @openapi

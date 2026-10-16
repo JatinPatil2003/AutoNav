@@ -45,12 +45,31 @@ export function createRobotRouter(robotController: RobotController): Router {
    *     responses:
    *       201:
    *         description: >
-   *           Robot created. No secret is issued — the robot identifies
-   *           itself to PlatformServer with its own device id (robotId),
-   *           resolved on its side from the ESP32 bridge; just make sure
-   *           the robotId here matches that device's id.
+   *           Robot created. Also generates and returns the plaintext
+   *           robot-link secret this robot authenticates with on
+   *           `/ws/robot-link` (`Authorization: Robot <secret>`) — shown
+   *           exactly once, only the sha256 hash is persisted.
    */
   router.post("/", validate({ body: createRobotSchema }), asyncHandler(robotController.createRobot));
+
+  /**
+   * @openapi
+   * /api/admin/robots/{id}/rotate-link-secret:
+   *   post:
+   *     summary: Rotate a robot's robot-link secret (admin only)
+   *     tags: [Admin, Robots]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: >
+   *           New plaintext robot-link secret, shown exactly once. The
+   *           robot's existing /ws/robot-link connection (if any) keeps
+   *           working until it next reconnects and is rejected with the
+   *           old secret — update the robot's env and restart it promptly.
+   *       404:
+   *         description: Robot not found
+   */
+  router.post("/:id/rotate-link-secret", asyncHandler(robotController.rotateLinkSecret));
 
   /**
    * @openapi

@@ -45,22 +45,72 @@ import { RobotAuthService } from "./modules/robot-auth/robotAuth.service";
 import { RobotAuthController } from "./modules/robot-auth/robotAuth.controller";
 import { createRobotAuthRouter } from "./modules/robot-auth/robotAuth.routes";
 
+import { RobotHealthService } from "./modules/control/robotHealth.service";
+import { RobotHealthController } from "./modules/control/robotHealth.controller";
+import { createRobotHealthRouter } from "./modules/control/robotHealth.routes";
+import { ControlSessionService } from "./modules/control/controlSession.service";
+import { ControlSessionGateway } from "./modules/control/controlSession.gateway";
+
+import { RobotConnectionRegistry } from "./modules/robot-link/robotConnectionRegistry";
+import { RobotLinkGateway } from "./modules/robot-link/robotLink.gateway";
+
+import { WsRouter } from "./core/wsRouter";
+
+export interface CreatedApp {
+  app: Express;
+  /**
+   * Attached to the internal HTTP listener only (see src/index.ts) —
+   * `/ws/robot-link` must never be reachable through the public nginx
+   * vhost, and `/ws/control` is the one WS path that nginx *does* proxy.
+   */
+  wsRouter: WsRouter;
+}
+
 /**
  * Composition root: repositories, services, and controllers are wired here
  * via constructor injection so every layer depends on an interface, not a
  * concrete persistence implementation — swapping MongooseUserRepository for
  * an in-memory fake (as the unit tests do) requires no change elsewhere.
  */
-export function createApp(): Express {
+export function createApp(): CreatedApp {
   const app = express();
 
   app.use(helmet());
   app.use(express.json());
   app.use(cookieParser());
 
-  if (config.isDevelopment) {
-    app.use(cors({ origin: config.frontendUrl, credentials: true }));
-  }
+  // CORS is always needed, not just in dev: the web dashboard is same-origin
+  // behind nginx in production (so technically wouldn't need this), but the
+  // native mobile app (Capacitor WebView) is *always* cross-origin — it has
+  // no origin that matches FRONTEND_URL in any environment. Its WebView
+  // presents as `https://localhost` (release — Capacitor's default secure
+  // scheme) or `http://localhost` (local dev builds against a plain-HTTP
+  // dev backend, see AndroidApp/capacitor.config.ts's androidScheme switch),
+  // or `capacitor://localhost` on some configs — never the real API host —
+  // so all three are allow-listed explicitly alongside the configured web
+  // origin rather than opening CORS to "*". AndroidApp's own Vite dev
+  // server (`npm run dev`, a plain browser tab, not the WebView) runs on a
+  // separate port from PlatformApp's — also allow-listed so the web-only
+  // dev loop works without needing the full Capacitor build/install cycle.
+  const allowedOrigins = new Set([
+    config.frontendUrl,
+    "https://localhost",
+    "http://localhost",
+    "http://localhost:5190",
+    "capacitor://localhost",
+  ]);
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.has(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true,
+    }),
+  );
 
   app.use(
     pinoHttp({
@@ -119,12 +169,29 @@ export function createApp(): Express {
   const adminController = new AdminController(adminService, requestService);
   const robotAuthController = new RobotAuthController(robotAuthService);
 
+  // --- WebSocket infra (robot-link + client control relay) ---
+  const robotConnectionRegistry = new RobotConnectionRegistry(robotRepository);
+  const robotLinkGateway = new RobotLinkGateway(robotRepository, robotConnectionRegistry);
+  const controlSessionService = new ControlSessionService(robotConnectionRegistry, robotAssignmentService);
+  const controlSessionGateway = new ControlSessionGateway(
+    robotRepository,
+    robotAssignmentService,
+    controlSessionService,
+  );
+  const robotHealthService = new RobotHealthService(robotRepository, robotConnectionRegistry);
+  const robotHealthController = new RobotHealthController(robotHealthService, robotAssignmentService);
+
+  const wsRouter = new WsRouter();
+  wsRouter.register("/ws/robot-link", robotLinkGateway.onConnection, robotLinkGateway.authenticate);
+  wsRouter.register("/ws/control", controlSessionGateway.onConnection, controlSessionGateway.authenticate);
+
   app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   app.use("/api/auth", createAuthRouter(authController));
   app.use("/api/users", createUserRouter(userController));
   app.use("/api/robots", createPublicRobotRouter(robotController));
+  app.use("/api/robots", createRobotHealthRouter(robotHealthController));
   app.use("/api/robot-access-requests", createRobotAccessRequestRouter(requestController));
   app.use("/api/admin/robots", createRobotRouter(robotController));
   app.use("/api/admin", createAdminRouter(adminController));
@@ -133,5 +200,5 @@ export function createApp(): Express {
   app.use(notFoundHandler);
   app.use(errorHandler);
 
-  return app;
+  return { app, wsRouter };
 }
