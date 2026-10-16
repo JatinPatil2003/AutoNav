@@ -93,10 +93,10 @@ jobs:
             JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
             ADMIN_EMAILS=${ADMIN_EMAILS}
             FRONTEND_URL=https://dashboard.autonav.in
-            COOKIE_DOMAIN=dashboard.autonav.in
+            COOKIE_DOMAIN=.autonav.in
             GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
             GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-            GOOGLE_CALLBACK_URL=https://dashboard.autonav.in/api/auth/google/callback
+            GOOGLE_CALLBACK_URL=https://platform-server.autonav.in/api/auth/google/callback
             DOCKER_USERNAME=${DOCKER_USERNAME}
             EOF
             chmod 600 ~/AutoNav/AWS/.env

@@ -8,7 +8,7 @@ export const swaggerSpec = swaggerJsdoc({
       version: "0.1.0",
       description:
         "Auth, user, and robot-assignment API for the AutoNav operator dashboard. " +
-        "Served exclusively over HTTPS in production (see AWS/nginx/dashboard.autonav.in.conf).",
+        "Served exclusively over HTTPS in production (see AWS/nginx/platform-server.autonav.in.conf).",
     },
     servers: [{ url: "/" }],
     components: {
