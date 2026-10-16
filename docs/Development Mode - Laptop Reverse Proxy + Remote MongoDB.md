@@ -37,7 +37,34 @@ Only one of the two paths through nginx is active at a time, controlled by which
 
 ## 1. Mongo: published port
 
-`AWS/docker-compose.platform.yml`'s `platform-mongo` service now publishes `27017:27017` (previously internal-only on the `platform-net` bridge network). Auth was already enforced via `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` in `.env`, so the container itself doesn't become open-door just because the port is published — but the **EC2 security group** also needs an inbound rule for TCP 27017. Scope it to the laptop's current public IP (or your home/office IP range) rather than `0.0.0.0/0`; this is a manual step in the AWS console, not something `docker-compose.platform.yml` can express.
+`AWS/docker-compose.platform.yml`'s `platform-mongo` service now publishes `27017:27017` (previously internal-only on the `platform-net` bridge network). Auth was already enforced via `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` in `.env`, so the container itself doesn't become open-door just because the port is published — but the **EC2 security group** also needs an inbound rule for TCP 27017. This is a manual step in the AWS console (or CLI), not something `docker-compose.platform.yml` can express.
+
+### Security group rule (manual, EC2 side)
+
+Add one inbound rule to the security group attached to the EC2 instance:
+
+| Field | Value |
+| --- | --- |
+| Type | Custom TCP |
+| Protocol | TCP |
+| Port range | `27017` |
+| Source | your laptop's current public IP, as `/32` (e.g. `203.0.113.42/32`) — **not** `0.0.0.0/0` |
+| Description | `platform-mongo dev access — <your name/laptop>` |
+
+Find your current public IP with `curl -4 ifconfig.me` (run on the laptop, not the EC2 host). If your ISP rotates your IP, you'll need to update this rule when it changes — a tighter but more fragile trade-off than leaving it open. (A VPN-tunnel-only version of this, binding Mongo's published port to the EC2 host's VPN-side IP instead of all interfaces, is a future improvement **not** implemented here because the OpenVPN Access Server exposes several `as0tN` tunnel interfaces/subnets rather than one fixed address — see `docs/OpenVPN Access Server Dynamic Robot DNS Setup.md`.)
+
+Console steps: **EC2 → Instances → (select instance) → Security tab → security group link → Edit inbound rules → Add rule** → fill in the table above → **Save rules**.
+
+Equivalent AWS CLI (replace `sg-xxxxxxxx` and the IP):
+
+```bash
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-xxxxxxxx \
+  --protocol tcp --port 27017 \
+  --cidr 203.0.113.42/32
+```
+
+To remove the rule later (e.g. once dev mode ends), use `revoke-security-group-ingress` with the same arguments, or delete it from the console.
 
 Redeploy with the normal flow:
 

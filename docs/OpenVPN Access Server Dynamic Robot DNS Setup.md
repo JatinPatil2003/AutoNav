@@ -233,39 +233,19 @@ sudo /usr/local/openvpn_as/scripts/sacli Start
 
 The OpenVPN Access Server uses `systemd-resolved`, while dnsmasq serves the `.robot` domain.
 
-Configure `systemd-resolved` to route only `.robot` queries to dnsmasq:
+Route `.robot` queries to dnsmasq **globally**, not per-link — a per-link routing domain (`resolvectl dns/domain as0t0 ...`) only applies to queries already associated with that one tunnel interface, and a client can land on any of the four `as0tN` adapters/subnets depending on which one OpenVPN Access Server happens to assign it. A global drop-in avoids that: it routes any `*.robot` query to dnsmasq regardless of which adapter the client ended up on, trying each of the four per-subnet dnsmasq-serving addresses in turn.
 
 ```bash
-sudo resolvectl dns as0t0 172.27.224.1
-sudo resolvectl domain as0t0 '~robot'
-```
-
-Create a persistent systemd service:
-
-```bash
-sudo tee /etc/systemd/system/robot-dns-resolved.service > /dev/null <<'EOF'
-[Unit]
-Description=Configure systemd-resolved for OpenVPN robot DNS
-After=systemd-resolved.service openvpnas.service
-Wants=systemd-resolved.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/resolvectl dns as0t0 172.27.224.1
-ExecStart=/usr/bin/resolvectl domain as0t0 ~robot
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
+sudo mkdir -p /etc/systemd/resolved.conf.d
+sudo tee /etc/systemd/resolved.conf.d/90-robot.conf > /dev/null <<'EOF'
+[Resolve]
+DNS=172.27.224.1 172.27.228.1 172.27.232.1 172.27.236.1
+Domains=~robot
 EOF
+sudo systemctl restart systemd-resolved
 ```
 
-Enable the service:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now robot-dns-resolved.service
-```
+(An earlier version of this doc configured this per-link on `as0t0` only via a `robot-dns-resolved.service` unit — that's superseded by the drop-in above. If that unit still exists on your host, disable it so the two configs don't fight each other: `sudo systemctl disable --now robot-dns-resolved.service`.)
 
 DNS routing:
 
