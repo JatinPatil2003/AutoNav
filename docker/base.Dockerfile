@@ -8,12 +8,12 @@
 # This keeps each runtime container (lidar/imu/controller/...) a thin
 # wrapper around one shared, already-built colcon workspace instead of
 # rebuilding every ROS package from source N times.
-FROM ros:kilted
+FROM jatinpatil2003/autonav:lyrical-base
 
 SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=kilted
+ENV ROS_DISTRO=lyrical
 
 # -----------------------------
 # System + ROS dependencies
@@ -26,7 +26,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-example-interfaces \
     ros-${ROS_DISTRO}-robot-localization \
     ros-${ROS_DISTRO}-xacro \
-    ros-${ROS_DISTRO}-cartographer-ros \
     ros-${ROS_DISTRO}-rviz2 \
     ros-${ROS_DISTRO}-tf-transformations \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
@@ -69,6 +68,7 @@ COPY autonav_imu src/autonav_imu
 COPY autonav_localization src/autonav_localization
 COPY autonav_navigation src/autonav_navigation
 COPY autonav_lidar src/autonav_lidar
+COPY autonav_msgs src/autonav_msgs
 
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
     && colcon build --symlink-install

@@ -50,8 +50,8 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             ref={ref}
             id={inputId}
             type={visible ? "text" : "password"}
-            className={`w-full rounded-md border bg-white px-3 py-2 pr-10 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-900 dark:text-slate-100 ${
-              error ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+            className={`w-full rounded-xl border bg-white/80 px-3 py-2 pr-10 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-900/70 dark:text-slate-100 ${
+              error ? "border-red-500" : "border-slate-300/80 dark:border-slate-600"
             } ${className}`}
             {...rest}
           />

@@ -21,3 +21,58 @@ body {
   user-select: none;
   overscroll-behavior: none;
 }
+
+@layer base {
+  :root {
+    --app-bg: radial-gradient(
+        1200px 800px at 15% -10%,
+        rgba(18, 177, 152, 0.25),
+        transparent 55%
+      ),
+      radial-gradient(1000px 700px at 110% 10%, rgba(53, 205, 177, 0.18), transparent 50%),
+      radial-gradient(900px 900px at 50% 120%, rgba(10, 141, 124, 0.2), transparent 55%), #f3f6f8;
+  }
+
+  .dark {
+    --app-bg: radial-gradient(
+        1200px 800px at 15% -10%,
+        rgba(18, 177, 152, 0.16),
+        transparent 55%
+      ),
+      radial-gradient(1000px 700px at 110% 10%, rgba(53, 205, 177, 0.1), transparent 50%),
+      radial-gradient(900px 900px at 50% 120%, rgba(10, 141, 124, 0.14), transparent 55%), #070b0d;
+  }
+}
+
+@layer components {
+  .app-canvas {
+    background-image: var(--app-bg);
+  }
+
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-[0_8px_40px_-12px_rgba(10,141,124,0.25)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)];
+  }
+
+  .glow-ring {
+    box-shadow:
+      0 0 0 3px rgba(18, 177, 152, 0.15),
+      0 0 24px 2px rgba(18, 177, 152, 0.25);
+  }
+}
+
+@keyframes blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(3%, -4%) scale(1.05);
+  }
+  66% {
+    transform: translate(-3%, 3%) scale(0.97);
+  }
+}
+
+.animate-blob {
+  animation: blob-float 14s ease-in-out infinite;
+}

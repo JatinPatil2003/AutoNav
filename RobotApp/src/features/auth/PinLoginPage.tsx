@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { CheckCircle2, KeyRound } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
+import { AppShell } from "../../components/ui/AppShell";
 import { UserAvatar } from "../../components/ui/UserAvatar";
 import { getApiErrorMessage } from "../../api/apiError";
 import { hmiClient } from "../../api/hmiClient";
@@ -48,17 +50,20 @@ export function PinLoginPage({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <Card className="w-full max-w-sm">
-        <div className="mb-4 flex items-center gap-3">
-          <UserAvatar name={name ?? email} avatarUrl={avatarUrl} className="h-12 w-12 text-lg" />
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Enter your PIN</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{name ?? maskEmail(email)}</p>
+    <AppShell>
+      <Card>
+        <div className="mb-5 flex items-center gap-3">
+          <UserAvatar name={name ?? email} avatarUrl={avatarUrl} className="h-14 w-14 text-xl" glow />
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+              Enter your PIN
+            </h1>
+            <p className="truncate text-sm text-slate-500 dark:text-slate-400">{name ?? maskEmail(email)}</p>
           </div>
         </div>
         {notice && (
-          <p className="mb-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
+          <p className="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             {notice}
           </p>
         )}
@@ -72,14 +77,18 @@ export function PinLoginPage({
             error={form.formState.errors.pin?.message}
             {...form.register("pin")}
           />
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {error && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+              {error}
+            </p>
+          )}
           <Button type="submit" isLoading={isSubmitting} className="mt-2">
-            Log in
+            <KeyRound className="h-4 w-4" /> Log in
           </Button>
           <button
             type="button"
             onClick={onForgotPin}
-            className="text-center text-sm font-medium text-brand-600 dark:text-brand-400"
+            className="text-center text-sm font-semibold text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400"
           >
             Forgot PIN?
           </button>
@@ -88,6 +97,6 @@ export function PinLoginPage({
           </Button>
         </form>
       </Card>
-    </div>
+    </AppShell>
   );
 }

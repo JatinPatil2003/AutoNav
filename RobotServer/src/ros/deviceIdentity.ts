@@ -48,11 +48,11 @@ export class DeviceIdentityService {
       logger.warn({ err }, "deviceIdentity: get_device_id service call failed");
     }
 
-    if (!config.isProduction && config.devDeviceIdOverride) {
+    if (config.devDeviceIdOverride) {
       this.robotId = config.devDeviceIdOverride;
       logger.warn(
         { robotId: this.robotId },
-        "deviceIdentity: using DEV_DEVICE_ID_OVERRIDE (non-production fallback, no ESP32 attached)",
+        "deviceIdentity: using DEV_DEVICE_ID_OVERRIDE (ESP32 bridge unreachable)",
       );
       return this.robotId;
     }

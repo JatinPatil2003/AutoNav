@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { ArrowLeft, Lightbulb, SlidersHorizontal, Wifi } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { AppShell } from "../../components/ui/AppShell";
 import { getApiErrorMessage } from "../../api/apiError";
 import { LED_PATTERN_IDLE, LED_PATTERN_OFF, firmwareClient } from "../../api/firmwareClient";
 
@@ -53,26 +55,36 @@ export function SettingsPage({ onBack, onOpenWifi }: SettingsPageProps) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <Card className="w-full max-w-sm">
-        <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">Settings</h1>
+    <AppShell>
+      <Card>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+          Settings
+        </h1>
         <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">LED controls for this robot.</p>
 
         {error && (
-          <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            {error}
+          </p>
         )}
 
-        <div className="mb-6 flex items-center justify-between rounded-md border border-slate-200 px-4 py-3 dark:border-slate-700">
-          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Light</span>
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-slate-200/70 bg-white/60 px-4 py-3 dark:border-slate-700/70 dark:bg-slate-800/40">
+          <span className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+            <Lightbulb className={`h-4 w-4 ${lightOn ? "text-amber-500" : "text-slate-400"}`} />
+            Light
+          </span>
           <Button variant={lightOn ? "primary" : "secondary"} isLoading={isLightLoading} onClick={handleToggleLight}>
             {lightOn ? "On" : "Off"}
           </Button>
         </div>
 
-        <div className="mb-6 rounded-md border border-slate-200 px-4 py-3 dark:border-slate-700">
+        <div className="mb-6 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-3 dark:border-slate-700/70 dark:bg-slate-800/40">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Brightness</span>
-            <span className="text-sm text-slate-500 dark:text-slate-400">{brightness}%</span>
+            <span className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+              <SlidersHorizontal className="h-4 w-4 text-slate-400" />
+              Brightness
+            </span>
+            <span className="text-sm font-semibold text-brand-600 dark:text-brand-400">{brightness}%</span>
           </div>
           <input
             type="range"
@@ -86,13 +98,13 @@ export function SettingsPage({ onBack, onOpenWifi }: SettingsPageProps) {
         </div>
 
         <Button variant="secondary" className="mb-3 w-full" onClick={onOpenWifi}>
-          Wifi settings
+          <Wifi className="h-4 w-4" /> Wifi settings
         </Button>
 
         <Button variant="ghost" className="w-full" onClick={onBack}>
-          Back
+          <ArrowLeft className="h-4 w-4" /> Back
         </Button>
       </Card>
-    </div>
+    </AppShell>
   );
 }

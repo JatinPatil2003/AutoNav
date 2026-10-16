@@ -11,7 +11,7 @@
 
 services:
   rviz:
-    image: jatinvpatil/autonav:base
+    image: jatinpatil2003/autonav:base
     container_name: rviz
     network_mode: "host"
     ipc: host
@@ -47,7 +47,7 @@ services:
     build:
       context: .
       dockerfile: docker/navigation.Dockerfile
-    image: jatinvpatil/autonav:navigation
+    image: jatinpatil2003/autonav:navigation
     container_name: save_map
     network_mode: "host"
     ipc: host

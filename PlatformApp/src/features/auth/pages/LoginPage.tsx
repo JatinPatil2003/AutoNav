@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import { Card } from "../../../components/ui/Card";
+import { AuthShell } from "../../../components/ui/AuthShell";
 import { ThemeToggle } from "../../../components/ui/ThemeToggle";
 import { LoginForm } from "../components/LoginForm";
 import { GoogleAuthButton } from "../components/GoogleAuthButton";
@@ -8,17 +10,13 @@ export function LoginPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-brand-100/70 to-transparent dark:from-brand-900/20"
-        aria-hidden
-      />
-      <div className="absolute right-4 top-4">
+    <AuthShell>
+      <div className="absolute right-4 top-4 z-10">
         <ThemeToggle />
       </div>
-      <Card className="relative w-full max-w-sm">
-        <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-base font-bold text-white">
-          A
+      <Card className="border-0 bg-transparent p-7 shadow-none dark:bg-transparent">
+        <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-md shadow-brand-900/20">
+          <Sparkles className="h-5 w-5 text-white" />
         </span>
         <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
           Sign in to AutoNav
@@ -50,6 +48,6 @@ export function LoginPage() {
           </Link>
         </p>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { ChevronRight, UserPlus, Wifi } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { AppShell } from "../../components/ui/AppShell";
 import { FullPageSpinner } from "../../components/ui/Spinner";
 import { UserAvatar } from "../../components/ui/UserAvatar";
 import { getApiErrorMessage } from "../../api/apiError";
@@ -33,12 +35,20 @@ export function UserPickerPage({ onPickUser, onNewUser, onOpenWifi }: UserPicker
   if (!users && !error) return <FullPageSpinner />;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <Card className="w-full max-w-md">
-        <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">Who's this?</h1>
-        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">Select your account to log in.</p>
+    <AppShell maxWidthClassName="max-w-md">
+      <Card>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+          Who's this?
+        </h1>
+        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
+          Select your account to log in.
+        </p>
 
-        {error && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            {error}
+          </p>
+        )}
 
         {users && users.length > 0 && (
           <ul className="mb-4 flex flex-col gap-2">
@@ -47,17 +57,18 @@ export function UserPickerPage({ onPickUser, onNewUser, onOpenWifi }: UserPicker
                 <button
                   type="button"
                   onClick={() => onPickUser(user.email, user.name, user.avatarUrl)}
-                  className="flex w-full items-center gap-3 rounded-md border border-slate-200 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                  className="group flex w-full items-center gap-3 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md hover:shadow-brand-900/5 dark:border-slate-700/70 dark:bg-slate-800/40 dark:hover:bg-slate-800"
                 >
                   <UserAvatar name={user.name} avatarUrl={user.avatarUrl} />
-                  <span>
-                    <span className="block text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {user.name}
                     </span>
-                    <span className="block text-xs text-slate-500 dark:text-slate-400">
+                    <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
                       {maskEmail(user.email)}
                     </span>
                   </span>
+                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-brand-500" />
                 </button>
               </li>
             ))}
@@ -71,12 +82,12 @@ export function UserPickerPage({ onPickUser, onNewUser, onOpenWifi }: UserPicker
         )}
 
         <Button variant="secondary" className="w-full" onClick={onNewUser}>
-          + New user
+          <UserPlus className="h-4 w-4" /> + New user
         </Button>
         <Button variant="ghost" className="mt-2 w-full" onClick={onOpenWifi}>
-          Wifi settings
+          <Wifi className="h-4 w-4" /> Wifi settings
         </Button>
       </Card>
-    </div>
+    </AppShell>
   );
 }

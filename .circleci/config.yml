@@ -9,7 +9,7 @@ jobs:
   build:
     executor: docker-publisher
     environment:
-      IMAGE_NAME: jatinvpatil/autonav
+      IMAGE_NAME: jatinpatil2003/autonav
     steps:
       - checkout
       - setup_remote_docker:

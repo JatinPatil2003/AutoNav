@@ -3,7 +3,7 @@
 #
 # Defaults to the published base image; override BASE_IMAGE to build
 #   against a locally built one while iterating on docker/base.Dockerfile.
-ARG BASE_IMAGE=jatinvpatil/autonav:base
+ARG BASE_IMAGE=jatinpatil2003/autonav:base
 FROM ${BASE_IMAGE}
 
 ENV LIDAR_SERIAL_PORT=/dev/lidar

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { ArrowLeft, Lock, ShieldCheck, Signal, Wifi as WifiIcon } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
+import { AppShell } from "../../components/ui/AppShell";
 import { getApiErrorMessage } from "../../api/apiError";
 import { CurrentWifi, WifiNetwork, networkClient } from "../../api/networkClient";
 
@@ -74,14 +76,21 @@ export function WifiSettingsPage({ onBack }: WifiSettingsPageProps) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <Card className="w-full max-w-sm">
-        <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">Wifi</h1>
+    <AppShell>
+      <Card>
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-md shadow-brand-900/20">
+          <WifiIcon className="h-5 w-5 text-white" />
+        </div>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Wifi</h1>
         <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
           {current?.connected ? `Connected to ${current.ssid}` : "Not connected"}
         </p>
 
-        {error && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            {error}
+          </p>
+        )}
 
         {!networks && !error && (
           <div className="mb-4 flex justify-center">
@@ -100,12 +109,18 @@ export function WifiSettingsPage({ onBack }: WifiSettingsPageProps) {
                     setPassword("");
                     setError(null);
                   }}
-                  className="flex w-full items-center justify-between rounded-md border border-slate-200 px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                  className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md hover:shadow-brand-900/5 dark:border-slate-700/70 dark:bg-slate-800/40 dark:hover:bg-slate-800"
                 >
-                  <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <span className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+                    {SECURED_PATTERN.test(network.security) && (
+                      <Lock className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+                    )}
                     {network.ssid}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{network.signal}%</span>
+                  <span className="flex items-center gap-1 text-xs font-medium text-slate-400">
+                    <Signal className="h-3.5 w-3.5" />
+                    {network.signal}%
+                  </span>
                 </button>
               </li>
             ))}
@@ -116,8 +131,8 @@ export function WifiSettingsPage({ onBack }: WifiSettingsPageProps) {
         )}
 
         {selected && (
-          <div className="mb-4 flex flex-col gap-3 rounded-md border border-slate-200 p-4 dark:border-slate-700">
-            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{selected.ssid}</p>
+          <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200/70 bg-white/60 p-4 dark:border-slate-700/70 dark:bg-slate-800/40">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{selected.ssid}</p>
             {SECURED_PATTERN.test(selected.security) && (
               <Input
                 label="Password"
@@ -137,8 +152,11 @@ export function WifiSettingsPage({ onBack }: WifiSettingsPageProps) {
           </div>
         )}
 
-        <div className="mb-6 flex items-center justify-between rounded-md border border-slate-200 px-4 py-3 dark:border-slate-700">
-          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">VPN</span>
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-slate-200/70 bg-white/60 px-4 py-3 dark:border-slate-700/70 dark:bg-slate-800/40">
+          <span className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+            <ShieldCheck className="h-4 w-4 text-slate-400" />
+            VPN
+          </span>
           <div className="flex gap-2">
             <Button variant="secondary" isLoading={isVpnLoading} onClick={() => handleVpn("connect")}>
               Connect
@@ -150,9 +168,9 @@ export function WifiSettingsPage({ onBack }: WifiSettingsPageProps) {
         </div>
 
         <Button variant="ghost" className="w-full" onClick={onBack}>
-          Back
+          <ArrowLeft className="h-4 w-4" /> Back
         </Button>
       </Card>
-    </div>
+    </AppShell>
   );
 }

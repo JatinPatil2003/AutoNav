@@ -2,10 +2,12 @@ import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { KeyRound } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
 import { Input } from "../../../components/ui/Input";
 import { PasswordInput } from "../../../components/ui/PasswordInput";
+import { AuthShell } from "../../../components/ui/AuthShell";
 import { ThemeToggle } from "../../../components/ui/ThemeToggle";
 import { getApiErrorMessage } from "../../../app/apiError";
 import {
@@ -88,11 +90,14 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <div className="absolute right-4 top-4">
+    <AuthShell>
+      <div className="absolute right-4 top-4 z-10">
         <ThemeToggle />
       </div>
-      <Card className="w-full max-w-sm">
+      <Card className="border-0 bg-transparent p-7 shadow-none dark:bg-transparent">
+        <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-md shadow-brand-900/20">
+          <KeyRound className="h-5 w-5 text-white" />
+        </span>
         {step === "email" && (
           <>
             <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -200,6 +205,6 @@ export function ForgotPasswordPage() {
           </p>
         )}
       </Card>
-    </div>
+    </AuthShell>
   );
 }

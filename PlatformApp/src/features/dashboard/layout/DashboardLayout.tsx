@@ -6,11 +6,11 @@ import { Topbar } from "./Topbar";
 export function DashboardLayout() {
   return (
     <RobotSelectionProvider>
-      <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="app-canvas flex h-screen">
         <Sidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto p-3">
             <Outlet />
           </main>
         </div>

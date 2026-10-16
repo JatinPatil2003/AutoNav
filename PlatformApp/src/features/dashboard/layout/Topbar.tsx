@@ -18,7 +18,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur dark:border-slate-700 dark:bg-slate-800/80">
+    <header className="glass-panel sticky top-0 z-10 m-3 mb-0 flex h-16 items-center justify-between rounded-2xl border px-6">
       <div className="text-sm text-slate-500 dark:text-slate-400">
         {robots.length === 0 ? (
           "No robot assigned"

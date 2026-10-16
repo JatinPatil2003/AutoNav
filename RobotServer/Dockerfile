@@ -17,16 +17,16 @@ COPY RobotApp/. .
 RUN npm run build
 
 # Deliberately its own lean image rather than FROM the heavy
-# jatinvpatil/autonav:base (which carries nav2-bringup, slam-toolbox,
+# jatinpatil2003/autonav:base (which carries nav2-bringup, slam-toolbox,
 # cartographer-ros, rviz2 — none of which RobotServer runs itself; it only
 # talks to those nodes over topics/services/actions). RobotServer needs:
-# Node.js (to run) + the ROS 2 Kilted client libraries and message
+# Node.js (to run) + the ROS 2 Lyrical client libraries and message
 # packages rclnodejs binds against at npm-install time.
-FROM ros:kilted AS base
+FROM ros:lyrical AS base
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=kilted
+ENV ROS_DISTRO=lyrical
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates gnupg \
@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update && apt-get install -y nodejs \
+    && apt-get update && apt-get install -y -t nodistro nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
@@ -70,4 +70,4 @@ COPY RobotServer/package*.json ./
 
 EXPOSE 8000
 
-CMD ["bash", "-c", "source /opt/ros/kilted/setup.bash && node dist/index.js"]
+CMD ["bash", "-c", "source /opt/ros/lyrical/setup.bash && node dist/index.js"]

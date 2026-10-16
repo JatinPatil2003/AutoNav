@@ -7,7 +7,7 @@ export FASTDDS_DEFAULT_PROFILES_FILE=/fastdds.xml
 
 source /opt/venv/bin/activate
 
-source "/opt/ros/kilted/setup.bash"
+source "/opt/ros/lyrical/setup.bash"
 source "/colcon_ws/install/setup.bash"
 
 exec "$@"

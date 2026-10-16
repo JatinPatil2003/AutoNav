@@ -1,6 +1,6 @@
 # Modular robot-side stack: one container per subsystem, all built FROM the
 # shared ROS base image (docker/base.Dockerfile), published as
-# jatinvpatil/autonav:base. To build and run everything straight from that
+# jatinpatil2003/autonav:base. To build and run everything straight from that
 # published base:
 #
 #   docker compose build
@@ -44,8 +44,8 @@ services:
       context: .
       dockerfile: docker/lidar.Dockerfile
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
-    image: jatinvpatil/autonav:lidar
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:lidar
     network_mode: host
     ipc: host
     privileged: true
@@ -59,8 +59,8 @@ services:
       context: .
       dockerfile: docker/imu.Dockerfile
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
-    image: jatinvpatil/autonav:imu
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:imu
     network_mode: host
     ipc: host
     privileged: true
@@ -74,8 +74,8 @@ services:
       context: .
       dockerfile: docker/controller.Dockerfile
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
-    image: jatinvpatil/autonav:controller
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:controller
     network_mode: host
     ipc: host
     privileged: true
@@ -89,8 +89,8 @@ services:
       context: .
       dockerfile: docker/localization.Dockerfile
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
-    image: jatinvpatil/autonav:localization
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:localization
     network_mode: host
     ipc: host
     user: "1000:1000"
@@ -104,8 +104,8 @@ services:
       context: .
       dockerfile: docker/navigation.Dockerfile
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-jatinvpatil/autonav:base}
-    image: jatinvpatil/autonav:navigation
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:navigation
     network_mode: host
     ipc: host
     privileged: true
@@ -123,7 +123,7 @@ services:
     build:
       context: .
       dockerfile: RobotServer/Dockerfile
-    image: jatinvpatil/autonav:robotserver
+    image: jatinpatil2003/autonav:robotserver
     network_mode: host
     ipc: host
     user: "1000:1000"
