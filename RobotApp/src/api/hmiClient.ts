@@ -18,6 +18,7 @@ export interface RosterUser {
   email: string;
   name: string;
   avatarUrl?: string;
+  pinSet: boolean;
 }
 
 /**

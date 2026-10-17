@@ -25,6 +25,7 @@ export interface RosterUserSummary {
   email: string;
   name: string;
   avatarUrl?: string;
+  pinSet: boolean;
 }
 
 export class RobotAuthService {
@@ -40,7 +41,7 @@ export class RobotAuthService {
     if (!robotId) return [];
 
     const users = await this.localUserRepository.listActive(robotId);
-    return users.map((u) => ({ email: u.email, name: u.name, avatarUrl: u.avatarUrl }));
+    return users.map((u) => ({ email: u.email, name: u.name, avatarUrl: u.avatarUrl, pinSet: !!u.pinHash }));
   }
 
   async identify(email: string): Promise<IdentifyResult> {

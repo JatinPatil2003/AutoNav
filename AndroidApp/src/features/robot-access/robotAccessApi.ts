@@ -3,10 +3,9 @@ import { RobotAccessRequest, RobotOption } from "./robotAccess.types";
 
 export const robotAccessApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    listRobotOptions: builder.query<RobotOption[], void>({
-      query: () => "/robots",
-      transformResponse: (response: { robots: RobotOption[] }) => response.robots,
-      providesTags: ["RobotOptions"],
+    lookupRobot: builder.query<RobotOption | null, string>({
+      query: (robotId) => `/robots/lookup/${encodeURIComponent(robotId)}`,
+      transformResponse: (response: { robot: RobotOption | null }) => response.robot,
     }),
     listMyRobotAccessRequests: builder.query<RobotAccessRequest[], void>({
       query: () => "/robot-access-requests/mine",
@@ -22,7 +21,7 @@ export const robotAccessApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useListRobotOptionsQuery,
+  useLazyLookupRobotQuery,
   useListMyRobotAccessRequestsQuery,
   useCreateRobotAccessRequestMutation,
 } = robotAccessApi;

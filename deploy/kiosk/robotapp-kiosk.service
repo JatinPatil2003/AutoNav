@@ -1,0 +1,14 @@
+[Unit]
+Description=RobotApp kiosk browser
+After=graphical-session.target docker.service
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/jatin/Projects/AutoNav/deploy/kiosk/robotapp-kiosk.sh
+Restart=on-failure
+RestartSec=2
+Environment=DISPLAY=:1
+
+[Install]
+WantedBy=graphical-session.target

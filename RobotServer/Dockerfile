@@ -1,20 +1,9 @@
-# Built with the repo root as context (not ./RobotServer) so this stage can
-# also pull in ../RobotApp — see docker-compose.yml's `context: .` /
-# `dockerfile: RobotServer/Dockerfile` and .circleci/config.yml's build
-# invocation. Every path below is root-relative for that reason.
-
-# -----------------------------
-# RobotApp build stage: the local HMI PWA, served statically by RobotServer
-# at runtime (same-origin, so its cookies need no CORS/SameSite handling).
-# -----------------------------
-FROM node:20-slim AS robotapp-build
-
-WORKDIR /robotapp
-COPY RobotApp/package*.json ./
-RUN npm ci
-
-COPY RobotApp/. .
-RUN npm run build
+# Built with the repo root as context (not ./RobotServer) — see
+# docker-compose.yml's `context: .` / `dockerfile: RobotServer/Dockerfile`
+# and .circleci/config.yml's build invocation. Every path below is
+# root-relative for that reason. RobotApp (the local HMI PWA) is built and
+# served by its own container now — see RobotApp/Dockerfile — fronted by
+# nginx, which reverse-proxies /api back to this process on localhost:8000.
 
 # Deliberately its own lean image rather than FROM the heavy
 # jatinpatil2003/autonav:base (which carries nav2-bringup, slam-toolbox,
@@ -65,7 +54,6 @@ ENV NODE_ENV=production
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY --from=robotapp-build /robotapp/dist ./robotapp-dist
 COPY RobotServer/package*.json ./
 
 EXPOSE 8000

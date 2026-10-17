@@ -68,6 +68,18 @@ export class RobotService {
     return robots.filter((r) => r.status !== "retired").map(toRobotSummaryDto);
   }
 
+  /**
+   * Non-admin-safe single-robot lookup by robotId, used to verify a
+   * user-entered robotId before letting them request access to it.
+   * Returns null for an unknown or retired robot — never a 404/500, so the
+   * caller can render a plain "robot not available" state.
+   */
+  async findSummaryByRobotId(robotId: string): Promise<RobotSummaryDto | null> {
+    const robot = await this.robotRepository.findByRobotId(robotId);
+    if (!robot || robot.status === "retired") return null;
+    return toRobotSummaryDto(robot);
+  }
+
   /** Permanently removes a robot along with its assignments and access requests. */
   async deleteRobot(id: string): Promise<void> {
     const robot = await this.robotRepository.findById(id);

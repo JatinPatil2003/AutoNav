@@ -2,7 +2,6 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
 import helmet from "helmet";
-import path from "node:path";
 import pinoHttp from "pino-http";
 import swaggerUi from "swagger-ui-express";
 import * as rclnodejs from "rclnodejs";
@@ -164,16 +163,9 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
   app.use("/api/system/diagnostics", requireAuth, createDiagnosticsRouter());
   app.use("/api/system/maintenance", requireAuth, createMaintenanceRouter());
 
-  // RobotApp (the local HMI PWA) is built separately and copied into the
-  // image at ROBOTAPP_STATIC_DIR — served same-origin so its cookies need
-  // no CORS/SameSite gymnastics. Mounted after every /api and /maps route
-  // so those always win; only unmatched paths fall through to the SPA.
-  app.use(express.static(config.robotAppStaticDir));
-  app.get(/^(?!\/api|\/maps|\/health).*/, (_req, res) => {
-    res.sendFile(path.join(config.robotAppStaticDir, "index.html"), (err) => {
-      if (err) res.status(404).json({ error: "NotFound", message: "RobotApp build not found" });
-    });
-  });
+  // RobotApp (the local HMI PWA) is now served by its own container,
+  // reverse-proxying /api, /ws, /maps and /health back to this process on
+  // localhost:8000 — see RobotApp/nginx.conf and docker-compose.yml.
 
   app.use(notFoundHandler);
   app.use(errorHandler);

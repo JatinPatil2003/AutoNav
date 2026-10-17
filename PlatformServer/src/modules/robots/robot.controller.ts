@@ -27,6 +27,11 @@ export class RobotController {
     res.status(200).json({ robots });
   };
 
+  lookupRobotByRobotId = async (req: Request, res: Response): Promise<void> => {
+    const robot = await this.robotService.findSummaryByRobotId(req.params.robotId);
+    res.status(200).json({ robot });
+  };
+
   deleteRobot = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     await this.robotService.deleteRobot(id);

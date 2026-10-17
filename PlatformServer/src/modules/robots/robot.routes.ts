@@ -111,5 +111,23 @@ export function createPublicRobotRouter(robotController: RobotController): Route
    */
   router.get("/", asyncHandler(robotController.listRobotSummaries));
 
+  /**
+   * @openapi
+   * /api/robots/lookup/{robotId}:
+   *   get:
+   *     summary: Look up a single non-retired robot by its robotId (any authenticated user)
+   *     description: >
+   *       Used to verify a user-entered robotId before letting them request
+   *       access to it. Always 200s — `{ robot: null }` for an unknown or
+   *       retired robotId, never a 404, so the client can render a plain
+   *       "robot not available" state instead of treating it as an error.
+   *     tags: [Robots]
+   *     security: [{ cookieAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: The matching robot summary, or null
+   */
+  router.get("/lookup/:robotId", asyncHandler(robotController.lookupRobotByRobotId));
+
   return router;
 }

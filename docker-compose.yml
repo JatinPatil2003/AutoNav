@@ -135,7 +135,7 @@ services:
       - MAPS_DIR=/app/maps
       - CAMERA_DEVICE=/dev/robotcam
       - PLATFORM_BASE_URL=${PLATFORM_BASE_URL}
-      - PLATFORM_ROBOT_SECRET=${PLATFORM_ROBOT_SECRET}
+      - ROBOT_LINK_SECRET=${ROBOT_LINK_SECRET}
       - ROSTER_SYNC_INTERVAL_MINUTES=60
       - ROBOT_SESSION_ACCESS_SECRET=${ROBOT_SESSION_ACCESS_SECRET}
       - ROBOT_SESSION_REFRESH_SECRET=${ROBOT_SESSION_REFRESH_SECRET}
@@ -143,7 +143,6 @@ services:
       - ROBOT_SESSION_REFRESH_TTL=24h
       - PIN_LOGIN_MAX_ATTEMPTS=5
       - PIN_LOGIN_LOCKOUT_MINUTES=15
-      - ROBOTAPP_STATIC_DIR=/app/robotapp-dist
     volumes:
       - /dev/robotcam:/dev/robotcam
       - ./RobotServer/maps:/app/maps
@@ -151,3 +150,13 @@ services:
     depends_on:
       - mongodb
       - navigation
+
+  robotapp:
+    build:
+      context: .
+      dockerfile: RobotApp/Dockerfile
+    image: jatinpatil2003/autonav:robotapp
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - robotserver

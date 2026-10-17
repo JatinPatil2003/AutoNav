@@ -70,7 +70,13 @@ export class RobotAuthService {
     const expiresAt = new Date(Date.now() + config.otp.expiryMinutes * 60 * 1000);
     await this.otpRepository.create(user._id.toString(), "robot-pin-setup", otpHash, expiresAt);
 
-    await this.emailOtpSender.sendOtp(user.email, otp);
+    // Fire-and-forget: respond to the robot as soon as the OTP is persisted
+    // rather than blocking on Gmail SMTP latency, which — now that this
+    // call arrives over the public internet (see resolveRobot.middleware.ts)
+    // — can push RobotServer's own client timeout (platformClient.ts).
+    this.emailOtpSender.sendOtp(user.email, otp).catch((err) => {
+      logger.error({ err, userId: user._id.toString() }, "robotAuth.requestPinSetupOtp: OTP email send failed");
+    });
     logger.debug({ userId: user._id.toString() }, "robotAuth.requestPinSetupOtp: OTP issued");
   }
 

@@ -77,6 +77,13 @@ export interface CreatedApp {
 export function createApp(): CreatedApp {
   const app = express();
 
+  // nginx proxies every request from loopback (see AWS/nginx/platform-server.autonav.in.conf),
+  // setting X-Forwarded-For/-Proto. Trusting only loopback as a proxy hop
+  // lets express-rate-limit and req.ip use the real client IP from that
+  // header without opening IP spoofing to anyone who can reach this
+  // process directly (there is no such direct public path).
+  app.set("trust proxy", "loopback");
+
   app.use(helmet());
   app.use(express.json());
   app.use(cookieParser());

@@ -15,4 +15,3 @@ process.env.ROBOT_SESSION_ACCESS_TTL = "15m";
 process.env.ROBOT_SESSION_REFRESH_TTL = "24h";
 process.env.PIN_LOGIN_MAX_ATTEMPTS = "5";
 process.env.PIN_LOGIN_LOCKOUT_MINUTES = "15";
-process.env.ROBOTAPP_STATIC_DIR = "./robotapp-dist";

@@ -47,9 +47,6 @@ const envSchema = z.object({
   ROBOT_SESSION_REFRESH_TTL: z.string().default("24h"),
   PIN_LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   PIN_LOGIN_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
-
-  // --- RobotApp static bundle ---
-  ROBOTAPP_STATIC_DIR: z.string().default("./robotapp-dist"),
 });
 
 function loadConfig() {
@@ -104,8 +101,6 @@ function loadConfig() {
       maxAttempts: env.PIN_LOGIN_MAX_ATTEMPTS,
       lockoutMinutes: env.PIN_LOGIN_LOCKOUT_MINUTES,
     },
-
-    robotAppStaticDir: env.ROBOTAPP_STATIC_DIR,
   };
 }
 

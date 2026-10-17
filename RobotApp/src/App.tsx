@@ -58,12 +58,12 @@ export function App() {
     key = "picker";
     screen = (
       <UserPickerPage
-        onPickUser={(pickedEmail, pickedName, pickedAvatarUrl) => {
+        onPickUser={(pickedEmail, pickedName, pickedPinSet, pickedAvatarUrl) => {
           setEmail(pickedEmail);
           setName(pickedName);
           setAvatarUrl(pickedAvatarUrl);
           setPinLoginNotice(undefined);
-          setFlow("pin-login");
+          setFlow(pickedPinSet ? "pin-login" : "pin-setup");
         }}
         onNewUser={() => setFlow("identify")}
         onOpenWifi={() => setFlow("wifi")}

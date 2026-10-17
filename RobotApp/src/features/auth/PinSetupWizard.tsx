@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, MailCheck, ShieldCheck } from "lucide-react";
@@ -46,10 +46,26 @@ export function PinSetupWizard({ email, name, avatarUrl, onBack, onPinSet }: Pin
     }
   }
 
+  // Each request-otp call invalidates whatever OTP record came before it
+  // (see PlatformServer's invalidateActiveForUser), so sending the initial
+  // code twice for one mount — e.g. React StrictMode's dev double-effect —
+  // silently invalidates the first email the moment the second is issued,
+  // right before the user can use it. Guard with a ref (not state, so it's
+  // set synchronously before the async call starts) to make the auto-send
+  // fire at most once per mount; "Resend" always bypasses it deliberately.
+  const hasSentInitialOtp = useRef(false);
+
   useEffect(() => {
+    if (hasSentInitialOtp.current) return;
+    hasSentInitialOtp.current = true;
     requestOtp();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- send the first code once, on entering this wizard
   }, []);
+
+  async function handleResend() {
+    otpForm.resetField("otp");
+    await requestOtp();
+  }
 
   async function onSubmitOtp(values: OtpFormValues) {
     setError(null);
@@ -109,7 +125,7 @@ export function PinSetupWizard({ email, name, avatarUrl, onBack, onPinSet }: Pin
             </h1>
             <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
               We sent a 6-digit code to {maskEmail(email)}.{" "}
-              <button type="button" onClick={requestOtp} className="font-semibold text-brand-600 dark:text-brand-400">
+              <button type="button" onClick={handleResend} className="font-semibold text-brand-600 dark:text-brand-400">
                 Resend code
               </button>
             </p>

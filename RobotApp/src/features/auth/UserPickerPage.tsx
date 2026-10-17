@@ -10,7 +10,7 @@ import { hmiClient, RosterUser } from "../../api/hmiClient";
 import { maskEmail } from "../../utils/maskEmail";
 
 interface UserPickerPageProps {
-  onPickUser: (email: string, name: string, avatarUrl?: string) => void;
+  onPickUser: (email: string, name: string, pinSet: boolean, avatarUrl?: string) => void;
   onNewUser: () => void;
   onOpenWifi: () => void;
 }
@@ -56,7 +56,7 @@ export function UserPickerPage({ onPickUser, onNewUser, onOpenWifi }: UserPicker
               <li key={user.email}>
                 <button
                   type="button"
-                  onClick={() => onPickUser(user.email, user.name, user.avatarUrl)}
+                  onClick={() => onPickUser(user.email, user.name, user.pinSet, user.avatarUrl)}
                   className="group flex w-full items-center gap-3 rounded-xl border border-slate-200/70 bg-white/60 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:shadow-md hover:shadow-brand-900/5 dark:border-slate-700/70 dark:bg-slate-800/40 dark:hover:bg-slate-800"
                 >
                   <UserAvatar name={user.name} avatarUrl={user.avatarUrl} />

@@ -14,6 +14,9 @@ export class NodemailerEmailOtpSender implements IEmailOtpSender {
   constructor() {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
       auth: { user: config.email.user, pass: config.email.appPassword },
     });
   }
