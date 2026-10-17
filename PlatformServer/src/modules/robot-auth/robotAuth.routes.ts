@@ -13,10 +13,11 @@ import {
 } from "./robotAuth.validation";
 
 /**
- * Mounted at /api/robot-auth — the robot-facing service-to-service API.
- * Every route here requires only the calling robot's own `x-robot-id`
- * header (see resolveRobot.middleware.ts) — no secret, the VPN is the
- * trust boundary (see root README).
+ * Mounted at /api/robot-auth — the robot-facing service-to-service API,
+ * publicly reachable (see AWS/nginx/platform-server.autonav.in.conf).
+ * Every route here requires the calling robot's `x-robot-id` header plus
+ * its ROBOT_LINK_SECRET as `Authorization: Robot <secret>` (see
+ * resolveRobot.middleware.ts) — the same credential /ws/robot-link uses.
  */
 export function createRobotAuthRouter(
   controller: RobotAuthController,

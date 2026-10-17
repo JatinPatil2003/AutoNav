@@ -7,11 +7,11 @@ export { RosterEntryDto } from "./platformClient.interface";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 /**
- * This robot's calls into PlatformServer's /api/robot-auth/* API. No
- * secret, no token exchange — the VPN is the trust boundary (see root
- * README), so every call just identifies itself with its own device id
- * (resolved from the ESP32 bridge, see ros/deviceIdentity.ts) and
- * PlatformServer resolves the robot record from that id directly.
+ * This robot's calls into PlatformServer's /api/robot-auth/* API, now
+ * reachable from the public internet rather than only over the VPN. Each
+ * call identifies itself with its own device id (resolved from the ESP32
+ * bridge, see ros/deviceIdentity.ts) and authenticates with the same
+ * ROBOT_LINK_SECRET used for /ws/robot-link, as `Authorization: Robot <secret>`.
  */
 export class PlatformClient implements IPlatformClient {
   constructor(private readonly deviceIdentity: DeviceIdentityService) {}
@@ -61,6 +61,7 @@ export class PlatformClient implements IPlatformClient {
         headers: {
           "Content-Type": "application/json",
           "x-robot-id": robotId,
+          authorization: `Robot ${config.robotLinkSecret}`,
         },
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
