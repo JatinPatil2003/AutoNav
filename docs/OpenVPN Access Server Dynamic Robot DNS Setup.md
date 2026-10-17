@@ -372,3 +372,38 @@ ssh user@autonav.robot
 ```
 
 The hostname resolves to the robot's current VPN address.
+
+---
+
+# 16. Static DNS for `platform.internal` (reverse direction: robot → PlatformServer)
+
+Everything above resolves a *robot's* dynamic VPN address so the EC2 host (or another peer) can reach it. The reverse direction needs the opposite kind of record: `RobotServer` (running on the robot) connects out to `PlatformServer` at `platform.internal:4000` directly over the VPN tunnel — bypassing nginx/Cloudflare/TLS entirely. This record remains useful as a VPN-only fallback path, but it is no longer the trust boundary for `/ws/robot-link`: that path is now also proxied publicly over HTTPS at `https://platform-server.autonav.in/ws/robot-link` (see `AWS/nginx/platform-server.autonav.in.conf`), authenticated by `ROBOT_LINK_SECRET` (see the comments in `PlatformServer/src/index.ts`) rather than VPN membership. Unlike a robot's address, EC2's own VPN-side address doesn't roam — so this is a **static** record, not a dynamically-updated one, and it must live in a file the `update-robot-dns.sh` timer never touches (that script overwrites `/etc/dnsmasq-robots.hosts` wholesale every 10s).
+
+Create a separate static hosts file:
+
+```bash
+echo "172.27.224.1 platform.internal" | sudo tee /etc/dnsmasq-platform.hosts
+sudo chmod 644 /etc/dnsmasq-platform.hosts
+```
+
+`172.27.224.1` is one of the four dnsmasq-serving gateway addresses from step "DNS servers provided by dnsmasq" above — any of them reaches EC2 itself (the OpenVPN Access Server), regardless of which `as0tN` subnet a given robot happens to be assigned to, since EC2 is the server all four belong to.
+
+Add a second `addn-hosts` line to the dnsmasq config from step 2 (dnsmasq supports multiple `addn-hosts` directives, merging all of them):
+
+```bash
+sudo sed -i '/^addn-hosts=\/etc\/dnsmasq-robots.hosts$/a addn-hosts=/etc/dnsmasq-platform.hosts' /etc/dnsmasq.d/openvpn-robots.conf
+```
+
+Restart dnsmasq to pick it up:
+
+```bash
+sudo systemctl restart dnsmasq
+```
+
+Verify from a connected robot:
+
+```bash
+ping platform.internal
+```
+
+If `platform.internal`'s actual host ever changes (e.g. EC2 instance replaced, or PlatformServer moved to different infrastructure), update the IP in `/etc/dnsmasq-platform.hosts` and `sudo systemctl restart dnsmasq` — nothing else needs to change, since `RobotServer/.env.example`'s `PLATFORM_BASE_URL=http://platform.internal:4000` stays the same either way.

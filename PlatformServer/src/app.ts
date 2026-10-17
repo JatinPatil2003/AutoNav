@@ -59,9 +59,11 @@ import { WsRouter } from "./core/wsRouter";
 export interface CreatedApp {
   app: Express;
   /**
-   * Attached to the internal HTTP listener only (see src/index.ts) —
-   * `/ws/robot-link` must never be reachable through the public nginx
-   * vhost, and `/ws/control` is the one WS path that nginx *does* proxy.
+   * Attached to the internal HTTP listener only (see src/index.ts).
+   * Both `/ws/robot-link` and `/ws/control` are proxied publicly by nginx
+   * (see AWS/nginx/platform-server.autonav.in.conf) — `/ws/robot-link` is
+   * guarded by `ROBOT_LINK_SECRET` (robotLinkGateway.authenticate) rather
+   * than a VPN trust boundary.
    */
   wsRouter: WsRouter;
 }

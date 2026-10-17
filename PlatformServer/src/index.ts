@@ -11,9 +11,10 @@ async function bootstrap(): Promise<void> {
   const server = http.createServer(app);
 
   // Both /ws/robot-link and /ws/control attach to this one listener.
-  // /ws/robot-link is kept unreachable from the public internet at the
-  // nginx layer (see AWS/nginx/platform-server.autonav.in.conf) — it is
-  // only ever dialed over the VPN, directly at platform.internal:4000.
+  // /ws/robot-link is now proxied publicly over HTTPS at
+  // https://platform-server.autonav.in/ws/robot-link (see
+  // AWS/nginx/platform-server.autonav.in.conf) — auth is enforced by
+  // ROBOT_LINK_SECRET (robotLinkGateway.authenticate), not a VPN boundary.
   wsRouter.attach(server);
 
   server.listen(config.port, () => {
