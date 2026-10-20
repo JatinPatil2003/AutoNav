@@ -1,0 +1,1230 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PlatformServer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* ---- Design plan ----
+   Color: indigo/blue accent on a cool paper neutral; code surfaces sink to near-ink regardless of theme.
+   Type: Libre Franklin (display, heavy/condensed) for headings + eyebrows, Source Sans 3 for body prose,
+         IBM Plex Mono for code, file paths, env vars and protocol frames.
+   Layout: single scrolling column, sticky mini-header with section jump, each of the report's 8 sections
+         as a bordered "panel" opened by a numbered tab, diagrams inline before their prose. */
+:root{
+  --bg:#f5f6fb; --surface:#ffffff; --surface-2:#edeffa; --border:#d7dbee;
+  --fg:#1a1d35; --fg-muted:#565c82;
+  --accent:#4338ca; --accent-strong:#352ea8; --accent-soft:#e6e5fb; --accent-fg:#ffffff;
+  --code-bg:#13162c; --code-fg:#d9dcff; --code-border:#2a2e52; --code-muted:#8d92c9;
+  --warn-bg:#fff6e8; --warn-border:#e4a53a; --warn-fg:#6b4100;
+  --danger-bg:#fdeceb; --danger-border:#d6534a; --danger-fg:#7c1d14;
+  --chip-bg:#eceefb; --chip-fg:#373c6b;
+  --shadow:0 1px 2px rgba(26,29,53,.06), 0 10px 28px -18px rgba(26,29,53,.35);
+  --font-display:'Libre Franklin',"Arial Narrow",sans-serif;
+  --font-body:'Source Sans 3',"Segoe UI",Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0e1c; --surface:#141730; --surface-2:#1b1f3f; --border:#2d3260;
+    --fg:#e7e9ff; --fg-muted:#a6abd9;
+    --accent:#9497f8; --accent-strong:#b7baff; --accent-soft:#242a57; --accent-fg:#0c0e1c;
+    --code-bg:#090b17; --code-fg:#c6caff; --code-border:#242a57; --code-muted:#6f74a8;
+    --warn-bg:#352709; --warn-border:#c98a2c; --warn-fg:#ffd59b;
+    --danger-bg:#361212; --danger-border:#b3473f; --danger-fg:#ffb4ac;
+    --chip-bg:#1f2347; --chip-fg:#c3c7f5;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -18px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c0e1c; --surface:#141730; --surface-2:#1b1f3f; --border:#2d3260;
+  --fg:#e7e9ff; --fg-muted:#a6abd9;
+  --accent:#9497f8; --accent-strong:#b7baff; --accent-soft:#242a57; --accent-fg:#0c0e1c;
+  --code-bg:#090b17; --code-fg:#c6caff; --code-border:#242a57; --code-muted:#6f74a8;
+  --warn-bg:#352709; --warn-border:#c98a2c; --warn-fg:#ffd59b;
+  --danger-bg:#361212; --danger-border:#b3473f; --danger-fg:#ffb4ac;
+  --chip-bg:#1f2347; --chip-fg:#c3c7f5;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -18px rgba(0,0,0,.7);
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--font-body);
+  font-size:15px; line-height:1.6; margin:0;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+h1,h2,h3,h4{font-family:var(--font-display); font-weight:800; letter-spacing:-.01em; text-wrap:balance; color:var(--fg);}
+p{margin:.6em 0;}
+a{color:var(--accent);}
+.wrap{max-width:900px; margin:0 auto; padding-block:28px 64px;}
+code, pre, .mono{font-family:var(--font-mono);}
+code{background:var(--chip-bg); color:var(--chip-fg); padding:.1em .4em; border-radius:4px; font-size:.86em;}
+
+/* Hero */
+.hero{padding-block:4px 20px; border-bottom:1px solid var(--border); margin-bottom:28px;}
+.eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:600;}
+.hero h1{font-size:clamp(28px,6vw,40px); margin:.15em 0 .1em;}
+.hero .tagline{font-size:16px; color:var(--fg-muted); max-width:56ch; margin:0 0 18px;}
+.stack-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+.stack-row .chip{background:var(--chip-bg); color:var(--chip-fg); border-radius:999px; padding:4px 11px; font-size:12px; font-family:var(--font-mono);}
+
+/* TOC */
+.toc{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); margin-bottom:34px;}
+.toc h2{font-size:12px; letter-spacing:.1em; text-transform:uppercase; margin:0 0 10px; color:var(--fg-muted);}
+.toc ol{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 18px;}
+@media (max-width:560px){ .toc ol{grid-template-columns:1fr;} }
+.toc li a{display:flex; gap:9px; align-items:baseline; text-decoration:none; color:var(--fg); padding:5px 2px; border-radius:6px;}
+.toc li a:hover{background:var(--surface-2);}
+.toc .n{font-family:var(--font-mono); color:var(--accent); font-weight:600; font-size:12px; min-width:1.4em;}
+
+/* Sections */
+section{margin-bottom:56px; scroll-margin-top:14px;}
+.sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.sec-num{font-family:var(--font-mono); color:var(--accent-fg); background:var(--accent); border-radius:7px; padding:2px 9px; font-size:13px; font-weight:700;}
+section h2{font-size:24px; margin:0;}
+.section-intro{color:var(--fg-muted); max-width:68ch;}
+
+/* Tables */
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; margin:14px 0;}
+table{border-collapse:collapse; width:100%; min-width:520px; font-size:13.5px;}
+thead th{text-align:left; background:var(--surface-2); font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:.03em; text-transform:uppercase; color:var(--fg-muted); padding:9px 12px; border-bottom:1px solid var(--border);}
+tbody td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+td code, th code{white-space:nowrap;}
+
+/* Code blocks */
+.codeblock{background:var(--code-bg); color:var(--code-fg); border:1px solid var(--code-border); border-radius:10px; padding:14px 16px; overflow-x:auto; margin:14px 0;}
+.codeblock pre{margin:0; font-family:var(--font-mono); font-size:12.5px; line-height:1.65; white-space:pre;}
+.codeblock .c{color:var(--code-muted);}
+
+/* Details / module map */
+.module{background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; box-shadow:var(--shadow);}
+.module summary{cursor:pointer; list-style:none; padding:12px 16px; font-family:var(--font-display); font-weight:700; font-size:14.5px; display:flex; align-items:center; gap:10px;}
+.module summary::-webkit-details-marker{display:none;}
+.module summary::before{content:"▸"; color:var(--accent); font-size:12px; transition:transform .15s;}
+.module[open] summary::before{transform:rotate(90deg);}
+.module summary .tag{font-family:var(--font-mono); font-weight:400; font-size:11.5px; color:var(--fg-muted);}
+.module .inner{padding:0 16px 14px;}
+.filerow{display:grid; grid-template-columns:minmax(140px,220px) 1fr; gap:10px; padding:7px 0; border-top:1px solid var(--border); font-size:13px;}
+.filerow:first-child{border-top:none;}
+.filerow .f{font-family:var(--font-mono); color:var(--accent-strong); word-break:break-word;}
+.filerow .d{color:var(--fg-muted); min-width:0;}
+
+/* Diagrams */
+figure.diagram{margin:18px 0; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow);}
+.svg-wrap{overflow-x:auto;}
+figure.diagram svg{display:block; min-width:560px; max-width:100%; height:auto; color:var(--fg);}
+figure.diagram svg text{fill:currentColor;}
+figure.diagram figcaption{font-size:12.5px; color:var(--fg-muted); margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);}
+.accentline{color:var(--accent);}
+.dim{opacity:.55;}
+
+/* Callouts */
+.callout{border:1px solid var(--border); border-left-width:5px; border-radius:8px; padding:12px 14px; margin:12px 0; font-size:14px;}
+.callout h4{margin:0 0 4px; font-size:13.5px; font-family:var(--font-display); display:flex; align-items:center; gap:7px;}
+.callout--warn{background:var(--warn-bg); border-color:var(--warn-border); color:var(--warn-fg);}
+.callout--danger{background:var(--danger-bg); border-color:var(--danger-border); color:var(--danger-fg);}
+.callout--warn h4, .callout--danger h4{color:inherit;}
+.callout p, .callout li{color:inherit;}
+.callout code{background:rgba(0,0,0,.12); color:inherit;}
+:root[data-theme="light"] .callout code, .callout code { background: rgba(0,0,0,.08); }
+
+/* Flow blocks */
+.flow{border:1px solid var(--border); border-radius:12px; padding:16px 18px; background:var(--surface); margin-bottom:22px; box-shadow:var(--shadow);}
+.flow h3{font-size:17px; margin:0 0 4px;}
+.flow .meta{font-size:12.5px; color:var(--fg-muted); margin-bottom:10px;}
+.flow ol{padding-left:1.25em; margin:.5em 0;}
+.flow li{margin-bottom:.45em;}
+.flow li::marker{color:var(--accent); font-weight:700;}
+
+/* misc */
+ul.plain{padding-left:1.2em;}
+ul.plain li{margin-bottom:.4em;}
+.kv-table td:first-child{font-family:var(--font-mono); color:var(--accent-strong); white-space:nowrap;}
+footer{color:var(--fg-muted); font-size:12.5px; border-top:1px solid var(--border); padding-top:16px; margin-top:40px;}
+@media (max-width:480px){
+  .filerow{grid-template-columns:1fr;}
+  figure.diagram{padding:10px;}
+}
+</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">AutoNav &middot; Onboarding Doc &middot; 1 of 5</div>
+  <h1>PlatformServer</h1>
+  <p class="tagline">The cloud brain: identity, fleet management, and remote-control session brokering for every robot and every user in AutoNav.</p>
+  <div class="stack-row">
+    <span class="chip">TypeScript</span><span class="chip">Express</span><span class="chip">MongoDB / Mongoose</span>
+    <span class="chip">JWT</span><span class="chip">Passport + Google OAuth</span><span class="chip">ws</span>
+    <span class="chip">Zod</span><span class="chip">bcrypt</span><span class="chip">nodemailer</span>
+  </div>
+
+  <figure class="diagram">
+    <div class="svg-wrap">
+    <svg viewBox="0 0 800 380" role="img" aria-label="System map: RobotApp talks only to RobotServer, which dials out to PlatformServer over a persistent robot-link WebSocket and robot-auth REST calls. PlatformApp and AndroidApp call into PlatformServer over REST and a control WebSocket. PlatformServer is the hub, highlighted as you are here.">
+      <defs>
+        <marker id="hm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <!-- RobotApp -->
+      <rect x="20" y="165" width="130" height="50" rx="8" fill="none" stroke="currentColor"/>
+      <text x="85" y="186" text-anchor="middle" font-size="12.5" font-weight="700">RobotApp</text>
+      <text x="85" y="202" text-anchor="middle" font-size="10.5" class="dim">robot touchscreen UI</text>
+      <!-- RobotServer -->
+      <rect x="220" y="165" width="150" height="50" rx="8" fill="none" stroke="currentColor"/>
+      <text x="295" y="186" text-anchor="middle" font-size="12.5" font-weight="700">RobotServer</text>
+      <text x="295" y="202" text-anchor="middle" font-size="10.5" class="dim">on-robot, bridges ROS2</text>
+      <!-- PlatformServer (hub, highlighted) -->
+      <rect x="470" y="140" width="190" height="100" rx="10" fill="var(--accent)" stroke="var(--accent)"/>
+      <text x="565" y="180" text-anchor="middle" font-size="14.5" font-weight="800" fill="var(--accent-fg)">PlatformServer</text>
+      <text x="565" y="198" text-anchor="middle" font-size="10.5" fill="var(--accent-fg)">identity · fleet · brokering</text>
+      <text x="565" y="131" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--accent)">YOU ARE HERE</text>
+      <!-- PlatformApp -->
+      <rect x="610" y="20" width="150" height="50" rx="8" fill="none" stroke="currentColor"/>
+      <text x="685" y="41" text-anchor="middle" font-size="12.5" font-weight="700">PlatformApp</text>
+      <text x="685" y="57" text-anchor="middle" font-size="10.5" class="dim">web dashboard</text>
+      <!-- AndroidApp -->
+      <rect x="610" y="310" width="150" height="50" rx="8" fill="none" stroke="currentColor"/>
+      <text x="685" y="331" text-anchor="middle" font-size="12.5" font-weight="700">AndroidApp</text>
+      <text x="685" y="347" text-anchor="middle" font-size="10.5" class="dim">mobile app</text>
+
+      <!-- RobotApp -> RobotServer -->
+      <line x1="150" y1="190" x2="216" y2="190" stroke="currentColor" marker-end="url(#hm-arrow)"/>
+      <text x="183" y="183" text-anchor="middle" font-size="10">HTTP, local only</text>
+
+      <!-- RobotServer -> PlatformServer (robot-link) -->
+      <line x1="370" y1="178" x2="466" y2="168" stroke="currentColor" marker-end="url(#hm-arrow)"/>
+      <text x="418" y="164" text-anchor="middle" font-size="10">/ws/robot-link (dials out)</text>
+      <!-- RobotServer -> PlatformServer (robot-auth) -->
+      <line x1="370" y1="200" x2="466" y2="205" stroke="currentColor" marker-end="url(#hm-arrow)"/>
+      <text x="418" y="222" text-anchor="middle" font-size="10">/api/robot-auth/* REST</text>
+      <!-- PlatformServer -> RobotServer (notifier, dashed) -->
+      <line x1="466" y1="222" x2="372" y2="213" stroke="currentColor" stroke-dasharray="4 4" marker-end="url(#hm-arrow)" opacity=".7"/>
+      <text x="418" y="238" text-anchor="middle" font-size="9.5" class="dim">HttpRobotNotifier (VPN push)</text>
+
+      <!-- PlatformApp -> PlatformServer -->
+      <line x1="640" y1="70" x2="598" y2="138" stroke="currentColor" marker-end="url(#hm-arrow)"/>
+      <text x="660" y="100" text-anchor="middle" font-size="10">REST+cookies,</text>
+      <text x="660" y="113" text-anchor="middle" font-size="10">/ws/control</text>
+
+      <!-- AndroidApp -> PlatformServer -->
+      <line x1="640" y1="310" x2="598" y2="242" stroke="currentColor" marker-end="url(#hm-arrow)"/>
+      <text x="660" y="290" text-anchor="middle" font-size="10">REST+JWT,</text>
+      <text x="660" y="277" text-anchor="middle" font-size="10">/ws/control</text>
+    </svg>
+    </div>
+    <figcaption>All five AutoNav components, with PlatformServer as the hub. Robots dial in; apps call in; PlatformServer only ever calls back out to a robot through the best-effort <code>HttpRobotNotifier</code>.</figcaption>
+  </figure>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#purpose"><span class="n">01</span> Purpose &amp; Role in the System</a></li>
+    <li><a href="#tech-stack"><span class="n">02</span> Tech Stack Explained</a></li>
+    <li><a href="#directory-map"><span class="n">03</span> Directory &amp; File Map</a></li>
+    <li><a href="#architecture"><span class="n">04</span> Architecture Layers &amp; Patterns</a></li>
+    <li><a href="#key-flows"><span class="n">05</span> Key Flows</a></li>
+    <li><a href="#cross-component"><span class="n">06</span> Cross-Component Interaction</a></li>
+    <li><a href="#running-locally"><span class="n">07</span> Running &amp; Developing Locally</a></li>
+    <li><a href="#gotchas"><span class="n">08</span> Gotchas &amp; Things to Know</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ===================== 1. PURPOSE ===================== -->
+<section id="purpose">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Purpose &amp; Role in the System</h2></div>
+  <p><strong>PlatformServer</strong> is the cloud/VPN-hosted backend of AutoNav. It runs on a server that is <em>not</em> the robot itself (an AWS EC2 instance, reachable at <code>platform-server.autonav.in</code> behind nginx — see the comments in <code>src/app.ts</code> referencing <code>AWS/nginx/platform-server.autonav.in.conf</code>). Think of it as the "brain" that knows about <em>accounts</em>, <em>robots</em>, and <em>who is allowed to drive which robot</em> — it never talks to ROS2 or motors directly; that is RobotServer's job.</p>
+  <p>Three different kinds of things connect to it:</p>
+  <ol>
+    <li><strong>End-user browsers</strong> — the <code>PlatformApp</code> React dashboard, which calls PlatformServer's REST API (<code>/api/...</code>) and opens a WebSocket (a persistent, two-way socket connection, as opposed to one-off HTTP requests) to <code>/ws/control</code> for remote-control sessions.</li>
+    <li><strong>The Android app (<code>AndroidApp</code>)</strong> — a Capacitor-wrapped (a native Android shell around a web app) mobile client, same REST/WebSocket surface, but using Bearer tokens instead of cookies and native Google Sign-In.</li>
+    <li><strong>Robots themselves</strong> — each physical robot runs <code>RobotServer</code>, which (a) dials out and holds open a persistent WebSocket to <code>/ws/robot-link</code> so PlatformServer can push teleop commands and run health checks, and (b) makes outbound REST calls to <code>/api/robot-auth/*</code> for its own kiosk login needs (checking if a user exists, fetching the roster of users allowed to log into its touchscreen, PIN setup).</li>
+  </ol>
+  <p>PlatformServer is the <strong>central authority</strong> for three things:</p>
+  <ul class="plain">
+    <li><strong>Identity</strong>: who has an account, how they log in (password, Google), and whether they're an admin.</li>
+    <li><strong>Fleet management</strong>: which robots exist, their provisioning secrets, and which users are assigned to which robots (and with what access level).</li>
+    <li><strong>Remote-control session brokering</strong>: when a user wants to drive a robot from the dashboard/app, PlatformServer is the relay in the middle — it never runs the robot's control loop itself, it forwards validated commands over the already-open robot-link socket and relays the robot's health back.</li>
+  </ul>
+</section>
+
+<!-- ===================== 2. TECH STACK ===================== -->
+<section id="tech-stack">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Tech Stack Explained</h2></div>
+  <p class="section-intro">All dependencies below are read from <code>PlatformServer/package.json</code>.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Dependency</th><th>Plain-English explanation</th><th>Where / why used here</th></tr></thead>
+    <tbody>
+      <tr><td><code>typescript</code></td><td>JavaScript with optional static types, checked at compile time (<code>tsc</code>) before the code runs — catches whole classes of bugs (wrong field names, wrong argument types) before deploy.</td><td>The entire <code>src/</code> tree is <code>.ts</code>. Compiled to <code>dist/</code> by <code>npm run build</code> (see <code>Dockerfile</code>).</td></tr>
+      <tr><td><code>express</code></td><td>The most common Node.js web framework — lets you register "when a GET/POST arrives at this URL path, run this function" (a <em>route</em>).</td><td><code>src/app.ts</code> builds the whole app; every <code>*.routes.ts</code> file registers an Express <code>Router</code>.</td></tr>
+      <tr><td><code>mongoose</code> (MongoDB)</td><td>MongoDB is a NoSQL database that stores JSON-like documents instead of SQL tables/rows. Mongoose is an ODM ("Object-Document Mapper") — define a <em>Schema</em> as a TypeScript interface + Mongoose <code>Schema</code> object, get back typed, validated documents instead of raw JSON.</td><td>Every <code>*.model.ts</code> file (<code>user.model.ts</code>, <code>robot.model.ts</code>, etc.) defines a Mongoose schema. <code>src/db/connection.ts</code> opens the connection.</td></tr>
+      <tr><td><code>jsonwebtoken</code> (JWT)</td><td>"JSON Web Token" — a signed, tamper-proof string that encodes a small JSON payload (e.g. <code>{sub: userId, role: "admin"}</code>). The server can later verify the signature without hitting the database, proving the payload wasn't forged.</td><td><code>src/common/utils/jwt.util.ts</code> signs/verifies four <em>different</em> token types (access, refresh, password-reset, robot-PIN-setup) — each with its own secret and a <code>purpose</code> field baked into the payload so one kind of token can never be replayed as another.</td></tr>
+      <tr><td><code>passport</code> + <code>passport-google-oauth20</code></td><td>Passport is pluggable "authentication middleware" for Express — register a <em>strategy</em> (a plugin for one login method) and it handles the browser-redirect dance. The Google strategy implements "Sign in with Google" (OAuth2 — the user logs in on Google's own page, and Google hands your server a proof-of-identity instead of you ever seeing their Google password).</td><td><code>src/config/passport.ts</code> registers the Google strategy; <code>src/modules/auth/auth.routes.ts</code> wires <code>/api/auth/google</code> (start) and <code>/api/auth/google/callback</code> (finish) to it.</td></tr>
+      <tr><td><code>google-auth-library</code></td><td>Google's own library for verifying an "ID token" (a signed proof-of-identity blob) <em>without</em> the browser redirect — used for native app sign-in where the phone's own Google Sign-In SDK already produced the token.</td><td><code>src/common/utils/googleToken.util.ts</code>'s <code>verifyGoogleIdToken</code>, used by <code>AuthController.googleToken</code> (the Android app's login path).</td></tr>
+      <tr><td><code>bcryptjs</code></td><td>A slow, intentionally-expensive one-way hashing algorithm for passwords (and here, also OTPs and robot PINs) — "one-way" means you can check "does this plaintext match this hash?" but can never recover the plaintext. "Slow" is deliberate: it makes brute-forcing stolen hashes impractical.</td><td><code>password.util.ts</code> (user passwords, 12 salt rounds), <code>otp.util.ts</code> (OTP codes, 10 rounds); robot PINs reuse <code>hashPassword</code>/<code>comparePassword</code> (see <code>robotAuth.service.ts</code>).</td></tr>
+      <tr><td><code>nodemailer</code></td><td>Sends email from Node.js via SMTP, the standard email-sending protocol.</td><td><code>src/modules/auth/senders/NodemailerEmailOtpSender.ts</code> sends one-time-passcode (OTP) emails through Gmail's SMTP server using an "app password" (a Google-generated password scoped to this one use, instead of the real Gmail password).</td></tr>
+      <tr><td><code>express-rate-limit</code></td><td>Middleware that counts requests per time window from a given key (usually IP) and rejects (HTTP 429) once a limit is exceeded — the standard defense against brute-force/credential-stuffing and abuse.</td><td><code>rateLimiter.middleware.ts</code> defines four limiters: general auth routes, a tighter one for OTP/password-reset, and two robot-specific ones keyed by robot id (not IP, since many robots may share one VPN egress IP).</td></tr>
+      <tr><td><code>zod</code></td><td>A "schema validation" library — describe the exact shape data <em>should</em> have (<code>z.object({ email: z.string().email() })</code>), parse untrusted input into that shape or throw a structured error. Also used to validate <code>process.env</code> itself.</td><td>Every <code>*.validation.ts</code> file; <code>src/config/env.ts</code> validates all environment variables at boot; <code>robotLink.protocol.ts</code> and <code>controlSession.protocol.ts</code> validate WebSocket message frames.</td></tr>
+      <tr><td><code>ws</code></td><td>The de-facto standard low-level WebSocket library for Node.js (Express itself has no WebSocket support).</td><td><code>src/core/wsRouter.ts</code> wraps <code>WebSocketServer</code>; the <code>robot-link</code> and <code>control</code> gateways use it.</td></tr>
+      <tr><td><code>swagger-jsdoc</code> + <code>swagger-ui-express</code></td><td>Swagger/OpenAPI is a standard format for describing a REST API so tooling can generate interactive docs. <code>swagger-jsdoc</code> scans <code>/** @openapi */</code> comments and builds the spec; <code>swagger-ui-express</code> serves a browsable UI from it.</td><td><code>src/config/swagger.ts</code> configures the scan (<code>./src/modules/**/*.routes.ts</code>); every route file has <code>@openapi</code> blocks; served at <code>GET /api/docs</code>.</td></tr>
+      <tr><td><code>helmet</code></td><td>A small Express middleware that sets a bundle of security-related HTTP response headers with sane defaults (e.g. disabling MIME-sniffing).</td><td><code>app.use(helmet())</code> in <code>src/app.ts</code>.</td></tr>
+      <tr><td><code>cors</code></td><td>Browsers block a page from calling a different-origin API unless that API explicitly allows it via CORS headers. This library generates those headers.</td><td><code>src/app.ts</code> allow-lists the dashboard's own origin plus three fixed Capacitor WebView origins (<code>https://localhost</code>, <code>http://localhost</code>, <code>capacitor://localhost</code>) and a local dev port — never a wildcard, so cookies (<code>credentials: true</code>) can be sent cross-origin safely.</td></tr>
+      <tr><td><code>cookie-parser</code></td><td>Parses the raw <code>Cookie:</code> request header into <code>req.cookies</code>, an object Express handlers can read.</td><td>Lets <code>requireAuth</code> middleware read <code>accessToken</code>/<code>refreshToken</code> cookies.</td></tr>
+      <tr><td><code>pino</code> / <code>pino-http</code> / <code>pino-pretty</code> / <code>pino-roll</code></td><td>Pino is a very fast structured (JSON) logger. <code>pino-http</code> auto-logs one line per HTTP request. <code>pino-pretty</code> colorizes it for local dev. <code>pino-roll</code> rotates log files on disk in production.</td><td><code>src/common/utils/logger.util.ts</code> picks pretty-console in dev, silent in tests, dual stdout+rotating-file in production.</td></tr>
+      <tr><td><code>dotenv</code></td><td>Loads a local <code>.env</code> file into <code>process.env</code> so you don't need to <code>export</code> variables manually in dev.</td><td><code>import "dotenv/config"</code> at the top of <code>src/config/env.ts</code>.</td></tr>
+      <tr><td><code>jest</code> / <code>ts-jest</code> / <code>supertest</code> / <code>mongodb-memory-server</code></td><td>Jest is the test runner/assertion framework. <code>ts-jest</code> lets it run TypeScript directly. <code>supertest</code> fires real HTTP requests at an in-process Express app without opening a network port. <code>mongodb-memory-server</code> spins up a real, temporary, in-memory MongoDB for integration tests.</td><td><code>tests/integration/auth.routes.test.ts</code> uses all three together; <code>tests/unit/*</code> test services against hand-written fakes instead (no DB at all).</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================== 3. DIRECTORY MAP ===================== -->
+<section id="directory-map">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Directory &amp; File Map</h2></div>
+  <p class="section-intro">From <code>find src scripts -type f</code> in <code>PlatformServer/</code>. This is the most module-heavy of the five AutoNav services — nine feature modules plus entry points, config, core infra and cross-cutting "common" code. Grouped by folder; open a group to see its files.</p>
+
+  <details class="module" open>
+    <summary>Entry points / wiring <span class="tag">src/index.ts, src/app.ts</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">src/index.ts</div><div class="d">Process entry point: connects to MongoDB, builds the Express app, attaches the WebSocket router to the same HTTP listener, starts listening on <code>config.port</code>.</div></div>
+      <div class="filerow"><div class="f">src/app.ts</div><div class="d">The <strong>composition root</strong> — instantiates every repository/service/controller/gateway, wires constructor dependencies, mounts every router, registers the two WebSocket endpoints, attaches error-handling middleware last.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>Config <span class="tag">src/config/</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">config/env.ts</div><div class="d">Defines and validates the entire environment-variable contract with Zod; exports a single typed <code>config</code> object everything else imports.</div></div>
+      <div class="filerow"><div class="f">config/passport.ts</div><div class="d">Registers the Passport Google OAuth2 strategy and maps Google's profile shape to AutoNav's internal <code>GoogleProfile</code> type.</div></div>
+      <div class="filerow"><div class="f">config/swagger.ts</div><div class="d">Builds the OpenAPI spec object from JSDoc comments in route files.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>Core infrastructure <span class="tag">src/core/, src/db/</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">core/wsRouter.ts</div><div class="d">Multiplexes multiple WebSocket endpoints (different auth models) onto one HTTP server's <code>upgrade</code> event, since raw <code>ws</code> normally only supports one path per server.</div></div>
+      <div class="filerow"><div class="f">db/connection.ts</div><div class="d">Opens/closes the Mongoose connection to MongoDB; logs connect/disconnect/error events.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>Common — cross-cutting code shared by all modules <span class="tag">src/common/</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">errors/AppError.ts</div><div class="d">Base class for all "expected" application errors — carries an HTTP status code.</div></div>
+      <div class="filerow"><div class="f">errors/{Conflict,Forbidden,NotFound,Unauthorized}Error.ts</div><div class="d">One subclass per HTTP status (409/403/404/401) for readable <code>throw new ConflictError(...)</code> call sites.</div></div>
+      <div class="filerow"><div class="f">errors/index.ts</div><div class="d">Re-exports all error classes from one import path.</div></div>
+      <div class="filerow"><div class="f">middleware/auth.middleware.ts</div><div class="d"><code>requireAuth</code> — extracts and verifies the JWT access token from cookie, <code>Authorization: Bearer</code>, or <code>Sec-WebSocket-Protocol</code> header; attaches <code>req.user</code>.</div></div>
+      <div class="filerow"><div class="f">middleware/errorHandler.middleware.ts</div><div class="d">The final Express error handler — maps <code>ZodError</code> → 400, <code>AppError</code> → its own status code, anything else → 500.</div></div>
+      <div class="filerow"><div class="f">middleware/notFound.middleware.ts</div><div class="d">Catches any request that matched no route, returns a structured 404.</div></div>
+      <div class="filerow"><div class="f">middleware/rateLimiter.middleware.ts</div><div class="d">Defines <code>authRateLimiter</code>, <code>otpRateLimiter</code>, <code>robotAuthRateLimiter</code>, <code>robotOtpRateLimiter</code>.</div></div>
+      <div class="filerow"><div class="f">middleware/requireAdmin.middleware.ts</div><div class="d"><code>requireAdmin</code> — 403s unless <code>req.user.role === "admin"</code>. Must run after <code>requireAuth</code>.</div></div>
+      <div class="filerow"><div class="f">middleware/resolveRobot.middleware.ts</div><div class="d">The robot-facing counterpart of <code>requireAuth</code>: authenticates a calling <em>robot</em> (not a human) via <code>x-robot-id</code> + <code>Authorization: Robot &lt;secret&gt;</code>, timing-safe-compares against the stored secret hash, attaches <code>req.robot</code>.</div></div>
+      <div class="filerow"><div class="f">middleware/validate.middleware.ts</div><div class="d">Generic <code>validate({ body, query, params })</code> — runs each given Zod schema's <code>.parse()</code> and overwrites the matching <code>req.*</code> with the parsed, type-safe result.</div></div>
+      <div class="filerow"><div class="f">types/auth.types.ts</div><div class="d">Shared TypeScript types: <code>AuthUser</code>, <code>AccessTokenPayload</code>, <code>RefreshTokenPayload</code>, <code>ResetTokenPayload</code>, <code>PinSetupTokenPayload</code>, <code>TokenPair</code>, <code>AuthRobot</code>.</div></div>
+      <div class="filerow"><div class="f">types/express.d.ts</div><div class="d">Augments Express's own <code>Request</code>/<code>User</code> types globally so <code>req.user</code> and <code>req.robot</code> are type-checked everywhere without casts.</div></div>
+      <div class="filerow"><div class="f">utils/asyncHandler.util.ts</div><div class="d">Wraps an <code>async</code> route handler so a thrown/rejected error is forwarded to Express's <code>next(err)</code> instead of crashing the process.</div></div>
+      <div class="filerow"><div class="f">utils/cookie.util.ts</div><div class="d"><code>setAuthCookies</code>/<code>clearAuthCookies</code> — sets <code>accessToken</code> (path <code>/</code>) and <code>refreshToken</code> (path <code>/api/auth</code> only) httpOnly cookies with environment-appropriate <code>secure</code>/<code>domain</code> flags.</div></div>
+      <div class="filerow"><div class="f">utils/googleToken.util.ts</div><div class="d">Verifies a Google ID token's signature server-side (native client login path).</div></div>
+      <div class="filerow"><div class="f">utils/jwt.util.ts</div><div class="d">Sign/verify functions for all four JWT types used in this service.</div></div>
+      <div class="filerow"><div class="f">utils/logger.util.ts</div><div class="d">Builds the shared <code>pino</code> logger instance, environment-aware.</div></div>
+      <div class="filerow"><div class="f">utils/otp.util.ts</div><div class="d">Generates a 6-digit numeric OTP and hashes/compares it with bcrypt.</div></div>
+      <div class="filerow"><div class="f">utils/password.util.ts</div><div class="d">Hashes/compares plaintext passwords (also reused for 4-digit robot PINs) with bcrypt.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>admin <span class="tag">admin-only operations spanning other modules</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">admin.controller.ts</div><div class="d">HTTP handlers for request approval/rejection, direct assignment grant/revoke/access-toggle, user listing, role change, user deletion.</div></div>
+      <div class="filerow"><div class="f">admin.routes.ts</div><div class="d">Mounts all of the above under <code>requireAuth, requireAdmin</code>.</div></div>
+      <div class="filerow"><div class="f">admin.service.ts</div><div class="d">Business logic tying <code>RobotAccessRequestRepository</code>, <code>UserRepository</code>, and <code>RobotAssignmentService</code> together; enforces "can't change/delete your own admin account".</div></div>
+      <div class="filerow"><div class="f">admin.validation.ts</div><div class="d">Zod schemas for role update, assignment grant/revoke/access-patch bodies.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>auth <span class="tag">human account authentication</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">auth.controller.ts</div><div class="d">Signup, login, Google OAuth callback + native token exchange, refresh, logout, set-password, forgot-password/verify-OTP/reset-password; decides cookie vs. body token response shape based on an <code>X-Client: mobile</code> header.</div></div>
+      <div class="filerow"><div class="f">auth.routes.ts</div><div class="d">Mounts all <code>/api/auth/*</code> routes, with OpenAPI docs and per-route rate limiters/validation.</div></div>
+      <div class="filerow"><div class="f">auth.service.ts</div><div class="d">All the actual logic: password hashing/verification, Google login/account-linking, refresh-token rotation via <code>refreshTokenVersion</code>, OTP issue/verify, first-admin-by-email-list resolution.</div></div>
+      <div class="filerow"><div class="f">auth.validation.ts</div><div class="d">Zod schemas + inferred DTO types for every auth request body.</div></div>
+      <div class="filerow"><div class="f">emailOtp.model.ts</div><div class="d">Mongoose schema for one-time codes, shared by both the password-reset flow and the robot PIN-setup flow (<code>purpose</code> field distinguishes them); has a MongoDB TTL index so expired codes self-delete.</div></div>
+      <div class="filerow"><div class="f">emailOtp.repository(.interface).ts</div><div class="d">Interface + Mongoose implementation for OTP storage/lookup/consumption.</div></div>
+      <div class="filerow"><div class="f">otpSender.interface.ts</div><div class="d">Abstraction for "send this OTP to this email" — lets the concrete email provider be swapped.</div></div>
+      <div class="filerow"><div class="f">senders/NodemailerEmailOtpSender.ts</div><div class="d">The concrete Gmail-SMTP implementation of <code>otpSender.interface.ts</code>.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>control <span class="tag">remote-control session relay + health check</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">controlSession.gateway.ts</div><div class="d">The <code>/ws/control</code> WebSocket endpoint: authenticates the connecting user+robot pair at handshake time, then hands the live socket to <code>ControlSessionService</code>.</div></div>
+      <div class="filerow"><div class="f">controlSession.protocol.ts</div><div class="d">Zod schemas/types for every frame crossing <code>/ws/control</code> (client→server: <code>joystick</code>, <code>estop</code>; server→client: <code>session</code>, <code>estop_ack</code>, <code>error</code>).</div></div>
+      <div class="filerow"><div class="f">controlSession.service.ts</div><div class="d">The actual relay logic: one active session per robot (newer preempts older), velocity frames coalesced to 30/s before forwarding, periodic re-validation of the underlying assignment, clean teardown on any disconnect/revoke/robot-offline path.</div></div>
+      <div class="filerow"><div class="f">robotHealth.controller.ts</div><div class="d">HTTP handler for the one-shot robot health check, gated by an active <code>platformAccess</code> assignment.</div></div>
+      <div class="filerow"><div class="f">robotHealth.dto.ts</div><div class="d">Shape of the health-check JSON response.</div></div>
+      <div class="filerow"><div class="f">robotHealth.routes.ts</div><div class="d">Mounts <code>GET /api/robots/:robotId/health</code>.</div></div>
+      <div class="filerow"><div class="f">robotHealth.service.ts</div><div class="d">Checks robot-link reachability plus a round-trip ROS liveness query over that link.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>robot-access-requests <span class="tag">user → admin approval workflow</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">robotAccessRequest.controller.ts</div><div class="d">User-facing: create a request, list "my requests".</div></div>
+      <div class="filerow"><div class="f">robotAccessRequest.dto.ts</div><div class="d">Shapes the Mongoose document into the wire response, handling both populated and unpopulated <code>user</code>/<code>robot</code> references.</div></div>
+      <div class="filerow"><div class="f">robotAccessRequest.model.ts</div><div class="d">Mongoose schema: <code>status</code> enum (<code>pending</code>/<code>approved</code>/<code>rejected</code>), a partial unique index preventing more than one <em>pending</em> request per (user, robot) pair.</div></div>
+      <div class="filerow"><div class="f">robotAccessRequest.repository(.interface).ts</div><div class="d">CRUD + status-filtered listing, admin-populated listing.</div></div>
+      <div class="filerow"><div class="f">robotAccessRequest.routes.ts</div><div class="d"><code>/api/robot-access-requests</code> (create, list mine) — any authenticated user.</div></div>
+      <div class="filerow"><div class="f">robotAccessRequest.service.ts</div><div class="d">Business rule: can't request a robot you already have active access to; translates a MongoDB duplicate-key error (code 11000) into a friendly <code>ConflictError</code>.</div></div>
+      <div class="filerow"><div class="f">robotAccessRequest.validation.ts</div><div class="d">Zod schemas for create/approve/reject bodies.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>robot-assignments <span class="tag">the actual user↔robot access grant</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">HttpRobotNotifier.ts</div><div class="d">Calls the <em>owning robot's own RobotServer</em> directly over HTTP (VPN-trusted, no auth of its own) to tell it "your cached roster is stale, re-sync now" after a grant/revoke/access-flag change. Best-effort — failures are swallowed since RobotServer self-corrects on its own periodic resync.</div></div>
+      <div class="filerow"><div class="f">robotAssignment.dto.ts</div><div class="d">Shapes an assignment document (with populated <code>user</code>/<code>robot</code>) into the wire response, including a derived <code>pinSet</code> boolean (never the actual PIN hash).</div></div>
+      <div class="filerow"><div class="f">robotAssignment.model.ts</div><div class="d">Mongoose schema: <code>status</code> (<code>active</code>/<code>revoked</code>), <code>hmiAccess</code> (robot kiosk PIN login) and <code>platformAccess</code> (dashboard/remote-control) as independent boolean flags, <code>pinHash</code>/<code>pinSetAt</code>/<code>pinUpdatedCount</code>, unique index on (user, robot) — one doc per pair for all time, reactivated rather than duplicated.</div></div>
+      <div class="filerow"><div class="f">robotAssignment.repository(.interface).ts</div><div class="d">All assignment queries/mutations, including the PIN-hash-selecting <code>listActiveForRobotWithPin</code> used only by <code>robot-auth</code>.</div></div>
+      <div class="filerow"><div class="f">robotAssignment.service.ts</div><div class="d">Grant/revoke/update-access business logic; triggers <code>HttpRobotNotifier</code> on revoke or on <code>hmiAccess: false</code>; <code>hasActivePlatformAccess</code> is the gate used by the control-session and health-check code paths.</div></div>
+      <div class="filerow"><div class="f">robotNotifier.interface.ts</div><div class="d">The <code>IRobotNotifier</code> abstraction plus a <code>NoopRobotNotifier</code> fallback implementation.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>robot-auth <span class="tag">robot-initiated, service-to-service kiosk login API</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">robotAuth.controller.ts</div><div class="d"><code>check-user</code>, <code>roster</code>, PIN-setup OTP request/verify/confirm — all called <em>by</em> a robot, never by a human client.</div></div>
+      <div class="filerow"><div class="f">robotAuth.dto.ts</div><div class="d"><code>RosterEntryDto</code> — what RobotServer caches locally to validate PIN logins offline (includes <code>pinHash</code>, deliberately — RobotServer needs it to compare PINs without round-tripping to PlatformServer on every kiosk login).</div></div>
+      <div class="filerow"><div class="f">robotAuth.routes.ts</div><div class="d">Mounts <code>/api/robot-auth/*</code>, gated by <code>createResolveRobot</code> (robot identity) + robot-specific rate limiters.</div></div>
+      <div class="filerow"><div class="f">robotAuth.service.ts</div><div class="d">Deliberately <em>not</em> anti-enumeration on <code>checkUserExists</code> (robots are already a trusted caller); PIN-setup OTP issue/verify/confirm, binding a <code>pinSetupToken</code> to one specific robot so it can't be replayed elsewhere.</div></div>
+      <div class="filerow"><div class="f">robotAuth.validation.ts</div><div class="d">Zod schemas for all robot-auth request bodies.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>robot-link <span class="tag">the persistent robot↔PlatformServer WebSocket</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">robotConnectionRegistry.interface.ts</div><div class="d">Abstraction over "which robots are currently connected, and how do I talk to them" — lets <code>ControlSessionService</code>/<code>RobotHealthService</code> depend on an interface instead of the real WS infrastructure.</div></div>
+      <div class="filerow"><div class="f">robotConnectionRegistry.ts</div><div class="d">The real implementation: one live socket per <code>robotId</code> (a newer connection always replaces an older one with close code 4409), a ping/pong liveness watchdog (10s interval, 2 missed pongs → terminate), RTT tracking, and a request/response correlation map for <code>health.query</code>/<code>health.result</code> round trips.</div></div>
+      <div class="filerow"><div class="f">robotLink.gateway.ts</div><div class="d">The <code>/ws/robot-link</code> WebSocket endpoint: authenticates the connecting robot via shared-secret header comparison (timing-safe), registers it in the registry, parses/validates inbound frames, routes <code>health.result</code> frames back to whoever is waiting.</div></div>
+      <div class="filerow"><div class="f">robotLink.protocol.ts</div><div class="d">Zod schemas/types for every frame crossing <code>/ws/robot-link</code>, split by direction (PlatformServer→RobotServer: <code>teleop.velocity</code>, <code>teleop.estop</code>, <code>teleop.release</code>, <code>health.query</code>; RobotServer→PlatformServer: <code>health.result</code>).</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>robots <span class="tag">the robot fleet registry</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">robot.controller.ts</div><div class="d">Admin: create robot, rotate its link secret, list (all/by status), delete. Public (any authenticated user): list minimal summaries, look up one by <code>robotId</code> slug.</div></div>
+      <div class="filerow"><div class="f">robot.dto.ts</div><div class="d"><code>RobotDto</code> (full, admin) vs. <code>RobotSummaryDto</code> (minimal, non-admin — no <code>vpnHostname</code>/<code>status</code>).</div></div>
+      <div class="filerow"><div class="f">robot.model.ts</div><div class="d">Mongoose schema: <code>robotId</code> (device slug), <code>name</code>, <code>vpnHostname</code>, <code>status</code> enum (<code>provisioned</code>/<code>active</code>/<code>retired</code>), <code>linkSecretHash</code> (sha256 hex, <code>select: false</code> by default so it's never accidentally returned).</div></div>
+      <div class="filerow"><div class="f">robot.repository(.interface).ts</div><div class="d">CRUD, status-filtered listing, the two link-secret-aware lookups used only by <code>resolveRobot</code>/<code>robotLink.gateway</code>.</div></div>
+      <div class="filerow"><div class="f">robot.routes.ts</div><div class="d">Exports both <code>createRobotRouter</code> (admin, mounted at <code>/api/admin/robots</code>) and <code>createPublicRobotRouter</code> (any authenticated user, mounted at <code>/api/robots</code>).</div></div>
+      <div class="filerow"><div class="f">robot.service.ts</div><div class="d">Create (generates + hashes a random 32-byte link secret, returned in plaintext exactly once), rotate-secret, list/summarize, delete (cascades to assignments + access requests first).</div></div>
+      <div class="filerow"><div class="f">robot.validation.ts</div><div class="d">Zod schema for robot creation.</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>users</summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">user.controller.ts</div><div class="d"><code>GET /api/users/me</code>.</div></div>
+      <div class="filerow"><div class="f">user.dto.ts</div><div class="d"><code>PublicUserDto</code> (safe wire shape — no password hash, includes <code>authProviders</code> and the user's active robots) and <code>PublicRobotDto</code>.</div></div>
+      <div class="filerow"><div class="f">user.model.ts</div><div class="d">Mongoose schema: <code>email</code> (unique), <code>passwordHash</code> (<code>select: false</code>), <code>authProviders</code> array, <code>googleId</code> (unique, sparse), <code>role</code>, <code>refreshTokenVersion</code> (the refresh-token revocation mechanism), <code>isEmailVerified</code>.</div></div>
+      <div class="filerow"><div class="f">user.repository(.interface).ts</div><div class="d">All user queries/mutations.</div></div>
+      <div class="filerow"><div class="f">user.routes.ts</div><div class="d">Mounts <code>/api/users/me</code>.</div></div>
+      <div class="filerow"><div class="f">user.service.ts</div><div class="d"><code>getMe</code> — fetches the user plus their active robots (via <code>RobotAssignmentService</code>).</div></div>
+    </div>
+  </details>
+
+  <details class="module">
+    <summary>scripts/ <span class="tag">one-off ops/dev tools, run via ts-node</span></summary>
+    <div class="inner">
+      <div class="filerow"><div class="f">seedRobot.ts</div><div class="d">Dev helper: provisions (or re-provisions) a <code>Robot</code> document and prints its plaintext link secret once — needed before any admin can approve access requests, and before a RobotServer instance has a secret to use.</div></div>
+      <div class="filerow"><div class="f">migrateRobotAssignments.ts</div><div class="d"><strong>Data-model evolution artifact</strong>: migrates from an old one-to-one <code>User.robot</code>/<code>Robot.assignedTo</code> field pair to the current many-to-many <code>RobotAssignment</code> collection; also force-rejects any pending access request that predates the <code>robot</code> field.</div></div>
+      <div class="filerow"><div class="f">backfillAssignmentAccessFlags.ts</div><div class="d"><strong>Data-model evolution artifact</strong>: backfills <code>hmiAccess</code>/<code>platformAccess</code> (both default <code>true</code>) onto assignment documents created before those two independent flags existed.</div></div>
+    </div>
+  </details>
+</section>
+
+<!-- ===================== 4. ARCHITECTURE ===================== -->
+<section id="architecture">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Architecture Layers &amp; Patterns</h2></div>
+
+  <h3 style="font-size:16px;margin-top:0;">The layering</h3>
+  <figure class="diagram">
+    <div class="svg-wrap">
+    <svg viewBox="0 0 640 400" role="img" aria-label="Six-layer request pipeline: routes, controller, service, repository interface, repository implementation, model, each with its responsibility.">
+      <defs>
+        <marker id="lay-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <text x="320" y="18" text-anchor="middle" font-size="11" class="dim">HTTP / WS request</text>
+      <line x1="320" y1="24" x2="320" y2="40" stroke="currentColor" marker-end="url(#lay-arrow)"/>
+      <!-- layer boxes -->
+      <g font-size="12.5">
+        <rect x="70" y="42" width="500" height="46" rx="8" fill="none" stroke="currentColor"/>
+        <text x="90" y="61" font-weight="700" font-family="var(--font-mono)">routes (*.routes.ts)</text>
+        <text x="90" y="77" class="dim" font-size="10.5">Express Router: URL+method+middleware chain → controller method</text>
+
+        <rect x="70" y="106" width="500" height="46" rx="8" fill="none" stroke="currentColor"/>
+        <text x="90" y="125" font-weight="700" font-family="var(--font-mono)">controller (*.controller.ts)</text>
+        <text x="90" y="141" class="dim" font-size="10.5">thin: pulls data off req, calls one service method, shapes response</text>
+
+        <rect x="70" y="170" width="500" height="46" rx="8" fill="var(--accent-soft)" stroke="currentColor"/>
+        <text x="90" y="189" font-weight="700" font-family="var(--font-mono)">service (*.service.ts)</text>
+        <text x="90" y="205" class="dim" font-size="10.5">all business logic / rules / orchestration across repositories</text>
+
+        <rect x="70" y="234" width="500" height="46" rx="8" fill="none" stroke="currentColor"/>
+        <text x="90" y="253" font-weight="700" font-family="var(--font-mono)">repository interface (*.repository.interface.ts)</text>
+        <text x="90" y="269" class="dim" font-size="10.5">abstract contract — no Mongoose/MongoDB in sight</text>
+
+        <rect x="70" y="298" width="500" height="46" rx="8" fill="none" stroke="currentColor"/>
+        <text x="90" y="317" font-weight="700" font-family="var(--font-mono)">repository implementation (*.repository.ts)</text>
+        <text x="90" y="333" class="dim" font-size="10.5">the only place that imports the Mongoose Model</text>
+
+        <rect x="70" y="362" width="500" height="34" rx="8" fill="none" stroke="currentColor"/>
+        <text x="90" y="384" font-weight="700" font-family="var(--font-mono)">model (*.model.ts) — Mongoose Schema / MongoDB collection</text>
+      </g>
+      <line x1="320" y1="88" x2="320" y2="104" stroke="currentColor" marker-end="url(#lay-arrow)"/>
+      <line x1="320" y1="152" x2="320" y2="168" stroke="currentColor" marker-end="url(#lay-arrow)"/>
+      <line x1="320" y1="216" x2="320" y2="232" stroke="currentColor" marker-end="url(#lay-arrow)"/>
+      <line x1="320" y1="280" x2="320" y2="296" stroke="currentColor" marker-end="url(#lay-arrow)"/>
+      <line x1="320" y1="344" x2="320" y2="360" stroke="currentColor" marker-end="url(#lay-arrow)"/>
+    </svg>
+    </div>
+    <figcaption>requireAuth / requireAdmin / resolveRobot / validate / rate limiters all run inside the routes layer, before the controller is ever called.</figcaption>
+  </figure>
+
+  <p><strong>Why the interface sits between service and the concrete repository</strong>: a <em>service</em> class's constructor takes the <em>interface</em> type (e.g. <code>constructor(private readonly userRepository: IUserRepository)</code> in <code>user.service.ts</code>), never the concrete <code>MongooseUserRepository</code> class. This is "dependency inversion" — the service doesn't know or care <em>how</em> data is stored, only <em>what operations</em> are available. In production (<code>src/app.ts</code>), the real <code>MongooseUserRepository</code> is passed in. In unit tests, a hand-written in-memory class implementing the same interface (<code>tests/unit/fakes/FakeUserRepository.ts</code>) is passed in instead — no real MongoDB, no network, tests run in milliseconds. The fakes even replicate Mongoose-specific quirks the services depend on, e.g. <code>FakeRobotAssignmentRepository</code>'s <code>populateRobot</code>/<code>populateUser</code> helpers mimic <code>.populate()</code> so a service's "is this field populated or still just an ObjectId?" check behaves identically in tests and production.</p>
+  <p><code>src/app.ts</code> is the <strong>composition root</strong>: the one place in the whole codebase where concrete classes are <code>new</code>'d up and wired together. Everywhere else only sees interfaces/abstract types.</p>
+
+  <h3 style="font-size:16px;">End-to-end trace: "robot access request" feature</h3>
+  <p class="section-intro">From a user clicking "Request Access" in PlatformApp through admin approval to the user actually getting access.</p>
+
+  <figure class="diagram">
+    <div class="svg-wrap">
+    <svg viewBox="0 0 1040 330" role="img" aria-label="End to end trace of the robot access request feature: a user request flows client to route to controller to service to repository to MongoDB with status pending, then an admin approval flows through the admin route, admin controller, admin service, robot assignment service, repository, into MongoDB with the assignment now active and the request marked approved.">
+      <defs>
+        <marker id="tr-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <!-- Row A: request creation, steps 1-6 -->
+      <text x="10" y="18" font-size="11" font-weight="700" class="accentline">USER CREATES REQUEST (1–6)</text>
+      <g font-size="10.5">
+        <rect x="10" y="26" width="150" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="85" y="48" text-anchor="middle" font-weight="700">PlatformApp</text>
+        <text x="85" y="62" text-anchor="middle" class="dim">POST /api/robot-access-requests {robotId}</text>
+
+        <rect x="190" y="26" width="160" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="270" y="44" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">*.routes.ts</text>
+        <text x="270" y="58" text-anchor="middle" class="dim">requireAuth</text>
+        <text x="270" y="70" text-anchor="middle" class="dim">validate(createRequestSchema)</text>
+
+        <rect x="380" y="26" width="160" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="460" y="48" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">RobotAccessRequest-</text>
+        <text x="460" y="62" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">Controller.createRequest</text>
+
+        <rect x="570" y="20" width="190" height="68" rx="7" fill="var(--accent-soft)" stroke="currentColor"/>
+        <text x="665" y="38" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">...Service.createRequest</text>
+        <text x="665" y="52" text-anchor="middle" class="dim">checks hasActiveAssignment</text>
+        <text x="665" y="64" text-anchor="middle" class="dim">(RobotAssignmentService)</text>
+        <text x="665" y="76" text-anchor="middle" class="dim">409 on duplicate pending</text>
+
+        <rect x="790" y="26" width="110" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="845" y="48" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">Mongoose</text>
+        <text x="845" y="62" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">Repository</text>
+
+        <rect x="930" y="26" width="100" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="980" y="48" text-anchor="middle" font-weight="700">MongoDB</text>
+        <text x="980" y="62" text-anchor="middle" class="dim">status: pending</text>
+      </g>
+      <line x1="160" y1="54" x2="186" y2="54" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="350" y1="54" x2="376" y2="54" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="540" y1="54" x2="566" y2="54" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="760" y1="54" x2="786" y2="54" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="900" y1="54" x2="926" y2="54" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+
+      <!-- connector down -->
+      <line x1="980" y1="82" x2="980" y2="130" stroke="currentColor" stroke-dasharray="4 4"/>
+      <line x1="980" y1="130" x2="85" y2="130" stroke="currentColor" stroke-dasharray="4 4" marker-end="url(#tr-arrow)"/>
+      <text x="500" y="123" text-anchor="middle" font-size="10" class="dim">admin lists GET /api/admin/robot-access-requests?status=pending</text>
+
+      <!-- Row B: admin approval, steps 7-11 -->
+      <text x="10" y="162" font-size="11" font-weight="700" class="accentline">ADMIN APPROVES → ASSIGNMENT GRANTED (7–11)</text>
+      <g font-size="10.5">
+        <rect x="10" y="170" width="150" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="85" y="192" text-anchor="middle" font-weight="700">Admin (dashboard)</text>
+        <text x="85" y="206" text-anchor="middle" class="dim">POST .../:id/approve</text>
+
+        <rect x="190" y="170" width="160" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="270" y="188" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">admin.routes.ts</text>
+        <text x="270" y="202" text-anchor="middle" class="dim">requireAuth, requireAdmin</text>
+
+        <rect x="380" y="170" width="160" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="460" y="192" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">AdminController.</text>
+        <text x="460" y="206" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">approveRequest</text>
+
+        <rect x="570" y="162" width="200" height="72" rx="7" fill="var(--accent-soft)" stroke="currentColor"/>
+        <text x="670" y="180" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">AdminService.approveRequest</text>
+        <text x="670" y="194" text-anchor="middle" class="dim">→ RobotAssignmentService.grant</text>
+        <text x="670" y="206" text-anchor="middle" class="dim">→ requestRepository.markApproved</text>
+        <text x="670" y="218" text-anchor="middle" class="dim">(404/409 guards)</text>
+
+        <rect x="800" y="170" width="110" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="855" y="192" text-anchor="middle" font-weight="700" font-family="var(--font-mono)">upsertActive</text>
+        <text x="855" y="206" text-anchor="middle" class="dim">(repository)</text>
+
+        <rect x="940" y="170" width="90" height="56" rx="7" fill="none" stroke="currentColor"/>
+        <text x="985" y="192" text-anchor="middle" font-weight="700">MongoDB</text>
+        <text x="985" y="206" text-anchor="middle" class="dim">status: active</text>
+      </g>
+      <line x1="160" y1="198" x2="186" y2="198" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="350" y1="198" x2="376" y2="198" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="540" y1="198" x2="566" y2="198" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="770" y1="198" x2="796" y2="198" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+      <line x1="910" y1="198" x2="936" y2="198" stroke="currentColor" marker-end="url(#tr-arrow)"/>
+
+      <text x="10" y="260" font-size="10.5" class="dim">Response shaped by toRobotAccessRequestDto() — a DTO <em>function</em>, not a class. The user now sees the robot in</text>
+      <text x="10" y="275" font-size="10.5" class="dim">GET /api/users/me's robots array, via UserService.getMe → RobotAssignmentService.listActiveRobotsForUser.</text>
+    </svg>
+    </div>
+    <figcaption>Steps 1–11 of the request → approve → assignment trace, naming the real controller/service/repository methods involved at each hop.</figcaption>
+  </figure>
+
+  <h3 style="font-size:16px;">The DTO pattern (<code>*.dto.ts</code> files)</h3>
+  <p>A <strong>DTO</strong> ("Data Transfer Object") is a plain function/interface that converts an internal Mongoose document into exactly the JSON shape that should cross the wire — and nothing more. This exists for two reasons visible throughout this codebase:</p>
+  <ul class="plain">
+    <li><strong>Hiding sensitive/internal fields</strong>: <code>UserModel</code> has <code>passwordHash</code> (<code>select: false</code> in the schema already, but the DTO is the second line of defense) — <code>toPublicUserDto</code> never includes it. <code>RobotAssignmentDto</code> exposes a derived <code>pinSet: boolean</code> instead of the raw <code>pinHash</code>.</li>
+    <li><strong>Decoupling the wire contract from the storage schema</strong>: <code>RobotDto</code> (admin, includes <code>vpnHostname</code>/<code>status</code>/<code>lastSeenAt</code>) vs. <code>RobotSummaryDto</code> (non-admin, just <code>id</code>/<code>robotId</code>/<code>name</code>/<code>displayName</code>) are two different views over the <em>same</em> <code>IRobotDocument</code> — <code>robot.dto.ts</code> has <code>toRobotDto</code> and <code>toRobotSummaryDto</code> side by side. Changing the Mongoose schema doesn't automatically change what's sent to clients; you only change the DTO function if you want that.</li>
+    <li>Several DTO files (<code>robotAccessRequest.dto.ts</code>, <code>robotAssignment.dto.ts</code>) also handle a Mongoose-specific wrinkle: a <code>ref</code>'d field (like <code>request.user</code>) might be just an ObjectId <em>or</em> a fully populated document depending on whether <code>.populate()</code> was called upstream — the DTO function runtime-checks which case it got (<code>isUserPopulated</code>) rather than assuming.</li>
+  </ul>
+</section>
+
+<!-- ===================== 5. KEY FLOWS ===================== -->
+<section id="key-flows">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Key Flows</h2></div>
+  <p class="section-intro">Eight flows, each traced step-by-step against the real files and method names.</p>
+
+  <!-- (a) signup/login -->
+  <div class="flow" id="flow-a">
+    <h3>(a) Signup / login with email + password</h3>
+    <div class="meta">Trigger: user submits the signup or login form &middot; Browser/App → auth.routes.ts → AuthController → AuthService → IUserRepository → MongoDB</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 680 300" role="img" aria-label="Sequence diagram of signup: browser posts to the auth route, which rate-limits and validates, calls AuthController then AuthService, which hashes the password, resolves role, creates the user, issues tokens, and the controller sets cookies and responds.">
+        <defs><marker id="a-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="70" y="20">Browser/App</text><text x="260" y="20">auth.routes.ts /</text><text x="260" y="33">AuthController</text>
+          <text x="450" y="20">AuthService</text><text x="610" y="20">MongoDB</text>
+        </g>
+        <line x1="70" y1="42" x2="70" y2="280" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="260" y1="42" x2="260" y2="280" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="450" y1="42" x2="450" y2="280" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="610" y1="42" x2="610" y2="280" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="70" y1="60" x2="256" y2="60" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="165" y="54" text-anchor="middle">1 POST /api/auth/signup {email,password,name}</text>
+          <text x="165" y="76" text-anchor="middle" class="dim">2 authRateLimiter (20 / 15min)</text>
+          <line x1="260" y1="94" x2="446" y2="94" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="353" y="88" text-anchor="middle">3 AuthController.signup → AuthService.signup</text>
+          <line x1="450" y1="114" x2="606" y2="114" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="528" y="108" text-anchor="middle">4a findByEmail (409 if taken)</text>
+          <line x1="450" y1="140" x2="446" y2="140" stroke="currentColor"/>
+          <text x="450" y="136" text-anchor="middle" class="dim">4b hashPassword (bcrypt, 12 rounds)</text>
+          <text x="450" y="150" text-anchor="middle" class="dim">4c resolveRole(email) via ADMIN_EMAILS</text>
+          <line x1="450" y1="166" x2="606" y2="166" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="528" y="160" text-anchor="middle">4d userRepository.create(...)</text>
+          <text x="450" y="188" text-anchor="middle" class="dim">5 issueTokens(user): access JWT {sub,role} + refresh JWT {sub,tokenVersion}</text>
+          <line x1="450" y1="206" x2="264" y2="206" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="353" y="200" text-anchor="middle">tokens returned to controller</text>
+          <text x="260" y="228" text-anchor="middle" class="dim">6 setAuthCookies (httpOnly: accessToken /, refreshToken /api/auth)</text>
+          <line x1="260" y1="246" x2="74" y2="246" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="165" y="240" text-anchor="middle">{user} (web) or {user,tokens} if X-Client: mobile</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Signup path. Login reuses the same shape via findByEmailWithPassword + comparePassword, returning a generic 401 for both "no such user" and "wrong password".</figcaption>
+    </figure>
+    <ul class="plain">
+      <li><strong>Login</strong>: <code>AuthService.login</code> calls <code>findByEmailWithPassword</code> (the only query that <code>.select("+passwordHash")</code>s the normally-hidden hash) and <code>comparePassword</code>; 401 <code>UnauthorizedError</code> on any mismatch — same generic message for "no such user" and "wrong password" so it doesn't leak which one.</li>
+      <li><strong>Refresh</strong>: <code>POST /api/auth/refresh</code> reads the refresh cookie/body, <code>verifyRefreshToken</code>, then compares its <code>tokenVersion</code> against the user's <em>current</em> <code>refreshTokenVersion</code> in the DB — logout or a password reset increments that counter, instantly invalidating every refresh token issued before that point without needing a token blocklist.</li>
+    </ul>
+  </div>
+
+  <!-- (b) OTP reset -->
+  <div class="flow" id="flow-b">
+    <h3>(b) Email OTP verification flow (password reset)</h3>
+    <div class="meta">Trigger: user clicks "Forgot password" &middot; Browser/App → auth.routes.ts → AuthController → AuthService → IEmailOtpRepository + IEmailOtpSender (Nodemailer/Gmail) → MongoDB</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 700 260" role="img" aria-label="Sequence diagram: browser requests password reset, service silently no-ops if user not found for anti enumeration, otherwise generates and emails an OTP via Gmail, stores a hashed OTP with TTL in MongoDB, then verify-otp and reset-password complete the flow and bump refreshTokenVersion.">
+        <defs><marker id="b-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="60" y="18">Browser/App</text><text x="230" y="18">AuthService</text><text x="430" y="18">MongoDB (OTP/User)</text><text x="620" y="18">Gmail SMTP</text>
+        </g>
+        <line x1="60" y1="36" x2="60" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="230" y1="36" x2="230" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="430" y1="36" x2="430" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="620" y1="36" x2="620" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="60" y1="54" x2="226" y2="54" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="145" y="48" text-anchor="middle">1 POST /forgot-password {email} (otpRateLimiter 5/hr)</text>
+          <text x="230" y="70" text-anchor="middle" class="dim">2 lookup user — not found ⇒ 200 anyway (anti-enumeration)</text>
+          <line x1="230" y1="86" x2="426" y2="86" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="328" y="80" text-anchor="middle">3 invalidate prior OTP, store bcrypt hash, 10min TTL</text>
+          <line x1="230" y1="104" x2="616" y2="104" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="420" y="98" text-anchor="middle">3 sendOtp(email, code) via NodemailerEmailOtpSender</text>
+          <line x1="60" y1="126" x2="226" y2="126" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="145" y="120" text-anchor="middle">4 POST /verify-otp {email,otp}</text>
+          <line x1="230" y1="142" x2="426" y2="142" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="328" y="136" text-anchor="middle">bcrypt-compare, mark consumed:true (single-use)</text>
+          <line x1="230" y1="160" x2="64" y2="160" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="145" y="154" text-anchor="middle">resetToken JWT {purpose:"password-reset"}</text>
+          <line x1="60" y1="182" x2="226" y2="182" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="145" y="176" text-anchor="middle">5 POST /reset-password {resetToken,newPassword}</text>
+          <line x1="230" y1="200" x2="426" y2="200" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="328" y="194" text-anchor="middle">verify token, set new hash, increment refreshTokenVersion</text>
+          <text x="328" y="220" text-anchor="middle" class="dim">(logs the account out on every device, not just this one)</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>The MongoDB EmailOtpModel schema uses a TTL index (<code>expires: 0</code> on <code>expiresAt</code>) — expired OTPs self-delete, no manual cleanup job needed.</figcaption>
+    </figure>
+  </div>
+
+  <!-- (c) Google OAuth -->
+  <div class="flow" id="flow-c">
+    <h3>(c) Google OAuth login flow (browser + native)</h3>
+    <div class="meta">Trigger: "Sign in with Google" &middot; Browser → GET /api/auth/google → Google's consent page → GET /api/auth/google/callback → AuthController → AuthService → MongoDB</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 720 300" role="img" aria-label="Sequence diagram: browser hits the google auth route which Passport redirects to Google, user approves on Google's own page, Google redirects back with a code, Passport exchanges it for a profile and calls AuthService.handleGoogleLogin, which finds or links or creates the user, then tokens are issued and the browser is redirected. A native variant below posts an idToken directly and skips the redirect dance.">
+        <defs><marker id="c-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="60" y="18">Browser</text><text x="250" y="18">PlatformServer</text><text x="250" y="31">(Passport)</text>
+          <text x="440" y="18">Google</text><text x="620" y="18">AuthService /</text><text x="620" y="31">MongoDB</text>
+        </g>
+        <line x1="60" y1="42" x2="60" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="250" y1="42" x2="250" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="440" y1="42" x2="440" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="620" y1="42" x2="620" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="60" y1="60" x2="246" y2="60" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="153" y="54" text-anchor="middle">1 GET /api/auth/google</text>
+          <line x1="250" y1="78" x2="436" y2="78" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="345" y="72" text-anchor="middle">302 → Google consent (session:false, JWT-only)</text>
+          <text x="440" y="98" text-anchor="middle" class="dim">2 user approves — PlatformServer never sees the Google password</text>
+          <line x1="440" y1="116" x2="64" y2="116" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="250" y="110" text-anchor="middle">3 redirect to GOOGLE_CALLBACK_URL?code=...</text>
+          <line x1="60" y1="134" x2="246" y2="134" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="153" y="128" text-anchor="middle">GET /api/auth/google/callback?code=...</text>
+          <line x1="250" y1="152" x2="436" y2="152" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="345" y="146" text-anchor="middle">4 exchange code for profile</text>
+          <text x="440" y="170" text-anchor="middle" class="dim">mapGoogleProfile → {googleId,email,name,avatarUrl}</text>
+          <line x1="250" y1="188" x2="616" y2="188" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="433" y="182" text-anchor="middle">6 AuthService.handleGoogleLogin(profile)</text>
+          <text x="620" y="206" text-anchor="middle" class="dim">findByGoogleId → findByEmail (link) → create new</text>
+          <line x1="620" y1="222" x2="254" y2="222" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="433" y="216" text-anchor="middle">tokens issued</text>
+          <line x1="250" y1="240" x2="64" y2="240" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="153" y="234" text-anchor="middle">7 cookies set, redirect to FRONTEND_URL/auth/callback</text>
+          <text x="20" y="266" font-weight="700" class="accentline" text-anchor="start">Native (Android) variant:</text>
+          <text x="20" y="282" class="dim" text-anchor="start">POST /api/auth/google/token {idToken} → verifyGoogleIdToken() checks signature + aud=GOOGLE_CLIENT_ID → same handleGoogleLogin, no redirect</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Browser redirect dance (steps 1–7) vs. the native ID-token exchange both converge on the same <code>handleGoogleLogin</code>. Failure path: <code>failureRedirect: "/api/auth/google/failure"</code> → plain 401 JSON.</figcaption>
+    </figure>
+    <p>If a local-password account already exists with the same email, it gets the Google identity <strong>linked</strong> via <code>linkGoogleAccount</code>, which <code>$addToSet</code>s <code>"google"</code> into <code>authProviders</code> without touching the password.</p>
+  </div>
+
+  <!-- (d) robot registration -->
+  <div class="flow" id="flow-d">
+    <h3>(d) Robot registration / onboarding by admin</h3>
+    <div class="meta">Trigger: admin runs <code>npm run seed:robot</code> (first robot) or calls the admin API &middot; Admin → robot.routes.ts/seedRobot.ts → RobotService → IRobotRepository → MongoDB. No robot participates yet — this is purely a database record.</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 660 230" role="img" aria-label="Sequence diagram: admin creates a robot record, RobotService checks uniqueness, generates and hashes a 32 byte link secret, stores only the hash and returns the plaintext secret exactly once; later when RobotServer connects over robot-link the registry marks the robot active; rotate-secret reissues a fresh one.">
+        <defs><marker id="d-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="70" y="18">Admin (CLI/Browser)</text><text x="300" y="18">RobotService</text><text x="500" y="18">MongoDB</text><text x="610" y="18">RobotServer</text>
+        </g>
+        <line x1="70" y1="36" x2="70" y2="220" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="300" y1="36" x2="300" y2="220" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="500" y1="36" x2="500" y2="220" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="610" y1="36" x2="610" y2="220" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="70" y1="54" x2="296" y2="54" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="185" y="48" text-anchor="middle">1 POST /api/admin/robots {robotId,name,vpnHostname}</text>
+          <line x1="300" y1="72" x2="496" y2="72" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="400" y="66" text-anchor="middle">2 uniqueness check, insert status:"provisioned"</text>
+          <text x="300" y="92" text-anchor="middle" class="dim">3 randomBytes(32) secret, sha256-hash it, store hash only</text>
+          <line x1="300" y1="110" x2="74" y2="110" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="185" y="104" text-anchor="middle">plaintext secret returned — exactly once</text>
+          <text x="300" y="132" text-anchor="middle" class="dim">(copied into that robot's RobotServer .env as ROBOT_LINK_SECRET)</text>
+          <line x1="610" y1="150" x2="504" y2="150" stroke="currentColor" marker-end="url(#d-arrow)" opacity=".8"/>
+          <text x="557" y="144" text-anchor="middle">4 /ws/robot-link connects → registry.register → touchLastSeen</text>
+          <text x="400" y="166" text-anchor="middle" class="dim">robotRepository.markSeen flips status → "active"</text>
+          <line x1="70" y1="190" x2="296" y2="190" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="185" y="184" text-anchor="middle">5 POST .../rotate-link-secret</text>
+          <text x="300" y="206" text-anchor="middle" class="dim">reissues a fresh secret; old connection stays open until it reconnects</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Provisioning is a pure database operation; a robot only becomes "active" once it successfully opens <code>/ws/robot-link</code> with the secret it was given.</figcaption>
+    </figure>
+  </div>
+
+  <!-- (e) access request + approval, compact -->
+  <div class="flow" id="flow-e">
+    <h3>(e) Robot access request + admin approval → robot assignment</h3>
+    <div class="meta">Full trace already drawn in §04's end-to-end diagram (steps 1–11 above). Summarized here as a flow.</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 680 200" role="img" aria-label="Compact sequence: user requests access to a robot, an admin lists pending requests and approves one, which grants a robot assignment and marks the request approved.">
+        <defs><marker id="e-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="70" y="18">User</text><text x="260" y="18">PlatformServer</text><text x="470" y="18">Admin</text><text x="610" y="18">MongoDB</text>
+        </g>
+        <line x1="70" y1="36" x2="70" y2="190" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="260" y1="36" x2="260" y2="190" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="470" y1="36" x2="470" y2="190" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="610" y1="36" x2="610" y2="190" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="70" y1="54" x2="256" y2="54" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="165" y="48" text-anchor="middle">1 create request {robotId}</text>
+          <line x1="260" y1="72" x2="606" y2="72" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="433" y="66" text-anchor="middle">insert status:"pending" (dup-key → 409 ConflictError)</text>
+          <line x1="470" y1="98" x2="264" y2="98" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="365" y="92" text-anchor="middle">2 list ?status=pending</text>
+          <line x1="470" y1="124" x2="264" y2="124" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="365" y="118" text-anchor="middle">3 approve (optional robotId override)</text>
+          <line x1="260" y1="142" x2="606" y2="142" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="433" y="136" text-anchor="middle">RobotAssignmentService.grant → upsertActive, markApproved</text>
+          <line x1="260" y1="166" x2="74" y2="166" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="165" y="160" text-anchor="middle">robot now appears in GET /api/users/me</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Payload shapes: request body <code>{robotId: string}</code>; approve body <code>{robotId?: string}</code> (optional override); the resulting <code>RobotAssignmentDto</code> carries independent <code>hmiAccess</code>/<code>platformAccess</code> booleans an admin can later toggle via <code>PATCH /api/admin/robot-assignments/:id/access</code>.</figcaption>
+    </figure>
+  </div>
+
+  <!-- (f) robot-link connection -->
+  <div class="flow" id="flow-f">
+    <h3>(f) Robot connecting to PlatformServer (robot-link: registration, persistent WS, auth)</h3>
+    <div class="meta">Trigger: RobotServer boots or reconnects &middot; RobotServer → /ws/robot-link upgrade → WsRouter → RobotLinkGateway.authenticate → IRobotRepository → RobotConnectionRegistry</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 700 320" role="img" aria-label="Sequence diagram: RobotServer opens a websocket to ws robot-link with a robot id header and a bearer-style shared secret. The raw HTTP upgrade event, bypassing Express, is handled by WsRouter which calls RobotLinkGateway.authenticate, which looks up the robot, timing-safe compares the sha256 hash of the presented secret, and on success the registry registers the connection, closing any prior one with code 4409, and starts a ping pong watchdog. On socket close a disconnect event fires that the control module listens for.">
+        <defs><marker id="f-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="60" y="18">RobotServer</text><text x="230" y="18">WsRouter</text><text x="430" y="18">RobotLinkGateway</text><text x="620" y="18">ConnectionRegistry</text>
+        </g>
+        <line x1="60" y1="36" x2="60" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="230" y1="36" x2="230" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="430" y1="36" x2="430" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="620" y1="36" x2="620" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="60" y1="54" x2="226" y2="54" stroke="currentColor" marker-end="url(#f-arrow)"/>
+          <text x="145" y="48" text-anchor="middle">1 wss://.../ws/robot-link, x-robot-id + Authorization: Robot &lt;secret&gt;</text>
+          <text x="230" y="72" text-anchor="middle" class="dim">2 raw http.Server "upgrade" event — bypasses Express entirely</text>
+          <line x1="230" y1="90" x2="426" y2="90" stroke="currentColor" marker-end="url(#f-arrow)"/>
+          <text x="328" y="84" text-anchor="middle">looks up authenticator for /ws/robot-link</text>
+          <text x="430" y="108" text-anchor="middle" class="dim">3 lookup robot + linkSecretHash, sha256(presented)</text>
+          <text x="430" y="122" text-anchor="middle" class="dim">crypto.timingSafeEqual (constant-time) · reject if unknown/retired</text>
+          <line x1="430" y1="140" x2="234" y2="140" stroke="currentColor" marker-end="url(#f-arrow)"/>
+          <text x="328" y="134" text-anchor="middle">4 success → handshake completes, onConnection fires</text>
+          <line x1="430" y1="158" x2="616" y2="158" stroke="currentColor" marker-end="url(#f-arrow)"/>
+          <text x="523" y="152" text-anchor="middle">register(robotId, ws)</text>
+          <text x="620" y="176" text-anchor="middle" class="dim">5 prior connection (if any) closed: code 4409</text>
+          <text x="620" y="190" text-anchor="middle" class="dim">ping every 10s; 2 missed pongs → terminate</text>
+          <text x="430" y="212" text-anchor="middle" class="dim">6 inbound health.result frames resolve pending queryHealth() promises</text>
+          <line x1="620" y1="232" x2="430" y2="232" stroke="currentColor" marker-end="url(#f-arrow)" opacity=".8"/>
+          <text x="523" y="226" text-anchor="middle">7 on close: unregister() fires "disconnect"</text>
+          <text x="430" y="250" text-anchor="middle" class="dim">→ ControlSessionService tears down any live session on this robot (flow g)</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Exactly one live socket per robot, ever. A reconnect always wins over its own stale previous connection.</figcaption>
+    </figure>
+    <div class="callout">
+      <h4>robot-link vs. robot-auth — not the same thing</h4>
+      <p><code>robot-link</code> is the <strong>always-open, bidirectional, PlatformServer-initiated-protocol</strong> connection for teleop/health. <code>robot-auth</code> (flow h) is <strong>one-off outbound REST calls</strong> from RobotServer, used only for the kiosk's own human-login needs. See the dedicated diagram in flow (h) below.</p>
+    </div>
+  </div>
+
+  <!-- (g) control session -->
+  <div class="flow" id="flow-g">
+    <h3>(g) Remote control session flow (control module)</h3>
+    <div class="meta">Trigger: a user opens the teleop screen for a robot they have access to &middot; Browser/App → /ws/control upgrade → ControlSessionGateway → ControlSessionService → RobotConnectionRegistry → the robot's live /ws/robot-link socket → RobotServer</div>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 720 320" role="img" aria-label="Sequence diagram: client opens the control websocket with a bearer token carried in the Sec-WebSocket-Protocol subprotocol header, the gateway re-parses cookies manually since express middleware is bypassed, verifies the access token and checks active platform access, then ControlSessionService preempts any existing session on that robot, starts a session with a coalescing timer for joystick frames capped at thirty per second and a thirty second re-validation timer, forwards joystick frames as teleop velocity, and forwards e-stop immediately uncoalesced as teleop estop.">
+        <defs><marker id="g-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="11" font-weight="700" text-anchor="middle">
+          <text x="60" y="18">Browser/App</text><text x="250" y="18">ControlSession</text><text x="250" y="31">Gateway</text>
+          <text x="440" y="18">ControlSession</text><text x="440" y="31">Service</text><text x="630" y="18">Robot (via</text><text x="630" y="31">robot-link)</text>
+        </g>
+        <line x1="60" y1="42" x2="60" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="250" y1="42" x2="250" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="440" y1="42" x2="440" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <line x1="630" y1="42" x2="630" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+        <g font-size="10.5">
+          <line x1="60" y1="58" x2="246" y2="58" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="153" y="52" text-anchor="middle">1 wss://.../ws/control?robotId=... + Sec-WebSocket-Protocol: bearer,&lt;token&gt;</text>
+          <text x="250" y="76" text-anchor="middle" class="dim">2 manual cookie reparse + verifyAccessToken; hasActivePlatformAccess gate</text>
+          <line x1="250" y1="94" x2="436" y2="94" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="343" y="88" text-anchor="middle">3 startSession({userId, robotMongoId, ws})</text>
+          <text x="440" y="112" text-anchor="middle" class="dim">4 preempt any existing session on this robot; new sessionId (UUID)</text>
+          <text x="440" y="126" text-anchor="middle" class="dim">coalescing timer (30/s) + 30s re-validation timer started</text>
+          <line x1="440" y1="144" x2="254" y2="144" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="343" y="138" text-anchor="middle">{type:"session", state:"ready"}</text>
+          <line x1="60" y1="166" x2="436" y2="166" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="248" y="160" text-anchor="middle">5 {type:"joystick", seq, data:{linear,angular}} (clientFrameSchema)</text>
+          <text x="440" y="182" text-anchor="middle" class="dim">stored as pendingVelocity — latest value wins, coalesced ≤30/s</text>
+          <line x1="440" y1="200" x2="626" y2="200" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="533" y="194" text-anchor="middle">teleop.velocity over robot-link</text>
+          <line x1="60" y1="222" x2="436" y2="222" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="248" y="216" text-anchor="middle">6 {type:"estop", data:{engaged}} — never coalesced</text>
+          <line x1="440" y1="240" x2="626" y2="240" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="533" y="234" text-anchor="middle">teleop.estop — sent immediately</text>
+          <line x1="440" y1="258" x2="64" y2="258" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="248" y="252" text-anchor="middle">estop_ack, or robot_offline error if send failed</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Velocity clamping is deliberately not re-enforced here — RobotServer's own TeleopService is the single source of truth; <code>TELEOP_MAX_LINEAR</code>/<code>TELEOP_MAX_ANGULAR</code> here are defense-in-depth only, not an enforced clamp.</figcaption>
+    </figure>
+
+    <h4 style="margin:18px 0 6px;font-size:14px;">Termination paths — all funneled through one <code>terminateSession</code></h4>
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 720 210" role="img" aria-label="Four termination paths for a control session, all funneled through one terminateSession method: client disconnect sends teleop release first; a newer session preempts the old one and sends release; an admin revoking the assignment mid-session sends release; but when the robot's own robot-link drops, the session is torn down as robot offline without sending teleop release, since there is no link left to send it over.">
+        <defs><marker id="g2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="290" y="10" width="140" height="40" rx="8" fill="var(--accent-soft)" stroke="currentColor"/>
+        <text x="360" y="35" text-anchor="middle" font-size="11.5" font-weight="700">active session</text>
+        <g font-size="10">
+          <line x1="320" y1="50" x2="110" y2="110" stroke="currentColor" marker-end="url(#g2-arrow)"/>
+          <rect x="20" y="112" width="180" height="48" rx="7" fill="none" stroke="currentColor"/>
+          <text x="110" y="130" text-anchor="middle" font-weight="700">client_disconnect</text>
+          <text x="110" y="145" text-anchor="middle">sends teleop.release ✓</text>
+
+          <line x1="345" y1="50" x2="265" y2="110" stroke="currentColor" marker-end="url(#g2-arrow)"/>
+          <rect x="190" y="112" width="150" height="48" rx="7" fill="none" stroke="currentColor"/>
+          <text x="265" y="130" text-anchor="middle" font-weight="700">preempted</text>
+          <text x="265" y="145" text-anchor="middle">sends teleop.release ✓</text>
+
+          <line x1="375" y1="50" x2="455" y2="110" stroke="currentColor" marker-end="url(#g2-arrow)"/>
+          <rect x="370" y="112" width="150" height="48" rx="7" fill="none" stroke="currentColor"/>
+          <text x="445" y="130" text-anchor="middle" font-weight="700">revoked</text>
+          <text x="445" y="145" text-anchor="middle">(30s revalidation) sends release ✓</text>
+
+          <line x1="400" y1="50" x2="610" y2="110" stroke="currentColor" marker-end="url(#g2-arrow)"/>
+          <rect x="540" y="112" width="170" height="60" rx="7" fill="var(--danger-bg)" stroke="var(--danger-border)"/>
+          <text x="625" y="130" text-anchor="middle" font-weight="700" fill="var(--danger-fg)">robot_offline</text>
+          <text x="625" y="145" text-anchor="middle" fill="var(--danger-fg)">robot-link dropped —</text>
+          <text x="625" y="158" text-anchor="middle" fill="var(--danger-fg)">release NOT sent (no link left)</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Three of four termination reasons send <code>teleop.release</code> so the robot stops moving; <code>robot_offline</code> cannot, by definition — there is no socket left to send it over. See the Gotchas section for why this matters.</figcaption>
+    </figure>
+  </div>
+
+  <!-- (h) robot-link vs robot-auth distinction — the extra-clear one -->
+  <div class="flow" id="flow-h">
+    <h3>(h) <code>robot-auth</code> module purpose — vs. <code>robot-link</code></h3>
+    <div class="meta"><code>robot-link</code> and <code>robot-auth</code> solve two unrelated problems and must not be confused. This is the subtlest piece of the architecture — worth its own close diagram.</div>
+
+    <figure class="diagram">
+      <div class="svg-wrap">
+      <svg viewBox="0 0 820 400" role="img" aria-label="One HTTP and WebSocket listener on PlatformServer is split by the custom WsRouter into two completely different trust models sharing the same ROBOT_LINK_SECRET. The ws robot-link path is a long-lived persistent connection authenticated once at handshake time with a timing safe comparison. The api robot-auth star path is ordinary short REST requests, each one independently authenticated on every single call by the resolveRobot middleware using the same shared secret as an Authorization Robot header, confirmed in RobotServer's own platformClient which sends config.robotLinkSecret as the bearer value to four robot-auth endpoints.">
+        <defs><marker id="h-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <!-- One listener -->
+        <rect x="260" y="10" width="300" height="46" rx="8" fill="var(--accent)" stroke="var(--accent)"/>
+        <text x="410" y="30" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--accent-fg)">One Node http.Server</text>
+        <text x="410" y="45" text-anchor="middle" font-size="10" fill="var(--accent-fg)">WsRouter multiplexes by pathname on "upgrade"</text>
+        <line x1="410" y1="56" x2="410" y2="78" stroke="currentColor" marker-end="url(#h-arrow)"/>
+
+        <!-- left column: robot-link -->
+        <rect x="30" y="80" width="340" height="300" rx="10" fill="none" stroke="currentColor"/>
+        <text x="200" y="104" text-anchor="middle" font-size="12.5" font-weight="700" font-family="var(--font-mono)">/ws/robot-link</text>
+        <text x="200" y="120" text-anchor="middle" font-size="10" class="dim">persistent WebSocket</text>
+        <rect x="55" y="134" width="290" height="60" rx="7" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="200" y="152" text-anchor="middle" font-size="10.5" font-weight="700">RobotLinkGateway.authenticate</text>
+        <text x="200" y="166" text-anchor="middle" font-size="10">checked ONCE, at WS handshake</text>
+        <text x="200" y="180" text-anchor="middle" font-size="10">sha256(secret) vs timingSafeEqual</text>
+        <line x1="200" y1="194" x2="200" y2="212" stroke="currentColor" marker-end="url(#h-arrow)"/>
+        <rect x="55" y="214" width="290" height="50" rx="7" fill="none" stroke="currentColor"/>
+        <text x="200" y="234" text-anchor="middle" font-size="10.5" font-weight="700">socket stays open for hours/days</text>
+        <text x="200" y="250" text-anchor="middle" font-size="10">teleop.*, health.query/result frames flow freely</text>
+        <text x="200" y="284" text-anchor="middle" font-size="10.5" font-weight="700">Purpose:</text>
+        <text x="200" y="300" text-anchor="middle" font-size="10">teleop command relay + health liveness</text>
+        <text x="200" y="320" text-anchor="middle" font-size="10.5" font-weight="700">Direction:</text>
+        <text x="200" y="336" text-anchor="middle" font-size="10">PlatformServer-initiated frames, over a</text>
+        <text x="200" y="350" text-anchor="middle" font-size="10">socket RobotServer dialed and holds open</text>
+
+        <!-- right column: robot-auth -->
+        <rect x="450" y="80" width="340" height="300" rx="10" fill="none" stroke="currentColor"/>
+        <text x="620" y="104" text-anchor="middle" font-size="12.5" font-weight="700" font-family="var(--font-mono)">/api/robot-auth/*</text>
+        <text x="620" y="120" text-anchor="middle" font-size="10" class="dim">one-off REST requests</text>
+        <rect x="475" y="134" width="290" height="60" rx="7" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="620" y="152" text-anchor="middle" font-size="10.5" font-weight="700">resolveRobot middleware</text>
+        <text x="620" y="166" text-anchor="middle" font-size="10">checked on EVERY single request</text>
+        <text x="620" y="180" text-anchor="middle" font-size="10">x-robot-id + Authorization: Robot &lt;secret&gt;</text>
+        <line x1="620" y1="194" x2="620" y2="212" stroke="currentColor" marker-end="url(#h-arrow)"/>
+        <rect x="475" y="214" width="290" height="50" rx="7" fill="none" stroke="currentColor"/>
+        <text x="620" y="234" text-anchor="middle" font-size="10.5" font-weight="700">connection closes after each response</text>
+        <text x="620" y="250" text-anchor="middle" font-size="10">check-user, roster, pin-setup/*</text>
+        <text x="620" y="284" text-anchor="middle" font-size="10.5" font-weight="700">Purpose:</text>
+        <text x="620" y="300" text-anchor="middle" font-size="10">RobotApp's kiosk-login needs on the touchscreen</text>
+        <text x="620" y="320" text-anchor="middle" font-size="10.5" font-weight="700">Direction:</text>
+        <text x="620" y="336" text-anchor="middle" font-size="10">RobotServer calls out, gets a response,</text>
+        <text x="620" y="350" text-anchor="middle" font-size="10">connection closes — repeated per login attempt</text>
+
+        <!-- shared secret connector -->
+        <line x1="200" y1="194" x2="410" y2="400" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2 5" opacity=".8"/>
+        <line x1="620" y1="194" x2="410" y2="400" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2 5" opacity=".8"/>
+        <rect x="310" y="372" width="200" height="26" rx="13" fill="var(--accent)"/>
+        <text x="410" y="389" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--accent-fg)">same ROBOT_LINK_SECRET</text>
+      </svg>
+      </div>
+      <figcaption>Two unrelated trust models, one shared secret, enforced at two very different points: once per connection on the left, once per request on the right. Confirmed in RobotServer's own <code>platformClient.ts</code>, which sends <code>config.robotLinkSecret</code> as the bearer value to both.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>robot-link</th><th>robot-auth</th></tr></thead>
+      <tbody>
+        <tr><td>Transport</td><td>Persistent WebSocket (<code>/ws/robot-link</code>)</td><td>One-off HTTP requests (<code>/api/robot-auth/*</code>)</td></tr>
+        <tr><td>Direction</td><td>PlatformServer-initiated frames over an always-open RobotServer-dialed socket</td><td>RobotServer calls out, gets a response, connection closes</td></tr>
+        <tr><td>Purpose</td><td>Teleop command relay + health liveness</td><td>RobotApp's own kiosk-login needs: "does this email have an account?", roster of users allowed on this robot's touchscreen, PIN setup</td></tr>
+        <tr><td>Auth mechanism</td><td>Same shared secret (<code>ROBOT_LINK_SECRET</code>), checked once at WS handshake</td><td>The <strong>same</strong> shared secret, but checked on <strong>every single HTTP request</strong> via <code>resolveRobot.middleware.ts</code></td></tr>
+        <tr><td>Confirmed in RobotServer</td><td>n/a (handled by RobotServer's own <code>teleopLink.handler.ts</code>)</td><td><code>RobotServer/src/clients/platformClient.ts</code>'s <code>PlatformClient</code> calls exactly these four endpoints using <code>config.robotLinkSecret</code> as the bearer value</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4 style="margin:18px 0 6px;font-size:14px;">PIN-setup steps (new user logging into a robot's touchscreen for the first time)</h4>
+    <ol>
+      <li>RobotApp → RobotServer → <code>POST /api/robot-auth/check-user {email}</code> → <code>{exists: boolean}</code> — not anti-enumeration: a robot is already a trusted caller, and the UX genuinely needs to distinguish "sign up first" from "ask your admin".</li>
+      <li><code>POST /api/robot-auth/pin-setup/request-otp {email}</code> (rate-limited by <code>robotOtpRateLimiter</code>, keyed by <code>robotId:email</code>) — <strong>is</strong> anti-enumeration (always 200): silently no-ops unless the email belongs to a user with an <em>active</em> assignment to <em>this exact</em> calling robot, reusing the OTP machinery with <code>purpose: "robot-pin-setup"</code>.</li>
+      <li><code>POST /api/robot-auth/pin-setup/verify-otp {email, otp}</code> → <code>{pinSetupToken}</code>, a JWT binding <code>{sub: userId, robotId: callerRobotId, purpose: "robot-pin-setup"}</code> — the robotId is baked in at <em>verify</em> time, from the robot that called verify, not confirm.</li>
+      <li><code>POST /api/robot-auth/pin-setup/confirm {pinSetupToken, pin}</code>: checks <code>payload.robotId !== callerRobotId</code> and 401s if they differ — a token minted for robot A can never be used to set a PIN on robot B, even by a legitimate different robot. PIN is bcrypt-hashed and stored on the assignment.</li>
+      <li><code>GET /api/robot-auth/roster</code> — called by RobotServer on boot/periodic resync — returns every active, <code>hmiAccess</code>-enabled assignment for the calling robot <strong>including the bcrypt <code>pinHash</code></strong>, so RobotServer can validate kiosk PIN logins completely offline.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===================== 6. CROSS-COMPONENT ===================== -->
+<section id="cross-component">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Cross-Component Interaction</h2></div>
+
+  <figure class="diagram">
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 440" role="img" aria-label="PlatformServer as the hub: RobotServer dials in over ws robot-link and calls in over api robot-auth, both authenticated with the same shared ROBOT_LINK_SECRET but checked differently; PlatformApp and AndroidApp call in over REST with cookies or JWT plus the ws control websocket; HttpRobotNotifier is the one place PlatformServer calls back out, unauthenticated, relying on the VPN, best effort only.">
+      <defs><marker id="x-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+      <rect x="310" y="180" width="200" height="90" rx="10" fill="var(--accent)" stroke="var(--accent)"/>
+      <text x="410" y="218" text-anchor="middle" font-size="14" font-weight="800" fill="var(--accent-fg)">PlatformServer</text>
+      <text x="410" y="236" text-anchor="middle" font-size="10" fill="var(--accent-fg)">MongoDB-backed hub</text>
+      <text x="410" y="250" text-anchor="middle" font-size="10" fill="var(--accent-fg)">one HTTP+WS listener</text>
+
+      <!-- RobotServer left -->
+      <rect x="20" y="190" width="170" height="60" rx="8" fill="none" stroke="currentColor"/>
+      <text x="105" y="215" text-anchor="middle" font-size="12" font-weight="700">RobotServer</text>
+      <text x="105" y="231" text-anchor="middle" font-size="9.5" class="dim">per-robot, on the device</text>
+      <line x1="190" y1="205" x2="306" y2="200" stroke="currentColor" marker-end="url(#x-arrow)"/>
+      <text x="248" y="192" text-anchor="middle" font-size="9.5">/ws/robot-link (dial out, persistent)</text>
+      <line x1="190" y1="235" x2="306" y2="230" stroke="currentColor" marker-end="url(#x-arrow)"/>
+      <text x="248" y="252" text-anchor="middle" font-size="9.5">/api/robot-auth/* (REST, per-call)</text>
+      <line x1="306" y1="258" x2="194" y2="258" stroke="currentColor" stroke-dasharray="4 4" marker-end="url(#x-arrow)" opacity=".75"/>
+      <text x="248" y="275" text-anchor="middle" font-size="9.5" class="dim">HttpRobotNotifier → vpnHostname (push, no auth, VPN-trusted, best-effort)</text>
+
+      <!-- shared secret badge -->
+      <rect x="40" y="150" width="240" height="24" rx="12" fill="var(--chip-bg)" stroke="var(--border)"/>
+      <text x="160" y="166" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--chip-fg)">both auth'd by the SAME ROBOT_LINK_SECRET</text>
+
+      <!-- PlatformApp top right -->
+      <rect x="610" y="40" width="190" height="60" rx="8" fill="none" stroke="currentColor"/>
+      <text x="705" y="65" text-anchor="middle" font-size="12" font-weight="700">PlatformApp</text>
+      <text x="705" y="81" text-anchor="middle" font-size="9.5" class="dim">web dashboard</text>
+      <line x1="640" y1="100" x2="470" y2="178" stroke="currentColor" marker-end="url(#x-arrow)"/>
+      <text x="610" y="130" text-anchor="middle" font-size="9.5">REST + httpOnly cookies</text>
+      <text x="610" y="144" text-anchor="middle" font-size="9.5">/ws/control (cookie or subprotocol)</text>
+
+      <!-- AndroidApp bottom right -->
+      <rect x="610" y="360" width="190" height="60" rx="8" fill="none" stroke="currentColor"/>
+      <text x="705" y="385" text-anchor="middle" font-size="12" font-weight="700">AndroidApp</text>
+      <text x="705" y="401" text-anchor="middle" font-size="9.5" class="dim">mobile, Bearer JWT</text>
+      <line x1="640" y1="360" x2="470" y2="272" stroke="currentColor" marker-end="url(#x-arrow)"/>
+      <text x="610" y="330" text-anchor="middle" font-size="9.5">REST + Authorization: Bearer</text>
+      <text x="610" y="344" text-anchor="middle" font-size="9.5">/ws/control, X-Client: mobile</text>
+    </svg>
+    </div>
+    <figcaption>PlatformServer as the hub. Everything except <code>HttpRobotNotifier</code> is robot- or user-initiated; the notifier is the one unauthenticated, VPN-trust, best-effort exception.</figcaption>
+  </figure>
+
+  <h3 style="font-size:16px;">How RobotServer connects in</h3>
+  <ul class="plain">
+    <li><strong>Identity</strong>: a robot's identity is its <code>robotId</code> (a device slug, e.g. <code>autonav-01</code>), established once at provisioning time (<code>RobotService.createRobot</code> / <code>scripts/seedRobot.ts</code>) and resolved on RobotServer's own side via its ESP32 bridge / <code>DEV_DEVICE_ID_OVERRIDE</code>.</li>
+    <li><strong>Secret</strong>: a single shared secret (<code>ROBOT_LINK_SECRET</code>, 32 random bytes, sha256-hashed at rest as <code>Robot.linkSecretHash</code>) authenticates the robot for <strong>both</strong> <code>/ws/robot-link</code> (checked once, at WS handshake) <strong>and</strong> every <code>/api/robot-auth/*</code> call (checked per-request).</li>
+    <li><strong>Persistent connection</strong>: exactly one <code>/ws/robot-link</code> WebSocket per robot. Heartbeats: a server-side ping every 10 seconds; force-closed after 2 consecutive missed pongs (~20–30s to detect a dead link). A reconnecting robot always wins over its own previous connection (old one closed with code 4409).</li>
+  </ul>
+  <div class="callout callout--warn">
+    <h4>Public reachability, not VPN-gated</h4>
+    <p>Per comments throughout the code (<code>app.ts</code>, <code>resolveRobot.middleware.ts</code>, <code>robotAuth.routes.ts</code>), both <code>/ws/robot-link</code> and <code>/api/robot-auth/*</code> are now reachable from the <strong>public internet</strong> (via nginx), not gated by a VPN boundary — the shared secret + timing-safe comparison <em>is</em> the entire trust boundary for robot-originated traffic. <code>HttpRobotNotifier</code> (PlatformServer→robot) is the one piece that still relies on the VPN, since it has no auth of its own.</p>
+  </div>
+
+  <h3 style="font-size:16px;">How PlatformApp and AndroidApp call in</h3>
+  <ul class="plain">
+    <li><strong>REST base paths</strong>: <code>/api/auth</code>, <code>/api/users</code>, <code>/api/robots</code> (public summaries + health), <code>/api/robot-access-requests</code>, <code>/api/admin/*</code> (admin-only), all mounted in <code>src/app.ts</code>.</li>
+    <li><strong>Auth scheme</strong>: web clients rely on httpOnly cookies set by <code>setAuthCookies</code>; native/mobile clients send <code>Authorization: Bearer &lt;accessToken&gt;</code> and additionally pass <code>X-Client: mobile</code> so <code>AuthController</code> also returns the raw token pair in response bodies.</li>
+    <li><strong>CORS</strong>: explicitly allow-lists <code>config.frontendUrl</code> plus three fixed Capacitor WebView origins and one local dev port (<code>5190</code>) — never a wildcard, since <code>credentials: true</code> is required.</li>
+    <li><strong>WebSocket endpoint</strong>: <code>/ws/control?robotId=&lt;mongo id&gt;</code>, auth via cookie (web, reparsed manually) or <code>Sec-WebSocket-Protocol: bearer, &lt;token&gt;</code> — the only JS-settable way to carry a bearer token on a WS handshake without leaking it into logs via the URL.</li>
+  </ul>
+
+  <h3 style="font-size:16px;"><code>HttpRobotNotifier</code> — PlatformServer pushing data out to a specific robot</h3>
+  <p><code>src/modules/robot-assignments/HttpRobotNotifier.ts</code> implements <code>IRobotNotifier</code>. It is the <strong>only</strong> place PlatformServer calls <em>out</em> to a robot's own RobotServer unprompted (as opposed to relaying over the already-open robot-link socket). It fires after an admin revokes an assignment, or flips <code>hmiAccess</code> to <code>false</code>, calling <code>POST https://&lt;robot.vpnHostname&gt;/api/platform-auth/roster/invalidate</code> directly — no authentication of its own (the VPN/network path to <code>vpnHostname</code> is the trust boundary), on a short timeout (<code>ROBOT_CALL_TIMEOUT_MS</code>, default 5s), and is explicitly <strong>best-effort</strong>: failures are logged and swallowed (<code>.catch(() => undefined)</code>) because RobotServer self-corrects via its own periodic roster resync regardless.</p>
+</section>
+
+<!-- ===================== 7. RUNNING LOCALLY ===================== -->
+<section id="running-locally">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Running &amp; Developing Locally</h2></div>
+
+  <div class="codeblock"><pre><span class="c"># clone &amp; configure</span>
+cd PlatformServer
+cp .env.example .env         <span class="c"># fill in real secrets (see table below)</span>
+docker run -d -p 27017:27017 --name dev-mongo mongo:6.0
+npm install
+npm run dev                  <span class="c"># nodemon + ts-node, http://localhost:4000</span></pre></div>
+
+  <ul class="plain">
+    <li><strong>Build/run compiled</strong>: <code>npm run build</code> (tsc → <code>dist/</code>), <code>npm start</code> (<code>node dist/index.js</code>) — exactly what the <code>Dockerfile</code> does (multi-stage: build stage runs <code>npm ci && npm run build</code>, runtime stage only <code>npm ci --omit=dev</code> + compiled <code>dist/</code>).</li>
+    <li><strong>Lint</strong>: <code>npm run lint</code> (ESLint over <code>src/**/*.ts</code>).</li>
+    <li><strong>Tests</strong>: <code>npm test</code> (Jest). Unit tests (<code>tests/unit/*.test.ts</code>) use the in-memory fakes in <code>tests/unit/fakes/</code> — no database at all. Integration tests (<code>tests/integration/*.test.ts</code>) spin up a real temporary MongoDB via <code>mongodb-memory-server</code> and fire real HTTP requests with <code>supertest</code>; <code>tests/setupEnv.ts</code> pre-populates <code>process.env</code> with dummy-but-valid values so <code>config/env.ts</code>'s Zod validation passes before any test file loads the app.</li>
+    <li><strong>Default port</strong>: <code>4000</code> (<code>PORT</code> env var).</li>
+    <li><strong>Swagger/OpenAPI docs</strong>: <code>GET /api/docs</code> once the server is running — an interactive UI generated from <code>@openapi</code> JSDoc comments in every <code>*.routes.ts</code> file.</li>
+  </ul>
+
+  <div class="codeblock"><pre><span class="c"># ops scripts</span>
+npm run seed:robot -- --robotId=autonav-01 --name=autonav --hostname=autonav.robot
+npm run migrate:robot-assignments        <span class="c"># safe to re-run</span>
+npm run migrate:assignment-access-flags  <span class="c"># safe to re-run</span></pre></div>
+
+  <h3 style="font-size:16px;">Environment variables (<code>.env.example</code>)</h3>
+  <div class="table-wrap">
+  <table class="kv-table">
+    <thead><tr><th>Variable</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>NODE_ENV</td><td><code>development</code>/<code>test</code>/<code>production</code> — gates logging verbosity/format and cookie <code>secure</code> flag.</td></tr>
+      <tr><td>PORT</td><td>HTTP listen port (default 4000).</td></tr>
+      <tr><td>MONGO_URI</td><td>MongoDB connection string.</td></tr>
+      <tr><td>JWT_ACCESS_SECRET / JWT_REFRESH_SECRET</td><td>Signing secrets for short-lived access tokens and long-lived refresh tokens (each ≥16 chars; <strong>must differ</strong> so a leaked refresh secret can't forge access tokens or vice versa).</td></tr>
+      <tr><td>ACCESS_TOKEN_TTL / REFRESH_TOKEN_TTL</td><td>Token lifetimes (default <code>15m</code> / <code>30d</code>).</td></tr>
+      <tr><td>ADMIN_EMAILS</td><td>Comma-separated list; an email becomes <code>role: "admin"</code> <strong>only at the moment its account is first created</strong> — adding an email here later does not retroactively promote an existing account (use <code>PATCH /api/admin/users/:id/role</code> for that).</td></tr>
+      <tr><td>FRONTEND_URL</td><td>The dashboard's own origin — used for CORS allow-listing and the post-OAuth redirect target.</td></tr>
+      <tr><td>COOKIE_DOMAIN</td><td>Cookie <code>domain</code> attribute in production (unset in dev, so cookies default to the exact request host).</td></tr>
+      <tr><td>GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_CALLBACK_URL</td><td>Google Cloud Console OAuth2 app credentials; <code>CLIENT_ID</code> is also the <code>audience</code> pinned when verifying native-app ID tokens.</td></tr>
+      <tr><td>EMAIL_USER / EMAIL_APP_PASSWORD</td><td>Gmail account + a Google "app password" (not the real account password) used for OTP email delivery.</td></tr>
+      <tr><td>OTP_EXPIRY_MINUTES</td><td>How long a 6-digit OTP stays valid (default 10).</td></tr>
+      <tr><td>RESET_TOKEN_SECRET / RESET_TOKEN_TTL</td><td>Signing secret/TTL for the short-lived password-reset JWT issued after OTP verification.</td></tr>
+      <tr><td>PIN_SETUP_TOKEN_SECRET / PIN_SETUP_TOKEN_TTL</td><td>Same idea, for the robot-PIN-setup JWT.</td></tr>
+      <tr><td>ROBOT_CALL_SCHEME / ROBOT_CALL_TIMEOUT_MS</td><td>Scheme (<code>http</code>/<code>https</code>) and timeout PlatformServer uses when it calls <em>out</em> to a robot's own RobotServer (<code>HttpRobotNotifier</code>).</td></tr>
+      <tr><td>TELEOP_MAX_LINEAR / TELEOP_MAX_ANGULAR</td><td>Defense-in-depth velocity ceiling constants — documented as <em>not</em> the authoritative clamp (RobotServer's <code>TeleopService</code> is).</td></tr>
+      <tr><td>HEALTH_QUERY_TIMEOUT_MS</td><td>Timeout for the one-shot <code>health.query</code>/<code>health.result</code> round trip over <code>/ws/robot-link</code>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="section-intro">Note: <code>ROBOT_LINK_SECRET</code> itself is <strong>not</strong> a PlatformServer env var — it's generated per-robot by <code>RobotService.createRobot</code>/<code>seedRobot.ts</code> and lives in <em>RobotServer's</em> <code>.env</code>, not PlatformServer's.</p>
+</section>
+
+<!-- ===================== 8. GOTCHAS ===================== -->
+<section id="gotchas">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Gotchas &amp; Things a New Developer Must Know</h2></div>
+
+  <div class="callout">
+    <h4>Two completely separate "caller" identities, never to be confused</h4>
+    <p><code>req.user</code> (a human, set by <code>requireAuth</code>, JWT-based) vs. <code>req.robot</code> (a robot, set by <code>resolveRobot</code>, shared-secret-based) — enforced at the type level in <code>src/common/types/express.d.ts</code> as two distinct optional fields on <code>Express.Request</code>, specifically so a handler can't accidentally treat one as the other.</p>
+  </div>
+
+  <div class="callout callout--warn">
+    <h4>Refresh-token revocation is a counter, not a blocklist</h4>
+    <p><code>User.refreshTokenVersion</code> is compared against the <code>tokenVersion</code> baked into each refresh JWT at the time it was issued. Logout and password-reset both just <code>$inc</code> this counter — every refresh token issued before that moment instantly fails on its next use. There is no token-blocklist table to maintain, but it also means you <strong>cannot revoke one specific device's session</strong> without logging out every device.</p>
+  </div>
+
+  <div class="callout">
+    <h4>Rate limiting is stacked, and robot-facing limiters key differently</h4>
+    <p><code>authRateLimiter</code> (20/15min, IP-keyed) wraps the whole <code>/api/auth</code> router; <code>otpRateLimiter</code> (5/hour, IP-keyed) additionally wraps just the OTP-adjacent endpoints. On the robot side, <code>robotAuthRateLimiter</code>/<code>robotOtpRateLimiter</code> key by <code>x-robot-id</code> (or <code>robotId:email</code>) instead of IP — because many physical robots can share one VPN egress IP, IP-keying there would let one noisy robot starve every other robot's budget.</p>
+  </div>
+
+  <div class="callout">
+    <h4>Error → HTTP status mapping is centralized — never set <code>res.status()</code> yourself</h4>
+    <p><code>errorHandler.middleware.ts</code> (the last middleware registered in <code>app.ts</code>): a thrown <code>ZodError</code> → 400 with a <code>details</code> array; any <code>AppError</code> subclass → its own <code>statusCode</code> (<code>UnauthorizedError</code>=401, <code>ForbiddenError</code>=403, <code>NotFoundError</code>=404, <code>ConflictError</code>=409); anything else → 500, logged via <code>logger.error</code>. Always <code>throw</code> — and <code>asyncHandler</code> is what actually gets a thrown/rejected async error to that handler at all (a raw <code>async</code> Express handler that throws does <strong>not</strong> automatically reach <code>errorHandler</code> without it).</p>
+  </div>
+
+  <div class="callout callout--warn">
+    <h4>Timing-safe secret comparison appears twice, deliberately duplicated</h4>
+    <p>Both <code>robotLink.gateway.ts</code> and <code>resolveRobot.middleware.ts</code> independently sha256-hash the presented secret and compare with <code>crypto.timingSafeEqual</code> rather than <code>===</code>, specifically to prevent a timing side-channel attack (measuring response-time differences to guess the secret byte-by-byte). If you ever add a third robot-secret-checking code path, <strong>copy this pattern</strong>, not a plain string comparison.</p>
+  </div>
+
+  <div class="callout">
+    <h4>The <code>CHANGELOG.md</code> is stale relative to the code</h4>
+    <p>It documents auth, robot-access-requests, and early admin features in detail but has <strong>no entries</strong> for the <code>control</code>, <code>robot-link</code>, or <code>robot-auth</code> modules, nor for the <code>hmiAccess</code>/<code>platformAccess</code> split or the two migration scripts — all of which clearly exist and are wired into <code>app.ts</code>. Don't trust the changelog as a complete feature inventory; read the modules directly.</p>
+  </div>
+
+  <div class="callout callout--warn">
+    <h4>Data-model evolution is visible in <code>scripts/</code></h4>
+    <p><code>migrateRobotAssignments.ts</code> reveals that the system originally had a <strong>one-to-one</strong> <code>User.robot</code>/<code>Robot.assignedTo</code> relationship, later migrated to the current <strong>many-to-many</strong> <code>RobotAssignment</code> junction collection. <code>backfillAssignmentAccessFlags.ts</code> similarly reveals that <code>hmiAccess</code>/<code>platformAccess</code> were originally a single implicit "has access" concept, later split into two independently-toggleable flags (kiosk login vs. dashboard/remote-control access). Both scripts are safe to re-run (upsert / only-touch-missing-fields) if you're ever unsure whether they already ran against a given database.</p>
+  </div>
+
+  <div class="callout callout--danger">
+    <h4>The control-session relay is intentionally fragile in one specific, documented way</h4>
+    <p>If the robot's <code>/ws/robot-link</code> connection drops mid-session, <code>ControlSessionService.handleRobotDisconnect</code> terminates every session on that robot with <code>state: "robot_offline"</code> — but unlike every <em>other</em> termination reason, it does <strong>not</strong> attempt to send <code>teleop.release</code> first (there is, by definition, no link left to send it over). This is correct — you can't message a socket that just closed — but a new developer reading only the client-facing contract might wonder why that one <code>SessionState</code> skips the release message. It's deliberate, not a bug.</p>
+  </div>
+
+  <div class="callout callout--danger">
+    <h4>Velocity commands are coalesced, but e-stop never is</h4>
+    <p>Joystick frames arriving faster than 30/s are silently collapsed to "latest value wins" before forwarding (<code>COALESCE_INTERVAL_MS</code>). If you add a new safety-critical frame type to <code>controlSession.protocol.ts</code>, follow the e-stop pattern (<code>forwardClientFrame</code>'s early, immediate, un-coalesced send) — <strong>never</strong> the joystick pattern.</p>
+  </div>
+
+  <div class="callout callout--danger">
+    <h4>A revoked/expired assignment doesn't kill a live control session instantly</h4>
+    <p><code>ASSIGNMENT_REVALIDATE_INTERVAL_MS</code> is 30 seconds, and the revalidation check <strong>fails open</strong> on a transient DB error (<code>.catch(() => true)</code>, with a comment explicitly justifying this as "don't kick a live session over a blip"). So there's up to a <strong>~30-second window</strong> between an admin revoking access and an in-progress teleop session actually being cut off.</p>
+  </div>
+
+  <div class="callout">
+    <h4><code>listAllSummaries</code>/<code>findSummaryByRobotId</code> are deliberately "safe for any authenticated user"</h4>
+    <p>Not just admins — they exist specifically so the request-access picker UI can show robot names without ever leaking <code>vpnHostname</code> or <code>status</code> to a non-admin. If you add a new field to <code>RobotModel</code>, default to <strong>not</strong> adding it to <code>RobotSummaryDto</code>/<code>toRobotSummaryDto</code> unless it's genuinely meant to be public to every logged-in user.</p>
+  </div>
+
+  <div class="callout">
+    <h4>No TODO/FIXME comments anywhere in <code>src/</code> or <code>scripts/</code></h4>
+    <p>The inline comments that do exist are unusually thorough design-rationale notes (e.g. why CORS is needed even "same-origin" in prod, why <code>Sec-WebSocket-Protocol</code> carries the bearer token, why <code>robotAuth.checkUserExists</code> breaks the anti-enumeration pattern on purpose) and are worth reading in place rather than skimming past — several of them explain <em>why</em> a line of code looks the way it does in a way this doc only summarizes.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  AutoNav &middot; PlatformServer onboarding doc &middot; compiled from a full read of <code>src/</code>, <code>scripts/</code> and <code>package.json</code>.
+</footer>
+
+</div>
+
+</body></html>

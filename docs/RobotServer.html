@@ -1,0 +1,1194 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>RobotServer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: a long vertical reference doc with a sticky teal/cyan TOC rail up top;
+   content reads top-to-bottom in strict report order, diagrams break up prose at each
+   structural joint (system map, layer trace, six flow sequences, link topology). */
+:root{
+  --bg:#f3f9f9;
+  --surface:#ffffff;
+  --surface-2:#e9f4f4;
+  --fg:#0e2628;
+  --fg-muted:#4c686c;
+  --border:#cde3e3;
+  --accent:#0c8585;
+  --accent-strong:#096868;
+  --accent-soft:#def3f2;
+  --code-bg:#0e2526;
+  --code-fg:#b9f1e8;
+  --warn-border:#c97a1f;
+  --warn-bg:#fcf0de;
+  --warn-fg:#6b4109;
+  --you-are-here:#e4552e;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#071819;
+    --surface:#0d2426;
+    --surface-2:#102e30;
+    --fg:#d8f3f0;
+    --fg-muted:#8fb6b3;
+    --border:#1d4042;
+    --accent:#3ad6c4;
+    --accent-strong:#7cf0e0;
+    --accent-soft:#113637;
+    --code-bg:#03100f;
+    --code-fg:#92f1df;
+    --warn-border:#e3a13c;
+    --warn-bg:#2b2008;
+    --warn-fg:#f3cb8d;
+    --you-are-here:#ff7a52;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#071819;
+  --surface:#0d2426;
+  --surface-2:#102e30;
+  --fg:#d8f3f0;
+  --fg-muted:#8fb6b3;
+  --border:#1d4042;
+  --accent:#3ad6c4;
+  --accent-strong:#7cf0e0;
+  --accent-soft:#113637;
+  --code-bg:#03100f;
+  --code-fg:#92f1df;
+  --warn-border:#e3a13c;
+  --warn-bg:#2b2008;
+  --warn-fg:#f3cb8d;
+  --you-are-here:#ff7a52;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+h1,h2,h3,h4{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-weight:700;
+  text-wrap:balance;
+  color:var(--fg);
+  letter-spacing:-0.01em;
+}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;}
+a{color:var(--accent-strong)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.wrap{max-width:860px;margin:0 auto;padding-block:1.5rem 4rem;min-width:0}
+
+/* ---- header ---- */
+.doc-header{padding-block:0.5rem 1.25rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.72rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--accent-strong);
+  margin:0 0 0.35rem;
+}
+.doc-header h1{font-size:2.1rem;margin:0 0 0.4rem}
+.role-line{color:var(--fg-muted);font-size:1rem;max-width:62ch;margin:0 0 1.25rem}
+
+/* ---- TOC ---- */
+.toc{
+  position:sticky; top:env(safe-area-inset-top,0px);
+  z-index:5;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:0.6rem 0.8rem;
+  margin-bottom:2rem;
+  box-shadow:0 1px 0 rgba(0,0,0,0.02);
+}
+.toc-label{font-family:"IBM Plex Mono",monospace;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--fg-muted);display:block;margin-bottom:0.45rem}
+.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0.4rem 0.5rem}
+.toc a{
+  display:inline-block;
+  font-size:0.82rem;
+  text-decoration:none;
+  color:var(--fg);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:0.3rem 0.7rem;
+  white-space:nowrap;
+}
+.toc a:hover{border-color:var(--accent);color:var(--accent-strong)}
+.toc a span{color:var(--accent-strong);font-family:"IBM Plex Mono",monospace;margin-right:0.35em}
+
+section{margin-bottom:3rem;scroll-margin-top:4.5rem;min-width:0}
+section > h2{
+  font-size:1.5rem;
+  display:flex;align-items:baseline;gap:0.6rem;
+  border-bottom:2px solid var(--accent-soft);
+  padding-bottom:0.5rem;
+  margin-bottom:1rem;
+}
+section > h2 .num{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:1rem}
+h3{font-size:1.1rem;margin:1.6rem 0 0.6rem}
+p{margin:0 0 1rem;max-width:68ch}
+ul,ol{max-width:68ch;padding-left:1.3rem}
+li{margin-bottom:0.4rem}
+strong{color:var(--fg)}
+
+/* ---- figures / svg diagrams ---- */
+figure{margin:1.25rem 0 1.75rem;padding:0;min-width:0}
+figure .svg-wrap{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:0.75rem;
+  overflow-x:auto;
+}
+figure svg{max-width:100%;height:auto;display:block;color:var(--fg)}
+figure svg text{fill:currentColor}
+figcaption{
+  font-size:0.82rem;
+  color:var(--fg-muted);
+  margin-top:0.55rem;
+  max-width:68ch;
+}
+.diagram-accent{color:var(--accent)}
+.diagram-warn{color:var(--you-are-here)}
+
+/* ---- tables ---- */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin:0 0 1.25rem}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:0.88rem}
+th,td{text-align:left;padding:0.55rem 0.8rem;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface-2);font-family:"IBM Plex Mono",monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-muted)}
+tr:last-child td{border-bottom:none}
+td code,th code{font-size:0.85em}
+.table-wrap table{background:var(--surface)}
+
+/* ---- code blocks ---- */
+pre{
+  background:var(--code-bg);
+  color:var(--code-fg);
+  border-radius:10px;
+  padding:0.9rem 1rem;
+  overflow-x:auto;
+  font-size:0.82rem;
+  line-height:1.55;
+  margin:0 0 1.25rem;
+}
+code{background:var(--surface-2);padding:0.1em 0.35em;border-radius:4px;font-size:0.85em}
+pre code{background:none;padding:0;border-radius:0;color:inherit}
+
+/* ---- tech stack cards ---- */
+.stack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.9rem;margin-bottom:1.5rem}
+.stack-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:0.9rem 1rem;min-width:0;
+}
+.stack-card h4{
+  margin:0 0 0.4rem;font-family:"IBM Plex Mono",monospace;font-size:0.92rem;color:var(--accent-strong);
+}
+.stack-card p{margin:0 0 0.45rem;font-size:0.85rem;max-width:none}
+.stack-card .where{font-size:0.78rem;color:var(--fg-muted)}
+.stack-card .where b{color:var(--fg);font-weight:600}
+
+/* ---- directory map ---- */
+details.folder{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:0.7rem 0.95rem;margin-bottom:0.65rem;
+}
+details.folder[open]{border-color:var(--accent)}
+details.folder summary{
+  cursor:pointer;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:0.9rem;
+  display:flex;align-items:center;gap:0.5rem;list-style:none;
+}
+details.folder summary::-webkit-details-marker{display:none}
+details.folder summary::before{content:"▸";color:var(--accent);transition:transform .15s ease}
+details.folder[open] summary::before{transform:rotate(90deg)}
+details.folder .table-wrap{margin-top:0.75rem}
+details.module{margin:0.6rem 0 0 0.1rem;border-left:2px solid var(--border);padding-left:0.75rem}
+details.module summary{font-size:0.85rem;color:var(--fg-muted)}
+details.module summary::before{content:"·";color:var(--accent)}
+
+/* ---- gotcha callouts ---- */
+.callout{
+  border-left:4px solid var(--border);
+  background:var(--surface);
+  border-radius:0 10px 10px 0;
+  padding:0.85rem 1rem;
+  margin-bottom:1rem;
+}
+.callout h4{margin:0 0 0.4rem;font-size:0.95rem;display:flex;align-items:center;gap:0.5rem}
+.callout p,.callout ul{font-size:0.9rem;margin-bottom:0.4rem}
+.callout.stub{border-left-color:var(--you-are-here);background:var(--warn-bg)}
+.callout.stub h4{color:var(--warn-fg)}
+.callout.note{border-left-color:var(--accent)}
+.badge{
+  font-family:"IBM Plex Mono",monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;
+  background:var(--you-are-here);color:#fff;border-radius:999px;padding:0.15em 0.6em;
+}
+
+/* ---- env var key ---- */
+.envkey{color:var(--accent-strong);font-weight:600}
+
+hr.sep{border:none;border-top:1px solid var(--border);margin:2.5rem 0}
+
+@media (max-width:480px){
+  .doc-header h1{font-size:1.6rem}
+  .toc ol{gap:0.35rem}
+  .toc a{font-size:0.76rem;padding:0.26rem 0.55rem}
+}
+</style>
+
+<div class="wrap">
+
+<header class="doc-header">
+  <p class="eyebrow">AutoNav &middot; sub-project reference</p>
+  <h1>RobotServer</h1>
+  <p class="role-line">The one process on the robot's onboard computer that bridges ROS2 (navigation, mapping, motors, sensors) to ordinary web protocols — HTTP, WebSocket, WebRTC — and brokers every outbound connection the robot makes to the cloud.</p>
+
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 270" role="img" aria-label="System map: RobotApp talks only to RobotServer on the robot over localhost; RobotServer makes two outbound-only connections to PlatformServer; PlatformApp and the AndroidApp talk only to PlatformServer over HTTPS and websockets.">
+        <defs>
+          <marker id="arrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <!-- RobotApp -->
+        <rect x="16" y="100" width="130" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="81" y="126" text-anchor="middle" font-size="12" fill="currentColor">RobotApp</text>
+        <text x="81" y="142" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.65">touchscreen UI</text>
+
+        <!-- RobotServer highlighted -->
+        <rect x="210" y="86" width="168" height="88" rx="10" fill="var(--accent-soft)" stroke="var(--you-are-here)" stroke-width="2.5"/>
+        <text x="294" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">RobotServer</text>
+        <text x="294" y="134" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.7">ROS2 ↔ HTTP/WS bridge</text>
+        <text x="294" y="162" text-anchor="middle" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--you-are-here)" font-weight="600">▲ YOU ARE HERE</text>
+
+        <!-- PlatformServer center -->
+        <rect x="470" y="86" width="168" height="88" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="554" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">PlatformServer</text>
+        <text x="554" y="134" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.65">cloud/VPN · MongoDB</text>
+        <text x="554" y="150" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.65">fleet, auth, relay</text>
+
+        <!-- PlatformApp -->
+        <rect x="700" y="24" width="144" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="772" y="49" text-anchor="middle" font-size="12" fill="currentColor">PlatformApp</text>
+        <text x="772" y="64" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.65">web dashboard</text>
+
+        <!-- AndroidApp -->
+        <rect x="700" y="188" width="144" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="772" y="213" text-anchor="middle" font-size="12" fill="currentColor">AndroidApp</text>
+        <text x="772" y="228" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.65">mobile teleop</text>
+
+        <!-- arrows -->
+        <line x1="146" y1="130" x2="206" y2="130" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrM)"/>
+        <text x="176" y="112" text-anchor="middle" font-size="9" fill="currentColor">same-origin</text>
+        <text x="176" y="149" text-anchor="middle" font-size="9" fill="currentColor">nginx → localhost:8000</text>
+
+        <line x1="378" y1="130" x2="466" y2="130" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrM)"/>
+        <text x="422" y="112" text-anchor="middle" font-size="9" fill="currentColor">outbound only</text>
+        <text x="422" y="149" text-anchor="middle" font-size="9" fill="currentColor">REST + /ws/robot-link</text>
+
+        <line x1="700" y1="60" x2="642" y2="104" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrM)"/>
+        <text x="690" y="88" text-anchor="middle" font-size="9" fill="currentColor">HTTPS + cookies</text>
+
+        <line x1="700" y1="212" x2="642" y2="158" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrM)"/>
+        <text x="692" y="192" text-anchor="middle" font-size="9" fill="currentColor">teleop via /ws/control</text>
+      </svg>
+    </div>
+    <figcaption>All five AutoNav sub-projects. RobotServer (highlighted) is the only one that speaks ROS2; it never accepts inbound internet connections, only outbound ones to PlatformServer.</figcaption>
+  </figure>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <span class="toc-label">On this page</span>
+  <ol>
+    <li><a href="#purpose"><span>1</span>Purpose &amp; Role</a></li>
+    <li><a href="#stack"><span>2</span>Tech Stack</a></li>
+    <li><a href="#files"><span>3</span>Directory &amp; File Map</a></li>
+    <li><a href="#architecture"><span>4</span>Architecture Layers</a></li>
+    <li><a href="#flows"><span>5</span>Key Flows</a></li>
+    <li><a href="#cross"><span>6</span>Cross-Component</a></li>
+    <li><a href="#running"><span>7</span>Running Locally</a></li>
+    <li><a href="#gotchas"><span>8</span>Gotchas</a></li>
+  </ol>
+</nav>
+
+<section id="purpose">
+  <h2><span class="num">01</span> Purpose &amp; Role in the System</h2>
+  <p>RobotServer is the <strong>one and only process that runs on the robot's own onboard computer</strong> (a Raspberry Pi or similar single-board computer, physically mounted on the robot). Its job is to bridge the ROS2 robotics software — navigation, mapping, motor control, sensors — to the outside world over ordinary web protocols (HTTP, WebSocket, WebRTC).</p>
+  <p>ROS2 ("Robot Operating System 2") is the robotics middleware the rest of the robot's software is built on: localization, path planning (Nav2), SLAM mapping, motor drivers, the LED/sensor microcontroller bridge. ROS2 nodes talk to each other using <em>topics</em> (fire-and-forget broadcast channels), <em>services</em> (one-shot request/response calls), and <em>actions</em> (long-running, cancelable, progress-reporting tasks like "drive to this point"). None of that is reachable over the internet or from a browser by default — RobotServer's entire reason for existing is to translate between "ROS2 node talking to other ROS2 nodes" and "web client talking over HTTP/WebSocket."</p>
+  <p>It replaces an older Python service (<code>WebServer/</code>, FastAPI + rclpy) that had accumulated duplicated routes, no mutual exclusion between launch processes, hardcoded database credentials, and other issues documented in the project's README. RobotServer is a ground-up rewrite in Node.js/TypeScript, deliberately mirroring the architecture of <strong>PlatformServer</strong> (the cloud backend) for consistency across the whole codebase.</p>
+
+  <h3>Three kinds of things talk to RobotServer</h3>
+  <ul>
+    <li><strong>RobotApp</strong> — a React single-page app that is the robot's own touchscreen UI. It is served by its own small container (nginx), which reverse-proxies <code>/api</code>, <code>/ws</code>, <code>/maps</code>, and <code>/health</code> back to RobotServer on <code>localhost:8000</code>. This keeps the browser on one origin, so RobotServer's login cookies "just work" with no cross-origin complications.</li>
+    <li><strong>PlatformServer</strong> (the cloud/VPN-hosted backend) — RobotServer makes <em>outbound</em> calls to PlatformServer: one-shot REST calls via <code>platformClient.ts</code>, and one persistent outbound WebSocket connection via <code>platformLink.client.ts</code>. RobotServer never listens for <em>inbound</em> connections from PlatformServer directly — PlatformServer instead calls one RobotServer HTTP endpoint (<code>/api/platform-auth/roster/invalidate</code>) over the VPN/public internet.</li>
+    <li><strong>ROS2 itself</strong> — via the <code>rclnodejs</code> library (a JavaScript/Node.js binding for ROS2's client library, playing the same role Python's <code>rclpy</code> plays elsewhere). RobotServer runs as a single ROS2 "node" and uses it to publish/subscribe to topics, call services, and send actions to Nav2, SLAM, and the ESP32 firmware bridge.</li>
+  </ul>
+  <p>Remote users (browser dashboard, Android app) no longer connect to RobotServer directly at all in this version — all remote teleop/control is relayed through PlatformServer's <code>/ws/robot-link</code>, with RobotServer as the outbound-only client. This means RobotServer's only exposed network surface is localhost-proxied RobotApp traffic plus its one outbound connection to PlatformServer — a deliberate security posture with no inbound attack surface from the internet.</p>
+</section>
+
+<section id="stack">
+  <h2><span class="num">02</span> Tech Stack Explained</h2>
+  <p>Every dependency below is explained in plain English, with where and why it's used in this codebase.</p>
+  <div class="stack-grid">
+
+    <div class="stack-card"><h4>TypeScript</h4><p>JavaScript with optional static types checked before the code runs.</p><p class="where"><b>Where:</b> the whole codebase under <code>src/</code>; <code>tsconfig.json</code> runs in <code>strict</code> mode with <code>noUnusedLocals</code>/<code>noUnusedParameters</code> to catch dead code.</p></div>
+
+    <div class="stack-card"><h4>Node.js</h4><p>The JavaScript runtime that lets JS/TypeScript run as a standalone server process outside a browser.</p><p class="where"><b>Where:</b> the entire backend; <code>src/index.ts</code> is the process entrypoint.</p></div>
+
+    <div class="stack-card"><h4>Express</h4><p>A minimalist web framework: define "routes" (e.g. <code>POST /api/navigation/start</code>) and attach handler functions, plus "middleware" that runs on every request.</p><p class="where"><b>Where:</b> the whole HTTP layer — <code>src/app.ts</code> (composition root) and every <code>*.routes.ts</code> file.</p></div>
+
+    <div class="stack-card"><h4>rclnodejs</h4><p>The JS/TypeScript client library for ROS2 — the Node.js equivalent of Python's <code>rclpy</code>. Lets a Node process become a real ROS2 node.</p><p class="where"><b>Where:</b> exclusively inside <code>src/ros/*</code> — a hard rule states "nothing outside this folder imports rclnodejs directly." Pinned to 2.x for ROS2 "Kilted" support.</p></div>
+
+    <div class="stack-card"><h4>ws</h4><p>A WebSocket server/client implementation — a persistent, two-way connection unlike one-shot HTTP request/response.</p><p class="where"><b>Where:</b> <code>src/core/wsRouter.ts</code> (incoming connections on the robot) and <code>src/clients/platformLink.client.ts</code> (outbound link to PlatformServer).</p></div>
+
+    <div class="stack-card"><h4>werift</h4><p>A WebRTC implementation for Node.js — peer-to-peer real-time audio/video/data, so a viewer can watch the camera feed without routing video through a server.</p><p class="where"><b>Where:</b> <code>video.wsServer.ts</code> (signaling handshake) and <code>ffmpegVideoSource.ts</code> (feeding frames — <strong>currently an unimplemented stub</strong>).</p></div>
+
+    <div class="stack-card"><h4>Mongoose</h4><p>An Object-Document Mapper for MongoDB: define a "Schema" as a TypeScript class and get back a typed "Model" for reads/writes.</p><p class="where"><b>Where:</b> saved goal poses (<code>goal.model.ts</code>) and cached local-login users (<code>localUser.model.ts</code>). Connection in <code>src/db/connection.ts</code>.</p></div>
+
+    <div class="stack-card"><h4>MongoDB GridFS</h4><p>A MongoDB convention for storing large binary files bigger than the normal per-document size limit, inside the database itself.</p><p class="where"><b>Where:</b> <code>maps/map.repository.ts</code>, storing saved map PNG + YAML files so they survive a container being recreated.</p></div>
+
+    <div class="stack-card"><h4>Zod</h4><p>A TypeScript-first schema validation library — describe the shape data should have, and it validates at runtime and derives a matching TypeScript type.</p><p class="where"><b>Where:</b> every environment variable (<code>config/env.ts</code>), every HTTP request body (<code>*.validation.ts</code>), and PlatformServer link messages (<code>teleopLink.protocol.ts</code>).</p></div>
+
+    <div class="stack-card"><h4>jsonwebtoken (JWT)</h4><p>Cryptographically signed, tamper-evident tokens encoding a small payload without a database lookup to verify.</p><p class="where"><b>Where:</b> RobotApp's human login session (access + refresh tokens), signed/verified in <code>jwt.util.ts</code>. Unrelated to the plain shared-secret <code>ROBOT_LINK_SECRET</code> scheme.</p></div>
+
+    <div class="stack-card"><h4>bcryptjs</h4><p>A slow-by-design password/PIN hashing library, making a leaked hash expensive to brute-force.</p><p class="where"><b>Where:</b> only to <em>compare</em> a PIN against an already-hashed value (<code>pin.util.ts</code>) — RobotServer never generates a hash; PlatformServer is the source of truth.</p></div>
+
+    <div class="stack-card"><h4>cookie-parser</h4><p>Express middleware that reads the <code>Cookie:</code> header and populates <code>req.cookies</code>.</p><p class="where"><b>Where:</b> <code>src/app.ts</code>, paired with <code>cookie.util.ts</code> which sets security flags (<code>httpOnly</code>, <code>secure</code> in production, <code>sameSite: strict</code>).</p></div>
+
+    <div class="stack-card"><h4>cors</h4><p>Browser security mechanism middleware that blocks a page on one origin from calling an API on another unless explicitly allowed.</p><p class="where"><b>Where:</b> configured from <code>CORS_ORIGINS</code> in <code>src/app.ts</code>; only applied if at least one origin is set.</p></div>
+
+    <div class="stack-card"><h4>helmet</h4><p>Express middleware setting a batch of security-related HTTP response headers with sensible defaults.</p><p class="where"><b>Where:</b> applied globally in <code>src/app.ts</code>.</p></div>
+
+    <div class="stack-card"><h4>pino / pino-http / pino-pretty</h4><p>A fast structured logger, an Express middleware that auto-logs every request/response, and a dev-only human-readable formatter.</p><p class="where"><b>Where:</b> <code>logger.util.ts</code> (JSON in production, pretty in dev, silent during tests), wired into Express in <code>app.ts</code>.</p></div>
+
+    <div class="stack-card"><h4>swagger-jsdoc / swagger-ui-express</h4><p>Reads <code>@openapi</code> JSDoc comments above route definitions and turns them into a browsable, "try it out" API doc page.</p><p class="where"><b>Where:</b> <code>src/config/swagger.ts</code>, mounted at <code>GET /api/docs</code>.</p></div>
+
+    <div class="stack-card"><h4>dotenv</h4><p>Loads key=value pairs from a <code>.env</code> file into <code>process.env</code> at startup.</p><p class="where"><b>Where:</b> top of <code>src/config/env.ts</code>.</p></div>
+
+    <div class="stack-card"><h4>Jest / ts-jest</h4><p>A JS/TypeScript testing framework; <code>ts-jest</code> runs TypeScript test files directly with no separate compile step.</p><p class="where"><b>Where:</b> <code>tests/</code>, run via <code>npm test</code>.</p></div>
+
+    <div class="stack-card"><h4>mongodb-memory-server</h4><p>Dev dependency: spins up a real, temporary, in-memory MongoDB for tests that need one.</p><p class="where"><b>Where:</b> not currently needed by <code>tests/unit/</code> (the fakes pattern avoids Mongo entirely) — reserved for future integration tests.</p></div>
+
+    <div class="stack-card"><h4>supertest</h4><p>Dev dependency for testing Express endpoints by firing real-ish requests at an <code>app</code> object in-process, with no network port bound.</p><p class="where"><b>Where:</b> available for HTTP-level tests.</p></div>
+
+    <div class="stack-card"><h4>nodemon + ts-node</h4><p>Dev-only tools: <code>ts-node</code> runs TypeScript directly without a compile step; <code>nodemon</code> watches and restarts on file changes.</p><p class="where"><b>Where:</b> wired via <code>nodemon.json</code> and <code>npm run dev</code>.</p></div>
+
+    <div class="stack-card"><h4>ESLint + @typescript-eslint</h4><p>Static code-quality/style checker for TypeScript.</p><p class="where"><b>Where:</b> run via <code>npm run lint</code>.</p></div>
+
+  </div>
+</section>
+
+<section id="files">
+  <h2><span class="num">03</span> Directory &amp; File Map</h2>
+  <p>Grouped by folder. Click any folder to expand its files. <code>src/modules/</code> is opened by default since it's where almost all feature work happens.</p>
+
+  <details class="folder">
+    <summary>src/ root — entrypoint &amp; composition root</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>index.ts</code></td><td>Process entrypoint: connects MongoDB, starts the ROS2 node, resolves this robot's identity, builds the Express app, starts the HTTP+WebSocket server, starts the outbound PlatformServer link, starts periodic roster sync, wires up graceful shutdown on SIGTERM/SIGINT.</td></tr>
+      <tr><td><code>app.ts</code></td><td>The <strong>composition root</strong> — constructs every gateway, repository, service, and controller by hand and wires them together (dependency injection via plain constructors, no DI framework); builds and returns the configured Express <code>app</code>.</td></tr>
+    </table></div>
+  </details>
+
+  <details class="folder">
+    <summary>src/config/</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>env.ts</code></td><td>Defines a Zod schema for every required/optional environment variable, validates <code>process.env</code> at import time (crashes immediately with a readable error list if invalid), exports a typed <code>config</code> object the rest of the app imports instead of touching <code>process.env</code> directly.</td></tr>
+      <tr><td><code>swagger.ts</code></td><td>Builds the OpenAPI spec (shared error/response schemas + route-level docs scraped from <code>*.routes.ts</code> JSDoc) served at <code>/api/docs</code>.</td></tr>
+    </table></div>
+  </details>
+
+  <details class="folder">
+    <summary>src/core/</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>eventBus.ts</code></td><td>A small typed wrapper around Node's built-in <code>EventEmitter</code>. Decouples the ROS2 layer from anything that reacts to ROS2 data — ROS2 callbacks run outside Express's request/response flow, so they <code>emit()</code> events here (<code>map</code>, <code>location</code>, <code>navStatus</code>, <code>robotStatus</code>) that other modules <code>on()</code> to.</td></tr>
+      <tr><td><code>wsRouter.ts</code></td><td>Lets multiple independent WebSocket endpoints (e.g. <code>/ws/topics</code>, <code>/ws/webrtc</code>) share one HTTP server and port, routed by URL path. Also runs an injected authentication check during the WebSocket "upgrade" handshake, before any Express middleware would run.</td></tr>
+    </table></div>
+  </details>
+
+  <details class="folder">
+    <summary>src/db/</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>connection.ts</code></td><td>Opens/closes the Mongoose connection to MongoDB; logs connect/error/disconnect events.</td></tr>
+    </table></div>
+  </details>
+
+  <details class="folder" open>
+    <summary>src/ros/ — the ROS2 integration layer (only folder that imports rclnodejs)</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>rosNode.ts</code></td><td>Owns the single <code>rclnodejs.Node</code> instance for the whole process (module-level singleton) — initializes ROS2, creates the node, starts it "spinning," shuts it down cleanly.</td></tr>
+      <tr><td><code>rosTopicGateway.ts</code></td><td>Generic publish/subscribe wrapper, keyed by topic name string — any feature service can publish/subscribe to <em>any</em> ROS2 topic through this one class. Caches the latest message per topic (<code>getLatest</code>) and exposes <code>createTimer</code> and an <code>isNodeAlive</code> liveness probe.</td></tr>
+      <tr><td><code>rosServiceGateway.ts</code></td><td>Generic wrapper for calling any ROS2 service (request/response), keyed by service name string.</td></tr>
+      <tr><td><code>rosActionGateway.ts</code></td><td>Generic wrapper for calling any ROS2 action (long-running, cancelable, with progress feedback), keyed by action name string.</td></tr>
+      <tr><td><code>quaternion.ts</code></td><td>Pure math helpers converting between a 2D heading angle ("yaw", radians) and the quaternion representation ROS2 poses require — avoids a full 3D-rotation library since every pose here is 2D (ground robot).</td></tr>
+      <tr><td><code>launchManager.ts</code></td><td>Single source of truth for starting/stopping <code>ros2 launch</code> subprocesses (Nav2 stack, or SLAM). Enforces only one such subprocess runs at a time — explicitly fixing a bug class the old Python server had.</td></tr>
+      <tr><td><code>runOnce.ts</code></td><td>Runs a short-lived command to completion and returns its exit code (e.g. <code>map_saver_cli</code>) — distinct from <code>launchManager</code>, which supervises long-running processes.</td></tr>
+      <tr><td><code>deviceIdentity.ts</code></td><td>Resolves <em>this specific robot's</em> unique ID by calling a ROS2 service exposed by the ESP32 microcontroller bridge (<code>/esp32_bridge_node/get_device_id</code>) — never from a config file. Retries at boot; falls back to <code>DEV_DEVICE_ID_OVERRIDE</code> for local dev without real hardware.</td></tr>
+    </table></div>
+  </details>
+
+  <details class="folder">
+    <summary>src/common/ — cross-cutting code shared by all modules</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>clock.ts</code></td><td>A tiny <code>Clock</code> interface (<code>now()</code>) wrapping <code>Date.now()</code>, injected wherever code needs wall-clock time, so unit tests can fast-forward time deterministically.</td></tr>
+      <tr><td><code>errors/AppError.ts</code></td><td>Base class for all intentional, "operational" errors — carries an HTTP status code.</td></tr>
+      <tr><td><code>errors/NotFoundError.ts</code></td><td>404 — the requested resource (e.g. named map/goal) doesn't exist.</td></tr>
+      <tr><td><code>errors/ConflictError.ts</code></td><td>409 — the request conflicts with current state (e.g. starting navigation while mapping is already running).</td></tr>
+      <tr><td><code>errors/RosUnavailableError.ts</code></td><td>503 — the ROS2 side of the request isn't reachable right now (e.g. Nav2 hasn't started); distinct from 404 because the route/resource itself is valid.</td></tr>
+      <tr><td><code>errors/NotImplementedError.ts</code></td><td>501 — a route that exists in the API contract but has no real implementation yet, so clients get an honest "not implemented" instead of a lying <code>{success:true}</code>.</td></tr>
+      <tr><td><code>errors/UnauthorizedError.ts</code></td><td>401 — authentication missing or invalid.</td></tr>
+      <tr><td><code>errors/index.ts</code></td><td>Re-exports all of the above from one import path.</td></tr>
+      <tr><td><code>middleware/auth.middleware.ts</code></td><td><code>requireAuth</code> Express middleware (checks the <code>robotAccessToken</code> cookie, verifies the JWT, attaches <code>req.user</code>) plus a shared helper also used by the raw WebSocket upgrade path, which has no Express middleware chain.</td></tr>
+      <tr><td><code>middleware/errorHandler.middleware.ts</code></td><td>The single place that turns any thrown error into an HTTP response — Zod errors → 400, <code>AppError</code> subclasses → their own status code, anything unexpected → 500 (logged).</td></tr>
+      <tr><td><code>middleware/notFound.middleware.ts</code></td><td>Catches any request matching no route at all → 404 JSON response.</td></tr>
+      <tr><td><code>middleware/validate.middleware.ts</code></td><td>Generic middleware factory: given Zod schemas for body/query/params, validates and type-safely replaces the matching part of the request, or throws a <code>ZodError</code>.</td></tr>
+      <tr><td><code>types/auth.types.ts</code></td><td>Shared TypeScript interfaces for the authenticated user shape and JWT payload shapes.</td></tr>
+      <tr><td><code>types/express.d.ts</code></td><td>Augments Express's <code>Request</code> type so <code>req.user</code> is a recognized, typed property.</td></tr>
+      <tr><td><code>utils/asyncHandler.util.ts</code></td><td>Wraps an async Express handler so a thrown/rejected error is automatically forwarded to the error middleware.</td></tr>
+      <tr><td><code>utils/cookie.util.ts</code></td><td>Sets/clears <code>robotAccessToken</code> / <code>robotRefreshToken</code> with consistent security options.</td></tr>
+      <tr><td><code>utils/jwt.util.ts</code></td><td>Signs and verifies the access/refresh JWTs for RobotApp's login session.</td></tr>
+      <tr><td><code>utils/logger.util.ts</code></td><td>Configures and exports the shared pino logger instance.</td></tr>
+      <tr><td><code>utils/parseCookies.util.ts</code></td><td>A minimal hand-rolled cookie-header parser, needed because the raw WebSocket upgrade event fires before any Express middleware has run.</td></tr>
+      <tr><td><code>utils/pin.util.ts</code></td><td><code>comparePin</code> — bcrypt-compares a plaintext PIN against a stored hash; never generates a hash.</td></tr>
+    </table></div>
+  </details>
+
+  <details class="folder" open>
+    <summary>src/modules/ — one folder per feature</summary>
+
+    <details class="module">
+      <summary>teleop/ — manual drive, no REST (see Flow D)</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>teleop.service.ts</code></td><td>Core manual-drive logic: clamps velocity to configured safe limits, republishes <code>cmd_vel</code> at 20Hz with a per-command expiry ("dead-man's switch"), refuses to drive while Nav2 is actively navigating, exposes <code>rotateInPlace</code> and <code>setEmergency</code>.</td></tr>
+        <tr><td><code>teleopLink.handler.ts</code></td><td>Subscribes to frames arriving over the outbound PlatformServer link and dispatches to <code>TeleopService</code>/<code>NavigationService</code> by frame <code>type</code>.</td></tr>
+        <tr><td><code>teleopLink.protocol.ts</code></td><td>Zod schemas (and the outbound reply type) defining the exact JSON message shapes exchanged over the PlatformServer robot-link for teleop.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>navigation/ — Nav2 goals, saved poses (full REST API)</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>navigation.service.ts</code></td><td>Launches/stops Nav2, selects/reloads maps, manages saved goal poses, sends/cancels <code>NavigateToPose</code> ROS2 actions, tracks goal status/feedback, sets AMCL's initial pose, exposes map/location snapshots, implements "localize at a saved point."</td></tr>
+        <tr><td><code>navigation.controller.ts</code></td><td>Thin Express handlers — each calls one service method and shapes the JSON response.</td></tr>
+        <tr><td><code>navigation.routes.ts</code></td><td>Defines the <code>/api/navigation/*</code> route table (mounted with <code>requireAuth</code>), each with an OpenAPI doc comment.</td></tr>
+        <tr><td><code>navigation.types.ts</code></td><td><code>Pose</code>, <code>Goal</code>, and the <code>NavStatus</code> enum (<code>IDLE</code>/<code>ACTIVE</code>/<code>SUCCEEDED</code>/<code>CANCELED</code>/<code>FAILED</code>).</td></tr>
+        <tr><td><code>navigation.validation.ts</code></td><td>Zod request-body schemas for navigation endpoints.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>mapping/ — SLAM session lifecycle, waypoint capture, save-map</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>mapping.service.ts</code></td><td>Starts/stops the SLAM launch, exposes current in-progress map/location, captures the robot's live pose as a named "waypoint" under a special <code>temp</code> map name, saves the finished map via <code>map_saver_cli</code>, commits temp waypoints onto a real named map.</td></tr>
+        <tr><td><code>mapping.controller.ts</code></td><td>Thin Express handlers for the above.</td></tr>
+        <tr><td><code>mapping.routes.ts</code></td><td><code>/api/mapping/*</code> route table.</td></tr>
+        <tr><td><code>mapping.validation.ts</code></td><td>Zod schemas (<code>waypointSchema</code>, <code>saveMapSchema</code>).</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>telemetry/ — ROS2 → WebSocket broadcast for RobotApp's live view</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>telemetry.mappers.ts</code></td><td>Pure functions converting raw ROS2 message shapes (<code>OccupancyGrid</code>, <code>PoseWithCovarianceStamped</code>) into simplified JSON shapes; also <code>isPoseConfident</code>, checking AMCL covariance against a threshold.</td></tr>
+        <tr><td><code>telemetry.broadcaster.ts</code></td><td>Subscribes to <code>/map</code> and <code>/amcl_pose</code> on the shared <code>RosTopicGateway</code>, and on a 20Hz timer republishes map/location/nav-status onto <code>core/eventBus</code>.</td></tr>
+        <tr><td><code>connectivity.broadcaster.ts</code></td><td>Periodically probes PlatformServer's own <code>/health</code> endpoint over the VPN as a stand-in for "do we have internet/platform connectivity," emitting a <code>robotStatus</code> event only when the state actually changes.</td></tr>
+        <tr><td><code>topics.wsServer.ts</code></td><td>Registers the <code>/ws/topics</code> WebSocket endpoint: a single broadcast-only channel where every <code>eventBus</code> event becomes a <code>{type, data}</code> JSON frame sent to every connected client.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>video/ — WebRTC camera streaming</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>videoSource.interface.ts</code></td><td><code>IVideoSource</code> interface (<code>getTrack()</code>, <code>stop()</code>) — decouples signaling logic from how camera frames are actually produced.</td></tr>
+        <tr><td><code>ffmpegVideoSource.ts</code></td><td><strong>Stub/unimplemented</strong> — intended to spawn <code>ffmpeg</code> against the camera device, encode to H264, feed packetized RTP into a WebRTC track; currently throws.</td></tr>
+        <tr><td><code>video.wsServer.ts</code></td><td>Registers <code>/ws/webrtc</code>: handles the WebRTC signaling handshake (SDP offer/answer + ICE candidate exchange) over a plain WebSocket.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>firmware/ — ESP32 peripheral board (LEDs)</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>firmware.service.ts</code></td><td>Calls two custom ROS2 services (<code>SetLedPattern</code>, <code>SetBrightness</code>) exposed by the ESP32 bridge node.</td></tr>
+        <tr><td><code>firmware.controller.ts</code></td><td>Thin Express handlers; maps a <code>success: false</code> service result to HTTP 502 (upstream/hardware failure, not a client error).</td></tr>
+        <tr><td><code>firmware.routes.ts</code></td><td><code>/api/firmware/*</code> route table.</td></tr>
+        <tr><td><code>firmware.validation.ts</code></td><td>Zod schema enforcing LED color/speed fields (<code>hue</code>/<code>sat</code>/<code>val</code>/<code>speedMs</code>) are either all given together or all omitted.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>goals/ &amp; maps/ — shared persistence used by navigation &amp; mapping</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>goals/goal.model.ts</code></td><td>Mongoose schema/model for a saved goal pose (<code>mapName</code>, <code>name</code>, <code>x</code>, <code>y</code>, <code>theta</code>), unique per <code>(mapName, name)</code>.</td></tr>
+        <tr><td><code>goals/goal.repository.interface.ts</code></td><td><code>IGoalRepository</code> — the abstract CRUD/query contract used by services.</td></tr>
+        <tr><td><code>goals/goal.repository.ts</code></td><td><code>MongooseGoalRepository</code> — the real Mongo-backed implementation.</td></tr>
+        <tr><td><code>maps/map.repository.interface.ts</code></td><td><code>IMapRepository</code> — save/load/list contract for map image+metadata blobs.</td></tr>
+        <tr><td><code>maps/map.repository.ts</code></td><td><code>GridFsMapRepository</code> — stores/retrieves map PNG+YAML files in MongoDB GridFS, copying to/from the local <code>mapsDir</code> as needed.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>robot-auth/ — local PIN login + robot↔platform account sync</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>localUser.model.ts</code></td><td>Mongoose schema caching each platform user's access/PIN-hash info <em>for this specific robot</em> — persisted to disk so a reboot during a brief network outage doesn't lock everyone out of local login.</td></tr>
+        <tr><td><code>localUser.repository.interface.ts</code></td><td><code>ILocalUserRepository</code> contract.</td></tr>
+        <tr><td><code>localUser.repository.ts</code></td><td><code>MongooseLocalUserRepository</code> — <code>replaceAll</code> does a full roster resync (upserts current entries, marks anyone missing as <code>revoked</code> rather than deleting them, preserving lockout history).</td></tr>
+        <tr><td><code>robotAuth.service.ts</code></td><td>The core human-login logic: <code>identify</code>, <code>loginWithPin</code> (verify PIN, lockout after repeated failures, issue session JWTs), <code>refresh</code>, and the three-step PIN-setup-via-OTP flow proxied to PlatformServer.</td></tr>
+        <tr><td><code>robotAuth.controller.ts</code></td><td>Thin Express handlers; also sets/clears the session cookies.</td></tr>
+        <tr><td><code>robotAuth.routes.ts</code></td><td>Defines <strong>two</strong> separate routers: <code>createHmiAuthRouter</code> (<code>/api/hmi-auth/*</code>, RobotApp only) and <code>createPlatformAuthRouter</code> (<code>/api/platform-auth/*</code>, PlatformServer-to-robot only) — kept structurally separate so the two trust domains can never be confused.</td></tr>
+        <tr><td><code>robotAuth.validation.ts</code></td><td>Zod schemas for identify/login/OTP/pin-setup request bodies.</td></tr>
+        <tr><td><code>rosterSync.service.ts</code></td><td>Pulls the current user roster from PlatformServer and replaces the local cache wholesale; called at boot, on a periodic timer, and on-demand when PlatformServer signals a change.</td></tr>
+      </table></div>
+    </details>
+
+    <details class="module">
+      <summary>system/ — network, diagnostics, maintenance</summary>
+      <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+        <tr><td><code>network/network.service.ts</code></td><td>Real implementation: wraps <code>nmcli</code> and <code>systemctl</code> (via <code>execFile</code>, never a shell string, to prevent injection) to list/connect WiFi and start/stop the OpenVPN client.</td></tr>
+        <tr><td><code>network/network.controller.ts</code></td><td>Thin Express handlers.</td></tr>
+        <tr><td><code>network/network.routes.ts</code></td><td><code>/api/system/network/*</code> — deliberately mounted <strong>without</strong> <code>requireAuth</code> (a robot may need WiFi configured before anyone can log in, with no internet yet to reach PlatformServer).</td></tr>
+        <tr><td><code>network/network.validation.ts</code></td><td>Zod schemas for WiFi/VPN request bodies.</td></tr>
+        <tr><td><code>diagnostics/diagnostics.routes.ts</code></td><td><strong>Stub only</strong> — every route returns <code>501 NotImplementedError</code>. Route shapes are fixed so clients have a stable contract to build against.</td></tr>
+        <tr><td><code>maintenance/maintenance.routes.ts</code></td><td><strong>Stub only</strong> — reboot, NTP sync, DB reset, credentials; all <code>501</code>.</td></tr>
+      </table></div>
+    </details>
+  </details>
+
+  <details class="folder">
+    <summary>src/clients/ — outbound connections to PlatformServer</summary>
+    <div class="table-wrap"><table><tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>platformClient.interface.ts</code></td><td><code>IPlatformClient</code> — the one-shot REST contract (<code>checkUserExists</code>, <code>fetchRoster</code>, the 3-step PIN-setup-OTP calls).</td></tr>
+      <tr><td><code>platformClient.ts</code></td><td>Real implementation: calls <code>PLATFORM_BASE_URL/api/robot-auth/*</code>, authenticating every call with <code>Authorization: Robot &lt;ROBOT_LINK_SECRET&gt;</code> and an <code>x-robot-id</code> header; retries once on a pure network failure; passes PlatformServer's 4xx errors straight through to the HMI.</td></tr>
+      <tr><td><code>platformLink.interface.ts</code></td><td><code>IPlatformLink</code> — the persistent-connection contract (<code>start</code>, <code>stop</code>, <code>isConnected</code>, <code>send</code>, <code>onFrame</code>).</td></tr>
+      <tr><td><code>platformLink.client.ts</code></td><td>Real implementation: dials PlatformServer's <code>/ws/robot-link</code>, authenticates the same way, auto-reconnects forever with jittered exponential backoff, and force-stops the robot (<code>teleop.stop()</code>) on <em>any</em> disconnect as a fail-safe.</td></tr>
+    </table></div>
+  </details>
+</section>
+
+<section id="architecture">
+  <h2><span class="num">04</span> Architecture Layers &amp; Patterns</h2>
+  <p>RobotServer uses a <strong>layered architecture</strong>: <code>routes → controller → service → repository (interface) → repository (implementation) → model</code>, explicitly modeled on PlatformServer's architecture for consistency across the codebase. Everything is wired together by hand in one "composition root" function, <code>createApp()</code> in <code>src/app.ts</code> — there is no dependency-injection framework; every class takes its dependencies as plain constructor arguments.</p>
+  <p><strong>Why this layering exists:</strong> each layer only knows about the layer directly below it through an <em>interface</em>, not a concrete class. A layer can therefore be tested in complete isolation by handing it a hand-written "fake" that satisfies the same interface, instead of the real thing (a real ROS2 node, a real MongoDB). That's exactly what <code>tests/unit/fakes/</code> contains: <code>FakeRosTopicGateway</code>, <code>FakeRosServiceGateway</code>, <code>FakeRosActionGateway</code>, <code>FakeGoalRepository</code>, <code>FakeMapRepository</code>, <code>FakeLocalUserRepository</code>, <code>FakePlatformClient</code>, <code>FakeClock</code>. Because of this, <strong>none of the unit tests under <code>tests/unit/</code> require a running ROS2 node or a real MongoDB instance</strong> — they run in plain Node.js, fast, in any environment, including CI.</p>
+  <p>A second, narrower but important pattern: ROS2 access itself is organized <strong>by communication primitive, not by feature</strong>. Instead of, say, a <code>NavigationGateway</code> and a <code>MappingGateway</code> each owning their own ROS2 publisher/subscriber code, there are exactly three generic classes — <code>RosTopicGateway</code>, <code>RosServiceGateway</code>, <code>RosActionGateway</code> — and every feature service depends on whichever of the three it needs, calling it with the specific ROS2 topic/service/action name as a plain string argument (e.g. <code>topicGateway.publish("geometry_msgs/msg/Twist", "cmd_vel", ...)</code>). This is why <code>TeleopService</code>, <code>NavigationService</code>, <code>MappingService</code>, and <code>FirmwareService</code> all take one or more of these three gateways as constructor parameters, rather than each having a bespoke ROS2 wrapper class.</p>
+
+  <h3>Concrete trace: "start navigation" (a navigation goal submission flow)</h3>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 900 380" role="img" aria-label="Layer trace for POST /api/navigation/goal/start: route validates and dispatches to the controller, the controller calls the service, the service looks up the saved pose through the goal repository into MongoDB, converts it to a quaternion, then sends the goal through the ROS2 action gateway to the Nav2 action server.">
+        <defs>
+          <marker id="arrL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <!-- top row -->
+        <rect x="10" y="20" width="150" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="85" y="48" text-anchor="middle" font-size="11.5" font-weight="700">Route</text>
+        <text x="85" y="64" text-anchor="middle" font-size="9" opacity="0.7">navigation.routes.ts</text>
+
+        <rect x="205" y="20" width="150" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="280" y="48" text-anchor="middle" font-size="11.5" font-weight="700">Controller</text>
+        <text x="280" y="64" text-anchor="middle" font-size="9" opacity="0.7">startGoal()</text>
+
+        <rect x="400" y="20" width="150" height="64" rx="8" fill="var(--accent-soft)" stroke="currentColor" stroke-width="1.5"/>
+        <text x="475" y="48" text-anchor="middle" font-size="11.5" font-weight="700">Service</text>
+        <text x="475" y="64" text-anchor="middle" font-size="9" opacity="0.7">NavigationService</text>
+
+        <rect x="595" y="20" width="150" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="670" y="48" text-anchor="middle" font-size="11.5" font-weight="700">Gateway</text>
+        <text x="670" y="64" text-anchor="middle" font-size="9" opacity="0.7">RosActionGateway</text>
+
+        <rect x="790" y="20" width="100" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="840" y="48" text-anchor="middle" font-size="10.5" font-weight="700">Nav2</text>
+        <text x="840" y="64" text-anchor="middle" font-size="8.5" opacity="0.7">action server</text>
+
+        <!-- horizontal arrows -->
+        <line x1="160" y1="52" x2="201" y2="52" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrL)"/>
+        <text x="180" y="40" text-anchor="middle" font-size="9" fill="var(--accent-strong)">1</text>
+        <line x1="355" y1="52" x2="396" y2="52" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrL)"/>
+        <text x="375" y="40" text-anchor="middle" font-size="9" fill="var(--accent-strong)">2</text>
+        <line x1="550" y1="52" x2="591" y2="52" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrL)"/>
+        <text x="570" y="40" text-anchor="middle" font-size="9" fill="var(--accent-strong)">5</text>
+        <line x1="745" y1="52" x2="786" y2="52" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrL)"/>
+
+        <!-- down to repository -->
+        <line x1="475" y1="84" x2="475" y2="170" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrL)"/>
+        <text x="520" y="130" text-anchor="middle" font-size="9" fill="var(--accent-strong)">3 &amp; 4</text>
+
+        <rect x="395" y="170" width="160" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="475" y="196" text-anchor="middle" font-size="11.5" font-weight="700">Repository</text>
+        <text x="475" y="212" text-anchor="middle" font-size="9" opacity="0.7">MongooseGoalRepository</text>
+
+        <line x1="475" y1="230" x2="475" y2="290" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrL)"/>
+
+        <rect x="395" y="290" width="160" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="475" y="314" text-anchor="middle" font-size="11.5" font-weight="700">MongoDB</text>
+        <text x="475" y="330" text-anchor="middle" font-size="8.5" opacity="0.7">GoalModel.findOne</text>
+
+        <text x="10" y="365" font-size="10" fill="currentColor" opacity="0.75">1 validate+dispatch · 2 startGoal(mapName,name) · 3 cancel active goal + yaw→quaternion · 4 findOne(mapName,name) lookup · 5 sendGoal(NavigateToPose)</text>
+      </svg>
+    </div>
+    <figcaption>The "start navigation" flow crossing every layer: route → controller → service → (goal repository → MongoDB) → ROS2 action gateway → Nav2's action server. Numbers match the step list below.</figcaption>
+  </figure>
+
+  <ol>
+    <li><strong>Route</strong> — <code>POST /api/navigation/goal/start</code> is defined in <code>navigation.routes.ts</code>. It runs <code>validate({ body: goalLookupSchema })</code> (Zod-checks the body has <code>mapName</code> and <code>name</code> strings) and then <code>asyncHandler(navigationController.startGoal)</code>.</li>
+    <li><strong>Controller</strong> — <code>NavigationController.startGoal</code> pulls <code>mapName</code>/<code>name</code> from <code>req.body</code>, calls <code>navigationService.startGoal(mapName, name)</code>, and on success responds <code>200 { status: "navigating" }</code>. The controller contains <em>no</em> business logic — just request/response shaping.</li>
+    <li><strong>Service</strong> — <code>NavigationService.startGoal</code> calls its own private <code>getGoal(mapName, name)</code> (via the goal repository) to look up the saved pose, then calls <code>sendGoal(pose)</code>, which: cancels any already-active goal (<code>actionGateway.cancelGoal</code>) and converts the saved 2D pose's <code>theta</code> (yaw) into a quaternion via <code>quaternionFromYaw</code>.</li>
+    <li><strong>Repository</strong> — the goal lookup goes through <code>IGoalRepository.findOne(mapName, name)</code> → <code>MongooseGoalRepository.findOne</code> → Mongoose's <code>GoalModel.findOne(...)</code> → MongoDB.</li>
+    <li><strong>Gateway</strong> — <code>RosActionGateway.sendGoal("nav2_msgs/action/NavigateToPose", "navigate_to_pose", goalMsg, onFeedback, timeout)</code> is the only place that actually calls <code>rclnodejs</code>'s <code>ActionClient.sendGoal(...)</code>, against the real (or faked, in tests) ROS2 action server.</li>
+    <li>As the Nav2 action server reports feedback (<code>distance_remaining</code>) and eventually a result, the service's <code>onFeedback</code> callback updates <code>this.feedback</code>, and the result promise updates <code>this.status</code> (a <code>NavStatus</code> value). These are exposed via separate <code>GET /api/navigation/goal/feedback</code> and <code>GET /api/navigation/status</code> endpoints — polled by RobotApp — rather than pushed.</li>
+  </ol>
+  <p>In tests (<code>tests/unit/navigation.service.test.ts</code>), the exact same <code>NavigationService</code> class is constructed with <code>FakeRosActionGateway</code>, <code>FakeRosServiceGateway</code>, <code>FakeRosTopicGateway</code>, a real <code>TeleopService</code> wired to a <code>FakeRosTopicGateway</code>, and <code>FakeGoalRepository</code>/<code>FakeMapRepository</code> — so the entire flow above runs in-process with no real ROS2 or Mongo, and the test can directly assert what goal message would have been sent.</p>
+</section>
+
+<section id="flows">
+  <h2><span class="num">05</span> Key Flows</h2>
+  <p>Six flows cover everything that happens from process start to a human driving the robot. Each diagram below is a sequence view: columns are participants, vertical dashed lines are their lifelines, and numbered arrows are steps in time order, matching the step list underneath.</p>
+
+  <h3>Flow A — Server boot sequence</h3>
+  <p><strong>Trigger:</strong> process start (<code>node dist/index.js</code> in production, <code>nodemon</code> + <code>ts-node</code> in dev).</p>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 900 350" role="img" aria-label="Boot sequence: index.ts orchestrates connecting the database, starting the ROS2 node and resolving device identity, building the Express app and websocket router, starting the outbound platform link, starting roster sync, then listening for connections and registering shutdown handlers.">
+        <defs><marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="10.5" font-weight="700" text-anchor="middle">
+          <rect x="4" y="8" width="112" height="38" rx="6" fill="var(--accent-soft)" stroke="currentColor"/><text x="60" y="31">index.ts</text>
+          <rect x="146" y="8" width="108" height="38" rx="6" fill="none" stroke="currentColor"/><text x="200" y="31">MongoDB</text>
+          <rect x="286" y="8" width="108" height="38" rx="6" fill="none" stroke="currentColor"/><text x="340" y="31">ROS2 node</text>
+          <rect x="446" y="8" width="108" height="38" rx="6" fill="none" stroke="currentColor"/><text x="500" y="31">Express+WS</text>
+          <rect x="606" y="8" width="118" height="38" rx="6" fill="none" stroke="currentColor"/><text x="665" y="31">PlatformLink</text>
+          <rect x="756" y="8" width="130" height="38" rx="6" fill="none" stroke="currentColor"/><text x="821" y="31">RosterSync</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.5">
+          <line x1="60" y1="46" x2="60" y2="340"/><line x1="200" y1="46" x2="200" y2="340"/><line x1="340" y1="46" x2="340" y2="340"/>
+          <line x1="500" y1="46" x2="500" y2="340"/><line x1="665" y1="46" x2="665" y2="340"/><line x1="821" y1="46" x2="821" y2="340"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" fill="none">
+          <line x1="60" y1="78" x2="196" y2="78" marker-end="url(#arrA)"/>
+          <line x1="60" y1="106" x2="336" y2="106" marker-end="url(#arrA)"/>
+          <line x1="60" y1="134" x2="336" y2="134" marker-end="url(#arrA)"/>
+          <line x1="60" y1="162" x2="496" y2="162" marker-end="url(#arrA)"/>
+          <line x1="60" y1="190" x2="496" y2="190" marker-end="url(#arrA)"/>
+          <line x1="60" y1="218" x2="661" y2="218" marker-end="url(#arrA)"/>
+          <line x1="60" y1="246" x2="817" y2="246" marker-end="url(#arrA)"/>
+          <path d="M 60,274 h 46 v 14 h -46" marker-end="url(#arrA)"/>
+          <path d="M 60,310 h 46 v 14 h -46" marker-end="url(#arrA)"/>
+        </g>
+        <g font-size="9.5" fill="currentColor">
+          <text x="64" y="74"><tspan fill="var(--accent-strong)">1</tspan> connectDatabase()</text>
+          <text x="64" y="102"><tspan fill="var(--accent-strong)">2</tspan> rclnodejs.init() + spin</text>
+          <text x="64" y="130"><tspan fill="var(--accent-strong)">3</tspan> resolveWithRetries(3) device id</text>
+          <text x="64" y="158"><tspan fill="var(--accent-strong)">4</tspan> createApp() composition root</text>
+          <text x="64" y="186"><tspan fill="var(--accent-strong)">5</tspan> register /ws/topics,/ws/webrtc + attach</text>
+          <text x="64" y="214"><tspan fill="var(--accent-strong)">6</tspan> construct PlatformLinkClient + start()</text>
+          <text x="64" y="242"><tspan fill="var(--accent-strong)">7</tspan> sync() once, then every 60 min</text>
+          <text x="112" y="286"><tspan fill="var(--accent-strong)">8</tspan> server.listen(PORT)</text>
+          <text x="112" y="322"><tspan fill="var(--accent-strong)">9</tspan> register SIGTERM/SIGINT</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Boot order: database, ROS2 node + device identity, composition root, websockets, outbound platform link, roster sync, then accept connections and arm shutdown handlers.</figcaption>
+  </figure>
+  <ol>
+    <li><code>connectDatabase()</code> opens the Mongoose/MongoDB connection.</li>
+    <li><code>initRosNode()</code> calls <code>rclnodejs.init()</code>, creates the ROS2 node (named <code>robot_server</code>), and starts it "spinning" (processing ROS2 callbacks).</li>
+    <li>A <code>DeviceIdentityService</code> is constructed and <code>resolveWithRetries(3)</code> is called — it asks the ESP32 bridge (over a ROS2 <code>Trigger</code> service) "what is this robot's device id?" If it never answers after 3 attempts, boot continues anyway in a <strong>degraded state</strong> (a warning is logged) — local ROS2 functionality and PIN login must come up even with no ESP32/VPN connectivity yet.</li>
+    <li><code>createApp(rosNode, deviceIdentity)</code> runs the entire composition root (every gateway/repository/service/controller built and wired, Express routes mounted).</li>
+    <li>A plain Node.js <code>http.Server</code> wraps the Express <code>app</code>; <code>registerWebSockets(wsRouter)</code> registers <code>/ws/topics</code> and <code>/ws/webrtc</code> on it; <code>wsRouter.attach(server, authenticateFn)</code> wires the WebSocket-upgrade routing in, authenticating by verifying the <code>robotAccessToken</code> cookie.</li>
+    <li>A <code>PlatformLinkClient</code> is constructed and <code>.start()</code>ed — this begins the (async, retrying) process of dialing PlatformServer's <code>/ws/robot-link</code> (Flow E). It's wired into <code>registerPlatformLink</code>, which hooks <code>teleopLink.handler.ts</code> up to it.</li>
+    <li><code>rosterSyncService.sync()</code> runs once immediately (best-effort — failure only logged, not fatal) and then every <code>ROSTER_SYNC_INTERVAL_MINUTES</code> (default 60) via <code>setInterval(...).unref()</code> — the <code>.unref()</code> means this timer alone won't keep the process alive if everything else has shut down.</li>
+    <li><code>server.listen(config.port, ...)</code> — the HTTP server starts accepting connections.</li>
+    <li><code>SIGTERM</code>/<code>SIGINT</code> handlers are registered: on shutdown, stop the platform link, close the HTTP server, shut down the ROS2 node, then <code>process.exit(0)</code>.</li>
+  </ol>
+
+  <h3>Flow B — HTTP request lifecycle (generic, applies to every REST call)</h3>
+  <p><strong>Trigger:</strong> any incoming HTTP request to RobotServer, directly or via RobotApp's nginx proxy.</p>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 820 230" role="img" aria-label="HTTP request lifecycle: request passes through helmet, JSON body parsing, cookie parsing, CORS, logging, the requireAuth gate, validation, the controller, and either a success response or the shared error handler.">
+        <defs><marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="10" text-anchor="middle" stroke="currentColor" fill="none">
+          <rect x="6" y="14" width="110" height="46" rx="7"/>
+          <rect x="146" y="14" width="110" height="46" rx="7"/>
+          <rect x="286" y="14" width="110" height="46" rx="7"/>
+          <rect x="426" y="14" width="110" height="46" rx="7"/>
+          <rect x="566" y="14" width="110" height="46" rx="7"/>
+          <rect x="286" y="100" width="110" height="46" rx="7" fill="var(--accent-soft)"/>
+          <rect x="426" y="100" width="110" height="46" rx="7"/>
+          <rect x="566" y="100" width="110" height="46" rx="7"/>
+          <rect x="426" y="176" width="110" height="46" rx="7" fill="var(--warn-bg)" stroke="var(--you-are-here)"/>
+        </g>
+        <g font-size="9.6" font-weight="600" fill="currentColor" text-anchor="middle">
+          <text x="61" y="34">1 helmet()</text><text x="61" y="48">headers</text>
+          <text x="201" y="34">2 express.json()</text><text x="201" y="48">body parse</text>
+          <text x="341" y="34">3 cookieParser</text><text x="341" y="48">req.cookies</text>
+          <text x="481" y="34">4 cors()</text><text x="481" y="48">if configured</text>
+          <text x="621" y="34">5 pinoHttp</text><text x="621" y="48">request log</text>
+          <text x="341" y="120">6 requireAuth</text><text x="341" y="134">cookie→401?</text>
+          <text x="481" y="120">7 validate()</text><text x="481" y="134">Zod body/query</text>
+          <text x="621" y="120">8 controller</text><text x="621" y="134">asyncHandler</text>
+          <text x="481" y="196">10/11 errorHandler</text><text x="481" y="210">/ notFoundHandler</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1.3" fill="none" marker-end="url(#arrB)">
+          <line x1="116" y1="37" x2="142" y2="37"/>
+          <line x1="256" y1="37" x2="282" y2="37"/>
+          <line x1="396" y1="37" x2="422" y2="37"/>
+          <line x1="536" y1="37" x2="562" y2="37"/>
+          <path d="M 621,60 V 100"/>
+          <line x1="396" y1="123" x2="422" y2="123"/>
+          <line x1="536" y1="123" x2="562" y2="123"/>
+          <path d="M 481,146 V 176" stroke-dasharray="3 3"/>
+          <path d="M 621,146 V 176 H 540" stroke-dasharray="3 3"/>
+        </g>
+        <text x="650" y="169" font-size="8.5" fill="currentColor">9 success → JSON response, or thrown error ↓</text>
+      </svg>
+    </div>
+    <figcaption>Every REST call runs the same middleware chain before reaching a controller; anything thrown at any step is funneled to the one shared error handler.</figcaption>
+  </figure>
+  <ol>
+    <li><code>helmet()</code> sets security headers.</li>
+    <li><code>express.json()</code> parses a JSON request body into <code>req.body</code>.</li>
+    <li><code>cookieParser()</code> parses <code>Cookie:</code> into <code>req.cookies</code>.</li>
+    <li><code>cors(...)</code> (only if <code>CORS_ORIGINS</code> is configured) checks the request's Origin.</li>
+    <li><code>pinoHttp(...)</code> logs the request (skipping <code>/health</code> to avoid log spam), and logs the response status on completion.</li>
+    <li>The request reaches the mounted router for its path prefix (e.g. <code>/api/navigation</code>). If that prefix was mounted with <code>requireAuth</code>, the request must carry a valid <code>robotAccessToken</code> cookie or it's rejected with 401 here, before the route handler ever runs.</li>
+    <li>Inside the matched route, <code>validate({ body: ... })</code> (if present) runs the Zod schema; a failure throws a <code>ZodError</code>.</li>
+    <li>The controller method runs (wrapped in <code>asyncHandler</code>, so a thrown/rejected error is forwarded via <code>next(err)</code> instead of crashing the process or hanging the request).</li>
+    <li>If nothing threw, the controller writes the JSON response directly.</li>
+    <li>If anything threw anywhere above, Express's error-handling chain reaches <code>errorHandler</code>, which maps <code>ZodError</code> → 400, any <code>AppError</code> subclass → its own status code, anything else → 500 (logged as unexpected).</li>
+    <li>If no route matched at all, <code>notFoundHandler</code> returns a 404 JSON body instead of Express's default HTML error page.</li>
+  </ol>
+
+  <h3>Flow C — Telemetry: ROS2 topic → WebSocket broadcast to RobotApp</h3>
+  <p><strong>Trigger:</strong> ROS2 publishes new data on <code>/map</code> (occasionally) or on a 20Hz timer (location + nav status).</p>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 900 300" role="img" aria-label="Telemetry flow: Nav2 and AMCL publish ROS2 topics consumed by the RosTopicGateway, mapped into simplified shapes by the telemetry broadcaster, emitted onto the event bus, and pushed by the topics websocket server to every connected RobotApp browser.">
+        <defs><marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="10" font-weight="700" text-anchor="middle">
+          <rect x="4" y="8" width="128" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><text x="68" y="32">Nav2 / AMCL</text>
+          <rect x="166" y="8" width="128" height="40" rx="6" fill="none" stroke="currentColor"/><text x="230" y="32">RosTopicGateway</text>
+          <rect x="328" y="8" width="150" height="40" rx="6" fill="var(--accent-soft)" stroke="currentColor"/><text x="403" y="32">telemetry.broadcaster</text>
+          <rect x="512" y="8" width="110" height="40" rx="6" fill="none" stroke="currentColor"/><text x="567" y="32">eventBus</text>
+          <rect x="656" y="8" width="130" height="40" rx="6" fill="none" stroke="currentColor"/><text x="721" y="32">topics.wsServer</text>
+          <rect x="820" y="8" width="76" height="40" rx="6" fill="none" stroke="currentColor"/><text x="858" y="32">RobotApp</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.5">
+          <line x1="68" y1="48" x2="68" y2="280"/><line x1="230" y1="48" x2="230" y2="280"/><line x1="403" y1="48" x2="403" y2="280"/>
+          <line x1="567" y1="48" x2="567" y2="280"/><line x1="721" y1="48" x2="721" y2="280"/><line x1="858" y1="48" x2="858" y2="280"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrC)">
+          <line x1="68" y1="80" x2="226" y2="80"/>
+          <line x1="230" y1="108" x2="399" y2="108"/>
+          <line x1="403" y1="136" x2="563" y2="136"/>
+          <path d="M 230,164 h 173" stroke-dasharray="2 3"/>
+          <line x1="567" y1="192" x2="717" y2="192"/>
+          <line x1="721" y1="220" x2="854" y2="220"/>
+        </g>
+        <g font-size="9.3" fill="currentColor">
+          <text x="72" y="76">1 publish /map, /amcl_pose</text>
+          <text x="234" y="104">2 /map callback → mapOccupancyGridToMapUpdate</text>
+          <text x="407" y="132">emit "map"</text>
+          <text x="234" y="160">3 20Hz timer reads getLatest(/amcl_pose) + navStatus</text>
+          <text x="571" y="188">5 subscribed at boot to all 4 event types</text>
+          <text x="725" y="216">6 wss://host/ws/topics (nginx proxy)</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Map updates are event-driven; location and nav-status ride a 20Hz timer reading the latest cached pose. Both land on the shared event bus and fan out to every connected browser.</figcaption>
+  </figure>
+  <ol>
+    <li>At app startup, <code>registerTelemetryBroadcast(topicGateway, navigationService)</code> subscribes to the ROS2 topics <code>/map</code> (<code>nav_msgs/msg/OccupancyGrid</code>) and <code>/amcl_pose</code> (<code>geometry_msgs/msg/PoseWithCovarianceStamped</code>) via the shared <code>RosTopicGateway</code>.</li>
+    <li>Every time a <code>/map</code> message arrives, its callback immediately converts it via <code>mapOccupancyGridToMapUpdate</code> and calls <code>eventBus.emit("map", ...)</code>.</li>
+    <li>A separate 20Hz timer (<code>topicGateway.createTimer</code>) reads the <em>latest</em> cached <code>/amcl_pose</code> message (via <code>getLatest</code>, not a per-message callback — avoids flooding on every pose tick), converts it via <code>mapPoseToLocationUpdate</code>, and emits <code>eventBus.emit("location", ...)</code>; it also emits <code>eventBus.emit("navStatus", { status: navigationService.getStatus() })</code> every tick.</li>
+    <li>Separately, <code>connectivity.broadcaster.ts</code> polls PlatformServer's own <code>/health</code> every 15 seconds and emits <code>eventBus.emit("robotStatus", { internetConnectivity })</code> <strong>only when that value actually changes</strong>.</li>
+    <li><code>registerTopicsWebSocket</code> (called once at boot) subscribed to all four <code>eventBus</code> event types when it registered <code>/ws/topics</code>; each event is immediately serialized and sent to every currently-connected socket as <code>JSON.stringify({ type, data })</code>.</li>
+    <li>RobotApp's browser-side code connects to <code>wss://&lt;host&gt;/ws/topics</code> (proxied by nginx to RobotServer's <code>localhost:8000</code>) and receives these frames live.</li>
+  </ol>
+  <p><strong>WebSocket message schema</strong> (all frames on <code>/ws/topics</code>, server→client only, no client messages expected):</p>
+  <pre><code>{ "type": "map", "data": { "info": {...}, "data": [...] } }
+{ "type": "location", "data": { "x": 1.2, "y": -0.4, "theta": 0.78 } }
+{ "type": "nav_status", "data": { "status": "ACTIVE" } }
+{ "type": "robotStatus", "data": { "internetConnectivity": true } }</code></pre>
+
+  <h3>Flow D — Teleop command flow (remote browser/app → cmd_vel)</h3>
+  <p><strong>Trigger:</strong> a remote operator (browser dashboard, Android app) sends a joystick/drive command.</p>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 900 330" role="img" aria-label="Teleop flow: a remote client's command is relayed by PlatformServer over the persistent robot-link to the platform link client, validated and dispatched to the teleop service, which clamps and republishes velocity onto the cmd_vel ROS2 topic at 20Hz, consumed downstream by the cmd_vel republisher with its own failsafe timeout.">
+        <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="10" font-weight="700" text-anchor="middle">
+          <rect x="4" y="8" width="110" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><text x="59" y="32">Remote client</text>
+          <rect x="150" y="8" width="130" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><text x="215" y="32">PlatformServer</text>
+          <rect x="316" y="8" width="140" height="40" rx="6" fill="none" stroke="currentColor"/><text x="386" y="32">PlatformLinkClient</text>
+          <rect x="492" y="8" width="150" height="40" rx="6" fill="var(--accent-soft)" stroke="currentColor"/><text x="567" y="32">teleopLink.handler</text>
+          <rect x="678" y="8" width="130" height="40" rx="6" fill="none" stroke="currentColor"/><text x="743" y="32">TeleopService</text>
+          <rect x="678" y="100" width="130" height="40" rx="6" fill="none" stroke="currentColor"/><text x="743" y="124">cmd_vel topic</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.5">
+          <line x1="59" y1="48" x2="59" y2="300"/><line x1="215" y1="48" x2="215" y2="300"/><line x1="386" y1="48" x2="386" y2="300"/>
+          <line x1="567" y1="48" x2="567" y2="300"/><line x1="743" y1="48" x2="743" y2="300"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrD)">
+          <line x1="59" y1="68" x2="211" y2="68"/>
+          <line x1="215" y1="90" x2="382" y2="90"/>
+          <line x1="386" y1="112" x2="563" y2="112"/>
+          <line x1="567" y1="140" x2="739" y2="140"/>
+          <line x1="743" y1="160" x2="743" y2="96"/>
+        </g>
+        <g font-size="9.2" fill="currentColor">
+          <text x="63" y="64">1 relayed via PlatformServer</text>
+          <text x="219" y="86">2 frame over persistent robot-link</text>
+          <text x="390" y="108">3 Zod-validate inboundLinkFrameSchema</text>
+          <text x="571" y="136">4 teleop.velocity → setVelocity()</text>
+          <text x="615" y="155">6 publish Twist @20Hz (if not Nav2-active)</text>
+        </g>
+        <g stroke="var(--you-are-here)" stroke-width="1.6" fill="none" marker-end="url(#arrD)">
+          <path d="M 743,180 V 220" stroke-dasharray="4 2"/>
+        </g>
+        <rect x="660" y="220" width="170" height="54" rx="7" fill="var(--warn-bg)" stroke="var(--you-are-here)"/>
+        <text x="745" y="242" text-anchor="middle" font-size="9.5" font-weight="700" fill="currentColor">cmd_vel_republisher.py</text>
+        <text x="745" y="256" text-anchor="middle" font-size="8.3" fill="currentColor">(outside RobotServer) 0.5s</text>
+        <text x="745" y="268" text-anchor="middle" font-size="8.3" fill="currentColor">timeout matches teleop TTL</text>
+        <text x="20" y="296" font-size="9" fill="currentColor" opacity="0.8">estop → /motor/emergency (bypasses TTL) · release → unconditional stop · health.query → health.result reply</text>
+      </svg>
+    </div>
+    <figcaption>No inbound teleop endpoint exists on RobotServer: every remote drive command arrives only through the outbound PlatformServer link, and a 20Hz republish with a per-command TTL fails the robot safe within half a second of any gap.</figcaption>
+  </figure>
+  <ol>
+    <li>A remote client does <strong>not</strong> connect to RobotServer directly at all in this version — it connects to PlatformServer, which relays the session over the persistent <code>platformLink</code> connection (<code>PlatformLinkClient</code>, the robot's outbound half of PlatformServer's <code>/ws/robot-link</code>).</li>
+    <li>When a frame arrives on that socket, <code>PlatformLinkClient</code>'s <code>"message"</code> handler JSON-parses it and calls every registered frame handler — the one registered is <code>registerTeleopLinkHandler</code>.</li>
+    <li>The handler validates the raw frame against <code>inboundLinkFrameSchema</code> (a Zod discriminated union over <code>type</code>) — an invalid frame is logged and silently dropped, never crashes anything.</li>
+    <li>For <code>type: "teleop.velocity"</code>, it calls <code>teleopService.setVelocity({ linear, angular })</code>.</li>
+    <li><code>TeleopService.setVelocity</code> first checks <code>getNavigationStatus() === NavStatus.ACTIVE</code> — if Nav2 is actively driving the robot via its own <code>NavigateToPose</code> goal, the command is silently refused (logged at debug level) so remote teleop can never fight autonomous navigation. Otherwise it clamps the values to <code>[-maxLinear, maxLinear]</code>/<code>[-maxAngular, maxAngular]</code> (from <code>TELEOP_MAX_LINEAR</code>/<code>TELEOP_MAX_ANGULAR</code> config) and sets an expiry timestamp (<code>clock.now() + ttlMs</code>, default 500ms).</li>
+    <li>A 20Hz timer (started in the constructor) calls <code>publishTick()</code> continuously: if the active command has expired with no refresh, it force-zeros; on any active→inactive or inactive→active transition it publishes one explicit edge-triggered frame; while steady-state active, it republishes the current commanded <code>geometry_msgs/msg/Twist</code> on the <code>cmd_vel</code> ROS2 topic every tick.</li>
+    <li>Downstream, <code>autonav_controller/cmd_vel_republisher.py</code> (a separate ROS2 node, outside RobotServer) has its own 0.5s timeout matching this TTL, so a dropped connection or stalled command fails safe within half a second either way.</li>
+    <li>For <code>type: "teleop.estop"</code>: calls <code>teleopService.setEmergency(engaged)</code>, which publishes directly onto <code>/motor/emergency</code> (<code>std_msgs/msg/Bool</code>) — bypasses the velocity/TTL machinery entirely.</li>
+    <li>For <code>type: "teleop.release"</code>: calls <code>teleopService.stop()</code> — an unconditional, immediate zero, even overriding an active Nav2 refusal.</li>
+    <li>For <code>type: "health.query"</code>: replies (via <code>link.send(...)</code>) with a <code>health.result</code> frame reporting <code>rclOk</code> (ROS2 node alive AND device id resolved), <code>navigationActive</code>, and this robot's real <code>maxLinear</code>/<code>maxAngular</code> limits, so a remote client can scale its joystick input correctly instead of guessing.</li>
+  </ol>
+  <p><strong>Inbound frame schemas</strong> (<code>teleopLink.protocol.ts</code>):</p>
+  <pre><code>{ type: "teleop.velocity", sessionId: string, data: { linear: number, angular: number } }
+{ type: "teleop.estop", sessionId: string, engaged: boolean }
+{ type: "teleop.release", sessionId: string }
+{ type: "health.query", id: string }</code></pre>
+  <p><strong>Outbound reply:</strong></p>
+  <pre><code>{ type: "health.result", id: string, rclOk: boolean, navigationActive: boolean, maxLinear: number, maxAngular: number }</code></pre>
+  <div class="callout note">
+    <h4>No inbound teleop endpoint</h4>
+    <p>There is no <code>teleop.routes.ts</code> / <code>teleop.controller.ts</code> and no inbound <code>/ws/teleop</code> WebSocket. The old server had a directly-reachable teleop WebSocket; this version deliberately removed it — the <em>only</em> way a remote client can drive the robot is through the outbound PlatformServer link described above. RobotApp (the local touchscreen) is expected to drive the robot some other way not present in this codebase as reviewed — likely a future local-only path, or it also goes through the same <code>TeleopService</code> via a mechanism not yet wired to a route.</p>
+  </div>
+
+  <h3>Flow E — RobotServer ↔ PlatformServer persistent link (robot-link) registration &amp; reconnection</h3>
+  <p><strong>Trigger:</strong> server boot, and continuously thereafter.</p>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 300" role="img" aria-label="Platform link lifecycle: PlatformLinkClient waits for a device identity, dials the robot-link websocket with authentication headers, starts a ping watchdog, and on any disconnect stops the robot unconditionally before computing a jittered backoff and reconnecting.">
+        <defs><marker id="arrE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="10" font-weight="700" text-anchor="middle">
+          <rect x="4" y="8" width="150" height="40" rx="6" fill="none" stroke="currentColor"/><text x="79" y="32">DeviceIdentityService</text>
+          <rect x="190" y="8" width="160" height="40" rx="6" fill="var(--accent-soft)" stroke="currentColor"/><text x="270" y="32">PlatformLinkClient</text>
+          <rect x="400" y="8" width="160" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><text x="480" y="32">/ws/robot-link</text>
+          <rect x="610" y="8" width="150" height="40" rx="6" fill="none" stroke="currentColor"/><text x="685" y="32">TeleopService</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.5">
+          <line x1="79" y1="48" x2="79" y2="280"/><line x1="270" y1="48" x2="270" y2="280"/><line x1="480" y1="48" x2="480" y2="280"/><line x1="685" y1="48" x2="685" y2="280"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrE)">
+          <path d="M 270,70 h -187" stroke-dasharray="2 3"/>
+          <line x1="270" y1="98" x2="476" y2="98"/>
+          <path d="M 270,150 h 34 v 14 h -34" />
+        </g>
+        <g font-size="9.2" fill="currentColor">
+          <text x="85" y="66">1 poll resolve() every 5s</text>
+          <text x="274" y="94">2 dial, headers x-robot-id + Authorization: Robot &lt;ROBOT_LINK_SECRET&gt;</text>
+          <text x="310" y="162">3 ping watchdog every 12.5s, 25s timeout</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrE)">
+          <line x1="480" y1="190" x2="274" y2="190"/>
+        </g>
+        <text x="300" y="186" font-size="9.2" fill="currentColor">close / error / watchdog-forced</text>
+        <g stroke="var(--you-are-here)" stroke-width="1.8" fill="none" marker-end="url(#arrE)">
+          <line x1="270" y1="214" x2="681" y2="214"/>
+        </g>
+        <text x="420" y="210" font-size="9.4" font-weight="700" fill="var(--you-are-here)">5 teleop.stop() — unconditional, first, before anything else</text>
+        <path d="M 270,238 h 34 v 14 h -34" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrE)"/>
+        <text x="312" y="250" font-size="9.2" fill="currentColor">jittered backoff 1s→30s, then redial</text>
+        <text x="20" y="276" font-size="8.8" fill="currentColor" opacity="0.8">6 send(frame) while down → silently dropped with debug log, never queued or thrown</text>
+      </svg>
+    </div>
+    <figcaption>Loss of the robot-link stops the robot before anything else runs — the fail-safe is unconditional and happens first, ahead of computing any reconnect delay.</figcaption>
+  </figure>
+  <ol>
+    <li><code>platformLink.start()</code> begins <code>connectWhenIdentityReady()</code>, which polls <code>deviceIdentity.resolve()</code> every 5 seconds until a robot ID is available (no identity → nothing to authenticate the link with, so it won't even attempt to dial).</li>
+    <li>Once an ID is available, <code>dial(robotId)</code> opens a <code>ws://</code> (or <code>wss://</code>, derived by swapping <code>http</code>→<code>ws</code> in <code>PLATFORM_BASE_URL</code>) connection to <code>${PLATFORM_BASE_URL}/ws/robot-link</code>, sending <code>x-robot-id: &lt;robotId&gt;</code> and <code>Authorization: Robot &lt;ROBOT_LINK_SECRET&gt;</code> as headers.</li>
+    <li>On <code>"open"</code>, the reconnect backoff resets to 1 second, and a <strong>ping watchdog</strong> starts: every 12.5 seconds it checks whether a WebSocket protocol-level ping has arrived from PlatformServer within the last 25 seconds; if not, it force-terminates the socket (triggering the fail-safe + reconnect path below) — this detects a silently-dead TCP connection that never fires a clean <code>close</code>/<code>error</code> event.</li>
+    <li>Incoming frames are JSON-parsed and handed to every registered handler (in practice, just <code>teleopLink.handler.ts</code>, wired via <code>registerPlatformLink</code> in <code>app.ts</code>).</li>
+    <li><strong>On any disconnect</strong> (clean close, error-triggered close, or the watchdog's forced termination) — <code>teardownAndScheduleReconnect()</code> runs <code>this.teleop.stop()</code> unconditionally, first, before anything else — described in the code as non-negotiable: no link means no remote supervision of motion, so motion must not continue unattended. Only after that does it compute a jittered exponential backoff (1s → doubling, capped at 30s, ±20% jitter) and schedule a reconnect attempt.</li>
+    <li><code>send(frame)</code> silently drops (with a debug log) anything sent while the link is down, rather than queuing or throwing.</li>
+  </ol>
+  <div class="callout note">
+    <h4>Trust model: ROBOT_LINK_SECRET</h4>
+    <p><code>ROBOT_LINK_SECRET</code> is the <em>only</em> secret in the robot↔PlatformServer relationship (everything else relies on the VPN as the trust boundary). It's issued once at robot-provisioning time by PlatformServer; PlatformServer stores only its SHA-256 hash; losing it requires a rotation endpoint on PlatformServer (<code>POST /api/admin/robots/:robotId/rotate-link-secret</code>, per the <code>.env.example</code> comments — lives in PlatformServer, not reviewed here).</p>
+  </div>
+
+  <h3>Flow F — Local PIN login (RobotApp touchscreen HMI session)</h3>
+  <p><strong>Trigger:</strong> a human stands in front of the robot and taps their name / enters an email on the touchscreen.</p>
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 310" role="img" aria-label="Local PIN login: RobotApp lists the local roster, identifies a user against the local cache or PlatformServer, logs in with PIN and bcrypt comparison or walks a three-step OTP setup proxied to PlatformServer, then issues session cookies checked by requireAuth on subsequent requests.">
+        <defs><marker id="arrF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g font-size="10" font-weight="700" text-anchor="middle">
+          <rect x="4" y="8" width="100" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><text x="54" y="32">RobotApp</text>
+          <rect x="140" y="8" width="150" height="40" rx="6" fill="var(--accent-soft)" stroke="currentColor"/><text x="215" y="32">RobotAuthService</text>
+          <rect x="326" y="8" width="150" height="40" rx="6" fill="none" stroke="currentColor"/><text x="401" y="32">LocalUserRepository</text>
+          <rect x="512" y="8" width="150" height="40" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/><text x="587" y="32">PlatformServer</text>
+          <rect x="698" y="8" width="150" height="40" rx="6" fill="none" stroke="currentColor"/><text x="773" y="32">cookies / JWT</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.5">
+          <line x1="54" y1="48" x2="54" y2="290"/><line x1="215" y1="48" x2="215" y2="290"/><line x1="401" y1="48" x2="401" y2="290"/><line x1="587" y1="48" x2="587" y2="290"/><line x1="773" y1="48" x2="773" y2="290"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrF)">
+          <line x1="54" y1="68" x2="211" y2="68"/>
+          <line x1="215" y1="90" x2="397" y2="90"/>
+          <line x1="54" y1="118" x2="211" y2="118"/>
+          <path d="M 215,140 h 368" stroke-dasharray="2 3"/>
+          <line x1="54" y1="168" x2="211" y2="168"/>
+          <line x1="215" y1="190" x2="769" y2="190"/>
+          <line x1="54" y1="218" x2="211" y2="218"/>
+          <path d="M 215,240 h 368" stroke-dasharray="2 3"/>
+          <line x1="54" y1="262" x2="211" y2="262"/>
+        </g>
+        <g font-size="9" fill="currentColor">
+          <text x="58" y="64">1 GET /hmi-auth/users</text><text x="219" y="86">listActive(robotId) — local only</text>
+          <text x="58" y="114">2 POST /identify</text><text x="400" y="136">if not found: checkUserExists(email)</text>
+          <text x="58" y="164">3 POST /login {email,pin}</text><text x="400" y="186">comparePin() bcrypt · lockedUntil check</text>
+          <text x="58" y="214">4 pin-setup/request-otp→verify-otp→confirm</text><text x="400" y="236">proxied fully; PlatformServer hashes + stores PIN</text>
+          <text x="58" y="258">6 POST /refresh (24h)</text>
+        </g>
+        <text x="20" y="284" font-size="8.8" fill="currentColor" opacity="0.8">5 requireAuth verifies robotAccessToken on every protected route · 7 PlatformServer may push /platform-auth/roster/invalidate (no auth, VPN boundary)</text>
+      </svg>
+    </div>
+    <figcaption>Local login works entirely from the on-robot cache; PlatformServer is consulted only for unknown users, OTP/PIN setup, and roster invalidation pushes.</figcaption>
+  </figure>
+  <ol>
+    <li><code>GET /api/hmi-auth/users</code> returns the lock-screen roster: <code>RobotAuthService.listActiveUsers()</code> reads <code>localUserRepository.listActive(robotId)</code> — purely from the <strong>local cache</strong>, no network call to PlatformServer needed for this (works even if the VPN is down).</li>
+    <li>User picks/enters an email; <code>POST /api/hmi-auth/identify</code> → <code>RobotAuthService.identify(email)</code> first checks the local cache; if found and active, returns <code>{status: "has-access", pinSet}</code> immediately. If not found locally, it falls through to <code>platformClient.checkUserExists(email)</code> (a live call to PlatformServer) to distinguish "no PlatformServer account at all" from "account exists but not granted to this robot" — giving a more precise error message either way.</li>
+    <li>If <code>pinSet</code> is true: <code>POST /api/hmi-auth/login { email, pin }</code> → <code>RobotAuthService.loginWithPin</code>: checks <code>lockedUntil</code> first (too many recent failures → reject without even checking the PIN), then <code>comparePin(pin, user.pinHash)</code> (bcrypt). On failure, <code>localUserRepository.recordFailedAttempt(...)</code> increments a counter and sets a lockout timestamp once <code>PIN_LOGIN_MAX_ATTEMPTS</code> is hit. On success, attempts reset and two JWTs are issued and set as cookies (<code>robotAccessToken</code> scoped to <code>/</code>, <code>robotRefreshToken</code> scoped to <code>/api/hmi-auth</code> only).</li>
+    <li>If <code>pinSet</code> is false (first time on this robot): the client walks a 3-step OTP flow fully proxied to PlatformServer (RobotServer never generates or checks the OTP/PIN itself) — <code>POST /api/hmi-auth/pin-setup/request-otp</code>, then <code>.../verify-otp</code> (returns a short-lived <code>pinSetupToken</code>), then <code>.../confirm</code> (<code>{pinSetupToken, pin}</code> → <code>platformClient.confirmPinSetup</code> → PlatformServer hashes and stores the PIN, returns the roster entry, which RobotServer immediately caches locally via <code>localUserRepository.applyEntry</code>). The user is <strong>not</strong> auto-logged-in after this — they must then explicitly log in with the PIN they just set.</li>
+    <li>Subsequent requests to protected routes carry the <code>robotAccessToken</code> cookie; <code>requireAuth</code> middleware verifies it and populates <code>req.user</code>.</li>
+    <li>When the access token expires (15 min default), the client calls <code>POST /api/hmi-auth/refresh</code> (reads <code>robotRefreshToken</code> cookie, 24h default) to get a fresh pair without re-entering the PIN.</li>
+    <li>Separately, PlatformServer can proactively trigger a full roster resync (e.g. right after an admin grants/revokes a user) by calling <code>POST /api/platform-auth/roster/invalidate</code> directly on this robot — mounted with no auth (VPN is the trust boundary) and handled by <code>rosterSyncService.sync()</code>.</li>
+  </ol>
+</section>
+
+<section id="cross">
+  <h2><span class="num">06</span> Cross-Component Interaction</h2>
+  <p>RobotServer talks outward to PlatformServer via <strong>two independent mechanisms</strong>, defined by two small interfaces so either can be swapped for a fake in tests. Locally, it talks to RobotApp only through nginx on the same machine.</p>
+
+  <figure>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 860 300" role="img" aria-label="RobotServer's network surface: RobotApp reaches RobotServer only through an nginx reverse proxy on localhost port 8000, forwarding cookies unchanged; RobotServer makes two outbound-only connections to PlatformServer, a one-shot REST client and a persistent robot-link websocket, both authenticated with the same robot id and shared secret headers.">
+        <defs><marker id="arrX" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+        <rect x="10" y="110" width="130" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="75" y="136" text-anchor="middle" font-size="11.5" font-weight="700">RobotApp</text>
+        <text x="75" y="152" text-anchor="middle" font-size="8.8" opacity="0.7">browser, same host</text>
+
+        <rect x="190" y="110" width="110" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="245" y="136" text-anchor="middle" font-size="10.5" font-weight="700">nginx</text>
+        <text x="245" y="152" text-anchor="middle" font-size="8.5" opacity="0.7">reverse proxy</text>
+
+        <rect x="350" y="96" width="170" height="88" rx="10" fill="var(--accent-soft)" stroke="var(--you-are-here)" stroke-width="2.5"/>
+        <text x="435" y="128" text-anchor="middle" font-size="12.5" font-weight="700">RobotServer</text>
+        <text x="435" y="144" text-anchor="middle" font-size="8.8" opacity="0.75">127.0.0.1:8000</text>
+        <text x="435" y="170" text-anchor="middle" font-size="8.8" font-family="IBM Plex Mono, monospace" fill="var(--you-are-here)" font-weight="600">▲ YOU ARE HERE</text>
+
+        <rect x="610" y="30" width="230" height="72" rx="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="725" y="54" text-anchor="middle" font-size="11" font-weight="700">PlatformClient (REST)</text>
+        <text x="725" y="70" text-anchor="middle" font-size="8.3" opacity="0.75">PLATFORM_BASE_URL/api/robot-auth/*</text>
+        <text x="725" y="84" text-anchor="middle" font-size="8.3" opacity="0.75">25s timeout · 1 retry on network fail</text>
+
+        <rect x="610" y="198" width="230" height="72" rx="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <text x="725" y="222" text-anchor="middle" font-size="11" font-weight="700">PlatformLinkClient (WS)</text>
+        <text x="725" y="238" text-anchor="middle" font-size="8.3" opacity="0.75">persistent /ws/robot-link</text>
+        <text x="725" y="252" text-anchor="middle" font-size="8.3" opacity="0.75">auto-reconnect, fail-safe stop</text>
+
+        <line x1="140" y1="140" x2="186" y2="140" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrX)"/>
+        <line x1="300" y1="140" x2="346" y2="140" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrX)"/>
+        <text x="245" y="122" text-anchor="middle" font-size="8.3" fill="currentColor">Cookie forwarded unchanged</text>
+        <text x="320" y="180" text-anchor="middle" font-size="8.3" fill="currentColor">same origin, no CORS</text>
+
+        <line x1="520" y1="70" x2="606" y2="70" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrX)"/>
+        <line x1="520" y1="226" x2="606" y2="226" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrX)"/>
+        <text x="563" y="60" text-anchor="middle" font-size="8" fill="currentColor">outbound, one-shot</text>
+        <text x="563" y="216" text-anchor="middle" font-size="8" fill="currentColor">outbound, persistent</text>
+
+        <text x="610" y="130" font-size="9" fill="currentColor">both authenticated with</text>
+        <text x="610" y="143" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--accent-strong)">x-robot-id</text>
+        <text x="665" y="143" font-size="9" fill="currentColor"> + </text>
+        <text x="678" y="143" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--accent-strong)">Authorization: Robot &lt;ROBOT_LINK_SECRET&gt;</text>
+
+        <rect x="610" y="150" width="230" height="1" fill="none"/>
+      </svg>
+    </div>
+    <figcaption>RobotServer's only inbound traffic is RobotApp via localhost nginx; every PlatformServer connection is outbound-initiated and carries the same robot identity headers.</figcaption>
+  </figure>
+
+  <h3>1. IPlatformClient / PlatformClient — one-shot REST calls</h3>
+  <p>Every call targets <code>${PLATFORM_BASE_URL}/api/robot-auth/*</code> and carries two headers: <code>x-robot-id: &lt;this robot's resolved device id&gt;</code> and <code>authorization: Robot &lt;ROBOT_LINK_SECRET&gt;</code>. There is a 25-second request timeout (deliberately generous — these calls now cross the public internet via Cloudflare + nginx, not just localhost), and exactly <strong>one automatic retry</strong> after a 1.5s pause, but <em>only</em> for a pure network-level failure (DNS/connect failure surfaces in Node's <code>fetch</code> as a <code>TypeError</code>) — a request that got a real HTTP response (even an error one) is never retried. PlatformServer's 4xx responses (bad/expired OTP, unknown user, etc.) are converted to an <code>AppError</code> with the <em>same</em> status code and message, so they pass straight through to the HMI as a meaningful client-facing error rather than being swallowed into a generic 500.</p>
+
+  <h3>2. IPlatformLink / PlatformLinkClient — persistent outbound WebSocket</h3>
+  <p>Described fully in Flow E. The key architectural point: <strong>PlatformServer's notion of "this robot is online" is entirely defined by whether this WebSocket connection is currently open</strong> — a push-based fact, not a periodic poll or a VPN-membership guess. The same <code>x-robot-id</code> + <code>Authorization: Robot &lt;secret&gt;</code> scheme authenticates it. Reconnection is automatic and indefinite, with exponential backoff; any disconnection immediately and unconditionally stops the robot's motion as a fail-safe before anything else happens.</p>
+
+  <p><strong>Data exchanged:</strong> roster entries (<code>RosterEntryDto</code>: assignment id, platform user id, email, name, avatar, PIN hash + metadata) flow PlatformServer → RobotServer via <code>fetchRoster()</code>/roster-invalidate; teleop velocity/estop/release/health frames flow bidirectionally over the robot-link; OTP/PIN-setup tokens flow through <code>PlatformClient</code>'s REST calls, with PlatformServer remaining the sole place PINs are ever hashed.</p>
+
+  <h3>How RobotApp talks to RobotServer</h3>
+  <p>RobotApp is built and served by its <em>own</em> container (<code>RobotApp/Dockerfile</code>, <code>RobotApp/nginx.conf</code>), fronted by nginx, running with <code>network_mode: host</code> alongside RobotServer on the same physical machine. nginx reverse-proxies <code>/api/*</code>, <code>/health</code>, <code>/maps/*</code>, and <code>/ws/*</code> straight through to RobotServer on <code>127.0.0.1:8000</code> (RobotServer's own configured <code>PORT</code>), forwarding the <code>Cookie</code> header unchanged. This keeps the browser on a single origin (nginx's), so RobotServer's <code>httpOnly</code>, <code>sameSite: strict</code> session cookies work with zero CORS configuration needed between the two. Authentication for RobotApp is exactly the PIN-login JWT-cookie scheme described in Flow F — there is no separate API key or token RobotApp has to manage itself.</p>
+</section>
+
+<section id="running">
+  <h2><span class="num">07</span> Running &amp; Developing Locally</h2>
+
+  <h3>npm scripts</h3>
+  <div class="table-wrap"><table><tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>npm run dev</code></td><td>Starts the server via <code>nodemon</code> (auto-restart on file changes) + <code>ts-node --transpile-only</code> (runs TypeScript directly, skipping full type-checking for speed) — entrypoint <code>src/index.ts</code>. Watches <code>src/**/*.ts,json</code>, ignores <code>*.test.ts</code>.</td></tr>
+    <tr><td><code>npm run build</code></td><td>Compiles TypeScript to plain JavaScript in <code>dist/</code>, via <code>tsc -p tsconfig.json</code>.</td></tr>
+    <tr><td><code>npm start</code></td><td>Runs the already-built <code>dist/index.js</code> (used in the Docker image / production).</td></tr>
+    <tr><td><code>npm run lint</code></td><td>Runs ESLint over <code>src/**/*.ts</code>.</td></tr>
+    <tr><td><code>npm test</code></td><td>Runs all Jest unit tests (<code>tests/unit/*.test.ts</code>) — these use the fakes pattern and need <strong>no</strong> real MongoDB or ROS2 environment.</td></tr>
+    <tr><td><code>npm run test:watch</code></td><td>Same, in watch mode.</td></tr>
+  </table></div>
+
+  <p><strong>Jest configuration</strong> (inline, likely <code>jest.config.js</code> at the repo root):</p>
+  <pre><code>preset: "ts-jest"
+testEnvironment: "node"
+roots: ["&lt;rootDir&gt;/tests"]
+testMatch: ["**/*.test.ts"]
+setupFiles: ["&lt;rootDir&gt;/tests/setupEnv.ts"]</code></pre>
+  <p>That setup file hardcodes a complete set of valid environment variables so <code>config/env.ts</code>'s Zod validation always passes during tests without needing a real <code>.env</code> file.</p>
+
+  <h3>Required environment variables</h3>
+  <div class="table-wrap"><table><tr><th>Variable</th><th>Plain-English purpose</th><th>Default</th></tr>
+    <tr><td><code class="envkey">NODE_ENV</code></td><td><code>development</code> / <code>test</code> / <code>production</code> — controls logging format/verbosity and cookie <code>secure</code> flag.</td><td><code>development</code></td></tr>
+    <tr><td><code class="envkey">PORT</code></td><td>TCP port RobotServer's HTTP+WebSocket server listens on.</td><td><code>8000</code></td></tr>
+    <tr><td><code class="envkey">MONGO_URI</code></td><td>Connection string for MongoDB (maps + saved goals + local-user cache). <strong>Required, no default.</strong></td><td>—</td></tr>
+    <tr><td><code class="envkey">CORS_ORIGINS</code></td><td>Comma-separated browser origins allowed to call this API cross-origin. The robot has no auth of its own beyond the VPN boundary, so this is about limiting which web pages' JS can call it, not authentication.</td><td>empty</td></tr>
+    <tr><td><code class="envkey">MAPS_DIR</code></td><td>Local filesystem folder where map PNG/YAML files are staged before/after GridFS round-trips.</td><td><code>./maps</code></td></tr>
+    <tr><td><code class="envkey">CAMERA_DEVICE</code></td><td>OS device path for the robot's camera (used by the not-yet-implemented video source).</td><td><code>/dev/robotcam</code></td></tr>
+    <tr><td><code class="envkey">PLATFORM_BASE_URL</code></td><td>Base URL of PlatformServer, for both REST calls and the WebSocket link (ws derived by swapping the scheme). <strong>Required.</strong></td><td>—</td></tr>
+    <tr><td><code class="envkey">ROSTER_SYNC_INTERVAL_MINUTES</code></td><td>How often to re-pull the full local-login user roster from PlatformServer as a staleness ceiling.</td><td><code>60</code></td></tr>
+    <tr><td><code class="envkey">ROBOT_LINK_SECRET</code></td><td>The one real shared secret: authenticates this robot's identity to PlatformServer for both REST calls and the persistent robot-link WebSocket. Issued once at provisioning; only its hash is stored on PlatformServer. <strong>Required.</strong></td><td>—</td></tr>
+    <tr><td><code class="envkey">DEV_DEVICE_ID_OVERRIDE</code></td><td>Local-dev-only: a fake robot ID to use when no real ESP32 bridge is attached.</td><td>unset</td></tr>
+    <tr><td><code class="envkey">TELEOP_MAX_LINEAR</code> / <code class="envkey">TELEOP_MAX_ANGULAR</code></td><td>The robot's real safe velocity envelope, in m/s and rad/s — matches Nav2's own DWB controller tuning so remote teleop can never exceed what autonomous navigation itself is allowed to do.</td><td><code>0.4</code> / <code>1.1</code></td></tr>
+    <tr><td><code class="envkey">ROBOT_SESSION_ACCESS_SECRET</code> / <code class="envkey">ROBOT_SESSION_REFRESH_SECRET</code></td><td>Signing secrets for the two RobotApp login JWTs. <strong>Required, min 16 chars.</strong></td><td>—</td></tr>
+    <tr><td><code class="envkey">ROBOT_SESSION_ACCESS_TTL</code> / <code class="envkey">ROBOT_SESSION_REFRESH_TTL</code></td><td>How long the access/refresh tokens stay valid.</td><td><code>15m</code> / <code>24h</code></td></tr>
+    <tr><td><code class="envkey">PIN_LOGIN_MAX_ATTEMPTS</code> / <code class="envkey">PIN_LOGIN_LOCKOUT_MINUTES</code></td><td>Local PIN-login brute-force protection thresholds.</td><td><code>5</code> / <code>15</code></td></tr>
+  </table></div>
+
+  <h3>Ports &amp; running without hardware</h3>
+  <p><strong>Default ports:</strong> <code>8000</code> (HTTP + both WebSocket endpoints, same port, routed by path via <code>WsRouter</code>). In the Docker Compose deployment, RobotServer runs with <code>network_mode: host</code> (shares the host machine's network namespace directly, no port mapping needed) because it must reach the ROS2 graph and other robot services over their native networking.</p>
+  <p><strong>Running locally without hardware:</strong> <code>npm install</code> genuinely needs a <em>sourced</em> ROS2 environment, because <code>rclnodejs</code> compiles native bindings against the installed ROS2 client libraries at install time — this cannot be skipped even for pure unit-test development, though the <strong>tests themselves</strong> don't need a live ROS2 node once installed. <code>DEV_DEVICE_ID_OVERRIDE</code> lets the server boot and resolve an identity without a physically-attached ESP32 board.</p>
+
+  <h3>Docker</h3>
+  <p><code>RobotServer/Dockerfile</code> is built from the <strong>repo root</strong> as its context (not <code>./RobotServer</code>), based on <code>ros:lyrical</code> (confusingly, the actual base ROS2 image tag used is <code>lyrical</code>, while <code>.env</code>/README reference ROS2 "Kilted" rclnodejs support — see Gotchas). It's a multi-stage build: a <code>build</code> stage adds <code>build-essential</code>/<code>cmake</code>/<code>python3</code> (needed to compile rclnodejs's native bindings and <code>tsc</code>-compile the TypeScript) and a lean runtime stage that only copies <code>node_modules</code> + compiled <code>dist/</code> + <code>package*.json</code>, keeping the final image smaller than the heavy <code>autonav:base</code> image (which bundles nav2-bringup/slam-toolbox/etc. that RobotServer itself never runs — it only talks to those as separate ROS2 nodes over the network).</p>
+
+  <p><strong>API docs:</strong> interactive, browsable API documentation is available at <code>GET /api/docs</code> whenever the server is running (built from the <code>@openapi</code> JSDoc comments in every <code>*.routes.ts</code> file).</p>
+</section>
+
+<section id="gotchas">
+  <h2><span class="num">08</span> Gotchas &amp; Things a New Developer Must Know</h2>
+
+  <div class="callout stub">
+    <h4><span class="badge">Stub</span> rclnodejs call shapes never run against a live ROS2 graph</h4>
+    <p>The three gateway classes cast ROS2 type-name strings through <code>as unknown as rclnodejs.TypeClass&lt;...&gt;</code> to work generically for any topic/service/action (including project-local custom ones like <code>autonav_msgs/srv/SetLedPattern</code>, which rclnodejs's pre-generated type maps don't know about until that package is <code>colcon build</code>'d and sourced). Re-verify field names/shapes on first real build against real hardware.</p>
+  </div>
+
+  <div class="callout stub">
+    <h4><span class="badge">Stub</span> No TF2 lookup — mapping's waypoint capture will throw</h4>
+    <p><code>tf2_ros</code> (the ROS2 library for looking up coordinate-frame transforms, e.g. <code>map</code>→<code>base_footprint</code>) isn't confirmed to have an equivalent in <code>rclnodejs</code>. Consequence: <code>getCurrentLocation()</code> is <strong>AMCL-only</strong> everywhere it's used — and AMCL isn't running during active SLAM mapping. This means <code>MappingService.captureWaypoint()</code> will <strong>throw <code>RosUnavailableError</code></strong> for as long as this gap exists, since there's no live pose available during mapping.</p>
+  </div>
+
+  <div class="callout stub">
+    <h4><span class="badge">Stub</span> FfmpegVideoSource always throws — video streaming doesn't work yet</h4>
+    <p><code>src/modules/video/ffmpegVideoSource.ts</code> is a stub that always throws. The WebRTC <em>signaling</em> path (<code>video.wsServer.ts</code>) is fully implemented and will attempt to call <code>videoSource.getTrack()</code>, which throws and causes the server to close the viewer's WebSocket with code 1011 and a "not implemented yet" reason — intentional graceful-ish failure, not a crash, but video streaming genuinely does not work yet.</p>
+  </div>
+
+  <div class="callout">
+    <h4>No TODO/FIXME comments exist anywhere in src/</h4>
+    <p>Unfinished work is instead tracked as explicit <code>NotImplementedError</code> (501) stub routes (<code>modules/system/diagnostics</code>, <code>modules/system/maintenance</code>) and the README's "Known gaps" section — a deliberate style choice ("say so honestly instead of lying about it," per a comment in <code>maintenance.routes.ts</code>) rather than silent TODOs.</p>
+  </div>
+
+  <div class="callout">
+    <h4>No direct, inbound teleop endpoint on RobotServer</h4>
+    <p>All remote teleop/control flows exclusively through the one outbound <code>platformLink</code> connection (Flow D). If you're looking for where a browser WebSocket connects straight to RobotServer to drive the robot — it doesn't exist in this codebase; that path was intentionally removed from the old architecture.</p>
+  </div>
+
+  <div class="callout">
+    <h4>/api/system/network/* routes are deliberately NOT behind requireAuth</h4>
+    <p>A robot may need its WiFi configured before anyone can even log in (no internet yet to reach PlatformServer for identity checks). This is an intentional exception to "every operational endpoint requires a logged-in session," not an oversight — but it does mean anyone with network access to RobotServer (same LAN/host) can list/change WiFi and VPN state without authenticating.</p>
+  </div>
+
+  <div class="callout">
+    <h4>Singleton / module-level global state</h4>
+    <ul>
+      <li><code>src/ros/rosNode.ts</code> holds the single <code>rclnodejs.Node</code> as a <strong>module-level variable</strong>, not inside a class instance — calling <code>initRosNode()</code> twice is safe (idempotent, returns the cached node), but <code>getRosNode()</code> throws if called before <code>initRosNode()</code> has completed.</li>
+      <li><code>src/core/eventBus.ts</code> exports one shared <code>eventBus</code> singleton instance.</li>
+      <li><code>src/core/wsRouter.ts</code> exports one shared <code>wsRouter</code> singleton instance.</li>
+      <li><code>src/common/utils/logger.util.ts</code> exports one shared <code>logger</code> singleton.</li>
+    </ul>
+    <p>These are fine for a single-process server with one ROS2 node, but mean you cannot easily run two independent "RobotServer" instances in the same Node.js process (not a real-world concern here, but relevant if anyone tries to unit-test two instances side-by-side).</p>
+  </div>
+
+  <div class="callout">
+    <h4>Constructor-cycle workaround in app.ts</h4>
+    <p><code>TeleopService</code> needs to know whether Nav2 is actively navigating (so remote teleop doesn't fight it), but <code>NavigationService</code> itself depends on <code>TeleopService</code> (for <code>rotateInPlace</code>, used during the localize flow). Since neither can take the other as a constructor argument without a circular dependency, <code>app.ts</code> constructs both, then calls <code>teleopService.bindNavigationStatus(() =&gt; navigationService.getStatus())</code> afterward to wire the callback in. If you ever need to replicate this pattern elsewhere, this is the established idiom — a post-construction setter, with a doc comment explaining why.</p>
+  </div>
+
+  <div class="callout">
+    <h4>LaunchManager enforces mutual exclusion between Nav2 and SLAM</h4>
+    <p>You cannot launch navigation while mapping is running, or vice versa; attempting to will throw <code>ConflictError</code> (409). This was a direct bug fix over the old server, which had three independent process-tracking globals with no coordination.</p>
+  </div>
+
+  <div class="callout">
+    <h4>The teleop dead-man's switch is per-command, not a fixed-interval watchdog</h4>
+    <p>Each <code>setVelocity</code> call carries its own expiry (<code>ttlMs</code>, default 500ms, but <code>rotateInPlace</code> passes a much longer custom TTL for its own multi-second in-place spin). This lets one long-lived internal call (the localize flow's spin) keep driving the robot unattended for many seconds, while an external remote client's commands still fail safe within half a second if they stop arriving — same mechanism, different deadlines per caller.</p>
+  </div>
+
+  <div class="callout">
+    <h4>PIN hashing happens only on PlatformServer, never on RobotServer</h4>
+    <p><code>pin.util.ts</code>'s doc comment is explicit about this — RobotServer only ever <em>compares</em> a PIN against an already-hashed value it cached from a sync; if you're debugging a PIN-setup issue, the actual hashing logic lives in PlatformServer's codebase, not here.</p>
+  </div>
+
+  <div class="callout">
+    <h4>Revoked local users are never deleted, only status-flagged</h4>
+    <p><code>MongooseLocalUserRepository.replaceAll</code> marks anyone missing from a fresh roster pull as <code>status: "revoked"</code> rather than removing their document — this preserves <code>failedAttempts</code>/<code>lockedUntil</code> history in case access is re-granted later. If you're querying <code>LocalUserModel</code> directly for any reason, remember stale/revoked rows accumulate rather than disappearing.</p>
+  </div>
+
+  <div class="callout stub">
+    <h4><span class="badge">Flag for team</span> Dockerfile base-image naming inconsistency</h4>
+    <p>The Dockerfile uses <code>FROM ros:lyrical</code> and sets <code>ROS_DISTRO=lyrical</code>, while the README and several code comments reference ROS2 "Kilted" support as the target distribution. Confirm which is actually intended before relying on either in a deployment — this looks like it could be a stale/transitional value.</p>
+  </div>
+
+  <div class="callout">
+    <h4>The "temp" map name is reserved</h4>
+    <p>Waypoints captured during active SLAM are stored under the map name <code>"temp"</code> (<code>mapping.service.ts</code>'s <code>TEMP_MAP_NAME</code>) and later moved (<code>commitWaypoints</code>) onto the real map name once mapping finishes. A map literally named <code>temp</code> by a user would collide with this mechanism.</p>
+  </div>
+
+  <hr class="sep">
+  <p class="role-line">That's the full reference. For how RobotServer's two PlatformServer channels look from the other side, see the PlatformServer doc; for the touchscreen UI that consumes <code>/ws/topics</code> and the HMI auth routes, see the RobotApp doc.</p>
+</section>
+
+</div>
+
+</body></html>

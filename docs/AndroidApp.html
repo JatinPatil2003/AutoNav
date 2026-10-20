@@ -1,0 +1,1185 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AndroidApp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: a single-column onboarding article (max 46rem) with a warm amber/orange
+   accent for a mobile-robotics-control subject; inline SVG diagrams sit in bordered figure
+   frames that match the surrounding card language; safety-critical content gets a hazard-styled
+   callout distinct from ordinary gotcha callouts. */
+:root{
+  --bg:#fdfaf5;
+  --surface:#ffffff;
+  --surface-2:#fff3e3;
+  --border:#e9ddcd;
+  --fg:#2a241d;
+  --fg-muted:#73685a;
+  --accent:#c2570c;
+  --accent-strong:#9a4409;
+  --accent-soft:#f3e3cf;
+  --danger:#b3301c;
+  --danger-soft:#fbe4de;
+  --code-bg:#2a241d;
+  --code-fg:#f3ece0;
+  --font-display:'IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1712;
+    --surface:#242019;
+    --surface-2:#30220f;
+    --border:#3c3326;
+    --fg:#f1e9dc;
+    --fg-muted:#b7a996;
+    --accent:#f0a24f;
+    --accent-strong:#ffc080;
+    --accent-soft:#3a2a13;
+    --danger:#ff6f58;
+    --danger-soft:#3a1a14;
+    --code-bg:#13100c;
+    --code-fg:#f1e9dc;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1712;
+  --surface:#242019;
+  --surface-2:#30220f;
+  --border:#3c3326;
+  --fg:#f1e9dc;
+  --fg-muted:#b7a996;
+  --accent:#f0a24f;
+  --accent-strong:#ffc080;
+  --accent-soft:#3a2a13;
+  --danger:#ff6f58;
+  --danger-soft:#3a1a14;
+  --code-bg:#13100c;
+  --code-fg:#f1e9dc;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--font-body);
+  line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+.wrap{max-width:52rem;margin:0 auto;padding-block:2.25rem 4rem}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;text-wrap:balance;color:var(--fg)}
+h1{font-size:2rem;margin:.2rem 0}
+h2{font-size:1.4rem;margin:0 0 .9rem;padding-top:.2rem;border-top:1px solid var(--border);padding-top:1.6rem}
+h3{font-size:1.08rem;margin:1.6rem 0 .6rem;color:var(--accent-strong)}
+p{margin:.7rem 0;max-width:65ch}
+a{color:var(--accent-strong)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-strong);margin:0}
+.tagline{font-size:1.08rem;color:var(--fg-muted);margin:.35rem 0 1.4rem;max-width:46ch}
+header.page{padding-bottom:.5rem}
+section{scroll-margin-top:1rem}
+.min0{min-width:0}
+
+/* TOC */
+nav.toc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:1.6rem 0 2.2rem}
+nav.toc h2{border:none;padding:0;margin:0 0 .6rem;font-size:.95rem;text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-mono);color:var(--fg-muted)}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:.35rem .8rem;counter-reset:toc}
+@media (max-width:560px){ nav.toc ol{grid-template-columns:1fr} }
+nav.toc li{counter-increment:toc;font-size:.92rem}
+nav.toc li::before{content:counter(toc) ". ";color:var(--accent);font-family:var(--font-mono);font-weight:600}
+nav.toc a{text-decoration:none}
+nav.toc a:hover{text-decoration:underline}
+
+/* tables */
+.table-wrap{overflow-x:auto;margin:1rem 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.88rem}
+th,td{text-align:left;padding:.55rem .75rem;border-bottom:1px solid var(--border);vertical-align:top}
+thead th{background:var(--surface-2);font-family:var(--font-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-muted)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-2)}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--surface-2);padding:.1em .35em;border-radius:5px}
+.code-wrap{overflow-x:auto;border-radius:10px;margin:.9rem 0}
+pre{margin:0;padding:.9rem 1rem;background:var(--code-bg);color:var(--code-fg);font-family:var(--font-mono);font-size:.82rem;line-height:1.55;border-radius:10px;min-width:max-content}
+pre code{background:none;padding:0;color:inherit}
+
+/* details/summary directory map */
+details{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:.6rem 0;padding:.1rem .2rem}
+summary{cursor:pointer;padding:.65rem .9rem;font-family:var(--font-mono);font-weight:600;font-size:.88rem;color:var(--accent-strong);list-style:revert}
+details[open] summary{border-bottom:1px solid var(--border)}
+details .table-wrap{border:none;border-radius:0;margin:0}
+details table{min-width:420px}
+
+/* figures / diagrams */
+figure.diagram{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin:1.3rem 0;overflow-x:auto}
+figure.diagram svg{display:block;max-width:100%;height:auto;min-width:480px;color:var(--fg)}
+figure.diagram svg text{fill:currentColor}
+figure.diagram.wide svg{min-width:680px}
+figcaption{font-size:.82rem;color:var(--fg-muted);margin-top:.7rem;padding-top:.6rem;border-top:1px dashed var(--border)}
+.diagram-accent{color:var(--accent)}
+.diagram-danger{color:var(--danger)}
+
+/* callouts */
+.callout{border-radius:10px;padding:.9rem 1.1rem;margin:1rem 0;border:1px solid var(--border);background:var(--surface)}
+.callout h4{margin:0 0 .35rem;font-family:var(--font-mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.07em}
+.callout p{margin:.3rem 0}
+.callout.gotcha{background:var(--surface-2);border-color:var(--accent-soft)}
+.callout.gotcha h4{color:var(--accent-strong)}
+.callout.safety{
+  background:var(--danger-soft);
+  border:2px solid var(--danger);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--danger) 12%, transparent);
+  padding:1.1rem 1.3rem;
+}
+.callout.safety h4{color:var(--danger);font-size:.82rem;display:flex;align-items:center;gap:.5rem}
+.callout.safety h4::before{content:"⚠";font-size:1rem}
+.callout.safety strong{color:var(--danger)}
+
+.flow-steps{margin:.8rem 0 1.2rem;padding-left:1.3rem}
+.flow-steps li{margin:.4rem 0}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:.72rem;background:var(--accent-soft);color:var(--accent-strong);padding:.12em .5em;border-radius:5px;margin-left:.3rem}
+hr.sep{border:none;border-top:1px solid var(--border);margin:2.4rem 0}
+.foot{color:var(--fg-muted);font-size:.82rem;margin-top:2.5rem}
+</style>
+
+<div class="wrap">
+
+<header class="page">
+  <p class="eyebrow">AutoNav &middot; sub-project onboarding &middot; 1 of 5</p>
+  <h1>AndroidApp</h1>
+  <p class="tagline">The mobile remote control: a native Android app that lets an operator log in from their phone and drive an AutoNav robot by joystick, anywhere there's internet.</p>
+
+  <figure class="diagram wide">
+    <svg viewBox="0 0 760 360" role="img" aria-label="System map: AndroidApp and PlatformApp both talk only to PlatformServer over REST and, for AndroidApp, a /ws/control WebSocket. PlatformServer relays teleop sessions to RobotServer on each robot, which bridges ROS2. RobotApp is the separate touchscreen UI physically on the robot, talking only to RobotServer. AndroidApp never reaches RobotServer directly.">
+      <defs>
+        <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <!-- row 1: AndroidApp (highlighted) + PlatformApp -->
+      <rect x="40" y="24" width="190" height="60" rx="10" fill="none" style="stroke:var(--accent);stroke-width:2.5"/>
+      <text x="135" y="50" text-anchor="middle" font-weight="700" style="fill:var(--accent)">AndroidApp</text>
+      <text x="135" y="68" text-anchor="middle" font-size="10.5" font-family="var(--font-mono)" style="fill:var(--accent)">you are here</text>
+
+      <rect x="330" y="24" width="190" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="425" y="50" text-anchor="middle" font-weight="600">PlatformApp</text>
+      <text x="425" y="68" text-anchor="middle" font-size="10.5" fill-opacity=".7">web dashboard, no teleop yet</text>
+
+      <!-- PlatformServer -->
+      <rect x="185" y="150" width="280" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="325" y="176" text-anchor="middle" font-weight="600">PlatformServer</text>
+      <text x="325" y="194" text-anchor="middle" font-size="10.5" fill-opacity=".7">cloud/VPN: auth, fleet, relay</text>
+
+      <!-- RobotServer -->
+      <rect x="185" y="270" width="280" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="325" y="296" text-anchor="middle" font-weight="600">RobotServer</text>
+      <text x="325" y="314" text-anchor="middle" font-size="10.5" fill-opacity=".7">on robot: bridges ROS2 ↔ HTTP/WS</text>
+
+      <!-- RobotApp off to the side -->
+      <rect x="560" y="270" width="170" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="645" y="296" text-anchor="middle" font-weight="600">RobotApp</text>
+      <text x="645" y="314" text-anchor="middle" font-size="10.5" fill-opacity=".7">on-robot touchscreen</text>
+
+      <!-- arrows -->
+      <line x1="135" y1="84" x2="280" y2="150" style="stroke:var(--accent);stroke-width:2" marker-end="url(#m1)"/>
+      <text x="155" y="118" font-size="10.5" style="fill:var(--accent)">REST + /ws/control</text>
+
+      <line x1="425" y1="84" x2="370" y2="150" stroke="currentColor" stroke-width="1.5" marker-end="url(#m1)"/>
+      <text x="400" y="118" font-size="10.5" fill-opacity=".7">REST</text>
+
+      <line x1="325" y1="210" x2="325" y2="270" stroke="currentColor" stroke-width="1.5" marker-end="url(#m1)"/>
+      <text x="335" y="245" font-size="10.5" fill-opacity=".7">relay (per-session)</text>
+
+      <line x1="465" y1="300" x2="560" y2="300" stroke="currentColor" stroke-width="1.5" marker-end="url(#m1)"/>
+      <text x="470" y="292" font-size="10.5" fill-opacity=".7">local, direct</text>
+    </svg>
+    <figcaption>All five AutoNav sub-projects. AndroidApp (highlighted) only ever speaks to PlatformServer — REST for everything, plus a dedicated <code>/ws/control</code> WebSocket for live teleop. PlatformServer relays that session on to the robot's own RobotServer; RobotApp is a separate, unrelated touchscreen client that only talks to RobotServer, locally on the robot.</figcaption>
+  </figure>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#purpose">Purpose &amp; role in the system</a></li>
+    <li><a href="#stack">Tech stack explained</a></li>
+    <li><a href="#files">Directory &amp; file map</a></li>
+    <li><a href="#architecture">Architecture layers &amp; patterns</a></li>
+    <li><a href="#flows">Key flows</a></li>
+    <li><a href="#cross">Cross-component interaction</a></li>
+    <li><a href="#running">Running &amp; building the app</a></li>
+    <li><a href="#gotchas">Gotchas</a></li>
+  </ol>
+</nav>
+
+<section id="purpose">
+<h2>1. Purpose &amp; role in the system</h2>
+<p><strong>AndroidApp</strong> is the native Android phone app that lets an AutoNav robot's owner/operator drive their robot remotely, from anywhere with internet access — not just while standing next to it.</p>
+<p>Concretely, a signed-in user can:</p>
+<ul>
+  <li>Log in (email/password or Google).</li>
+  <li>Request access to a specific robot (by typing in a robot ID) if they don't have one assigned yet, and wait for an administrator to approve the request.</li>
+  <li>Pick which robot to operate, if they have more than one.</li>
+  <li>See a "is the robot actually reachable and healthy" check before being allowed to drive it.</li>
+  <li>Drive the robot with an on-screen joystick ("teleop" — teleoperation).</li>
+  <li>Hit a big red Emergency Stop ("e-stop") button at any time.</li>
+  <li>Adjust how sensitive the joystick is (a 0–100% speed multiplier).</li>
+  <li>Log out.</li>
+</ul>
+<p>Two feature areas are <strong>visible placeholders only</strong> right now: Analytics (trip history/usage stats) exists as a literal "coming soon" page, and Settings' robot-switcher only appears if the user actually has more than one robot.</p>
+
+<h3>How this differs from PlatformApp (the sibling web dashboard)</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th></th><th>AndroidApp (this app)</th><th>PlatformApp</th></tr></thead>
+<tbody>
+<tr><td>Form factor</td><td>Native Android app, phone-sized, portrait, one-handed</td><td>Browser-based desktop/web dashboard</td></tr>
+<tr><td>Star feature</td><td>Joystick teleop — driving the robot live</td><td>Fleet management, admin approvals, overview dashboards</td></tr>
+<tr><td>Navigation</td><td>Bottom tab bar (mobile convention)</td><td>Sidebar (desktop convention)</td></tr>
+<tr><td>Login</td><td>Native Google Sign-In (device credential picker, no browser) + email/password</td><td>Browser redirect-based Google OAuth</td></tr>
+<tr><td>Token storage</td><td>Encrypted native secure storage (Android Keystore)</td><td>Browser cookies</td></tr>
+<tr><td>"No robot" / robot picker UX</td><td>Explicit, never guesses — a specific robot is about to be armed for physical motion</td><td>Dashboard silently defaults to the user's first robot</td></tr>
+</tbody>
+</table>
+</div>
+<p>Both apps share the same backend (PlatformServer), the same visual brand (same Tailwind color scale, same component naming conventions), and largely the same code <em>patterns</em> (Redux Toolkit Query, React Router, react-hook-form + zod). A developer who knows one can read the other's code structure immediately — only the platform-specific plumbing (native storage, native sign-in, mobile navigation, the teleop feature itself) differs.</p>
+</section>
+
+<section id="stack">
+<h2>2. Tech stack explained</h2>
+<p>Every concept below is explained from scratch; skip ahead if already familiar.</p>
+
+<h3>The web layer</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Piece</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td><strong>React</strong><br><code>react</code>, <code>react-dom</code> v18</td><td>A JavaScript library for building user interfaces out of reusable "components" — small functions that return a description of some HTML. The app's UI is a tree of React components.</td></tr>
+<tr><td><strong>TypeScript</strong><br><code>typescript</code></td><td>JavaScript with an added type system: you can declare "this variable is always a string" or "this function takes a number and returns a RobotHealth object," and the compiler catches mistakes before the code ever runs. All source files are <code>.ts</code>/<code>.tsx</code> (<code>.tsx</code> = TypeScript + the HTML-like JSX syntax React uses).</td></tr>
+<tr><td><strong>Vite</strong><br><code>vite</code>, <code>@vitejs/plugin-react</code></td><td>The build tool. In development it serves the app instantly and refreshes the WebView the moment a file is saved. For production it bundles everything into optimized <code>.js</code>/<code>.css</code> files in a <code>dist/</code> folder — this folder is literally what gets shipped inside the Android app.</td></tr>
+<tr><td><strong>React Router</strong><br><code>react-router-dom</code></td><td>Handles in-app navigation ("pages"). Even with no browser address bar, it still manages which screen is showing and supports "go back" semantics (see the hardware back button flow).</td></tr>
+<tr><td><strong>Redux Toolkit + RTK Query</strong><br><code>@reduxjs/toolkit</code>, <code>react-redux</code></td><td>Redux is a single JavaScript object (the "store") holding all shared app data, updated only through controlled "actions." RTK Query, bundled inside it, is the data-fetching layer: you declare "endpoints" (<code>login</code>, <code>getMe</code>, <code>getRobotHealth</code>…) and it auto-generates React hooks (<code>useLoginMutation</code>, <code>useGetMeQuery</code>…) that handle caching, loading states, and re-fetching. This is the <em>only</em> way the app talks to PlatformServer's HTTP API (<code>src/app/baseApi.ts</code>, <code>src/app/store.ts</code>).</td></tr>
+<tr><td><strong>react-hook-form + zod</strong><br>+ <code>@hookform/resolvers</code></td><td>Form handling. <code>react-hook-form</code> manages field state and validation efficiently; <code>zod</code> is a schema-validation library ("email must look like an email, password ≥8 characters") whose schemas (<code>auth.schemas.ts</code>) plug into forms via the resolvers adapter.</td></tr>
+<tr><td><strong>Tailwind CSS</strong><br><code>tailwindcss</code>, <code>postcss</code>, <code>autoprefixer</code></td><td>A utility-class CSS framework — compose pre-defined classes directly in markup (<code>className="flex items-center gap-3 rounded-xl"</code>) instead of writing custom CSS files. <code>tailwind.config.ts</code> defines the brand palette (hand-kept in sync with PlatformApp) plus safe-area-inset spacing tokens (§8).</td></tr>
+<tr><td><strong>lucide-react</strong></td><td>An icon library — every icon in the UI (Gauge, Radio, WifiOff…) comes from here.</td></tr>
+<tr><td><strong>react-joystick-component</strong></td><td>A small, purpose-built library that renders a draggable virtual joystick and fires <code>move</code>/<code>stop</code> callbacks with <code>{x, y}</code> coordinates as the user drags. Powers <code>JoystickPad.tsx</code>.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The native/mobile layer — Capacitor</h3>
+<p><strong>Capacitor</strong> (<code>@capacitor/core</code>, <code>@capacitor/cli</code>, <code>@capacitor/android</code>) is the framework that turns this web app into an installable Android app. A phone can't "open" a website the way a laptop browser does and call it an app — Capacitor instead creates a real native Android application whose entire UI is one full-screen embedded browser view (a "WebView") that loads the built <code>dist/</code> web bundle from the device's local storage, not from the internet. From the outside it looks, installs, and behaves exactly like any other Android app — its own icon, its own process, listed in Settings — but internally its screen is just this React app running inside that WebView.</p>
+<p>That alone would only get you a glorified bookmark — the WebView's JavaScript can't normally touch Android's camera, secure storage, hardware back button, etc. Capacitor bridges that gap with <strong>native plugins</strong>: small pieces of actual Android (Java/Kotlin) code, each exposing a JavaScript API, that the WebView's JavaScript can call to reach real device features. This project uses four:</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Plugin</th><th>Dependency</th><th>Native feature it bridges</th><th>Used in</th></tr></thead>
+<tbody>
+<tr><td>App</td><td><code>@capacitor/app</code></td><td>Lifecycle events (app paused/resumed/backgrounded) and the hardware Back button</td><td><code>native/backButton.ts</code>, <code>native/backgroundSafety.ts</code>, <code>ControlPage.tsx</code></td></tr>
+<tr><td>Preferences</td><td><code>@capacitor/preferences</code></td><td>Simple native key/value storage (not encrypted, but more durable than the WebView's own <code>localStorage</code>)</td><td><code>native/preferences.ts</code></td></tr>
+<tr><td>Secure Storage</td><td><code>@aparajita/capacitor-secure-storage</code></td><td>Android Keystore-backed <strong>encrypted</strong> storage</td><td><code>app/tokenStore.ts</code></td></tr>
+<tr><td>Google Sign-In</td><td><code>@capawesome/capacitor-google-sign-in</code></td><td>Android's native Credential Manager / sign-in UI (no browser popup)</td><td><code>native/googleSignIn.ts</code>, <code>GoogleSignInButton.tsx</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Capacitor.isNativePlatform()</code> (from <code>@capacitor/core</code>) is checked before using any of these, so the exact same code also runs harmlessly in a plain desktop browser during <code>npm run dev</code> — the native calls are simply skipped.</p>
+
+<h3>WebSocket (teleop transport)</h3>
+<p>A <strong>WebSocket</strong> is a persistent, two-way network connection — unlike a normal HTTP request, which is one request → one response → connection closed. Once opened, either side (the app or PlatformServer) can push a message to the other at any time, with no new connection needed. This is essential for teleop: joystick commands need to stream out continuously and robot status/acknowledgements need to stream back, all in real time. The app uses the browser-standard <code>WebSocket</code> API directly, no extra library, in <code>controlSession.client.ts</code>.</p>
+
+<h3>Build-time config</h3>
+<ul>
+  <li><code>.env</code> / <code>.env.example</code> — Vite environment variables (<code>VITE_API_BASE_URL</code>, <code>VITE_WS_BASE_URL</code>, <code>VITE_GOOGLE_WEB_CLIENT_ID</code>), read via <code>import.meta.env.*</code> and baked into the JS bundle at build time — not re-readable at runtime without rebuilding.</li>
+  <li>No Dockerfile exists for this app, unlike RobotServer/RobotApp — this app is distributed as an installed Android APK, not a server container.</li>
+</ul>
+</section>
+
+<section id="files">
+<h2>3. Directory &amp; file map</h2>
+<p>Binary/icon assets (launcher icons at every DPI, splash screens, <code>favicon.png/svg</code>, <code>resources/icon.png</code>) are grouped and noted rather than listed file-by-file — they require no code changes for ordinary feature work.</p>
+
+<details>
+<summary>Web app root</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>package.json</code></td><td>npm scripts + all dependencies (§2).</td></tr>
+<tr><td><code>capacitor.config.ts</code></td><td>Capacitor build config: app ID, app name, web asset dir, dev-only mixed-content/scheme toggle (read at build time from <code>.env</code>).</td></tr>
+<tr><td><code>index.html</code></td><td>The single HTML page the WebView loads; mounts React into <code>&lt;div id="root"&gt;</code>.</td></tr>
+<tr><td><code>vite.config.ts</code></td><td>Vite dev server config (port 5190, <code>host: true</code> so a phone on the LAN can reach it).</td></tr>
+<tr><td><code>tailwind.config.ts</code></td><td>Brand color scale, safe-area spacing tokens, <code>darkMode: "media"</code> (follows OS theme).</td></tr>
+<tr><td><code>postcss.config.js</code></td><td>Wires Tailwind + autoprefixer into the CSS build pipeline.</td></tr>
+<tr><td><code>.eslintrc.cjs</code></td><td>Lint rules (TypeScript + React Hooks rules).</td></tr>
+<tr><td><code>tsconfig.json</code>, <code>tsconfig.app.json</code>, <code>tsconfig.node.json</code></td><td>TypeScript compiler project config (strict mode on).</td></tr>
+<tr><td><code>.env</code>, <code>.env.example</code></td><td>Environment variables (§2/§6/§7).</td></tr>
+<tr><td><code>README.md</code></td><td>Dev setup, build/sync/APK instructions, Google Sign-In one-time setup.</td></tr>
+<tr><td><code>public/favicon.png</code>, <code>public/favicon.svg</code>, <code>resources/icon.png</code></td><td>Static/icon assets (group).</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/app/ — app-wide infrastructure</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>store.ts</code></td><td>Creates the Redux store; the only reducer slice is RTK Query's own (<code>baseApi</code>).</td></tr>
+<tr><td><code>baseApi.ts</code></td><td>The base RTK Query client: attaches the Bearer token + <code>X-Client: mobile</code> header to every request, and implements single-flight 401 → refresh-token → retry logic.</td></tr>
+<tr><td><code>apiError.ts</code></td><td><code>getApiErrorMessage()</code> — pulls a human-readable message out of an RTK Query error shape.</td></tr>
+<tr><td><code>tokenStore.ts</code></td><td>In-memory access token + Keystore-backed (via Secure Storage) refresh token.</td></tr>
+<tr><td><code>robotSelection/robotSelection.context.ts</code></td><td>React Context definition for "which robot is currently selected."</td></tr>
+<tr><td><code>robotSelection/RobotSelectionProvider.tsx</code></td><td>Loads/persists the selected robot ID (per-user key) via native Preferences; never silently defaults when &gt;1 robot exists.</td></tr>
+<tr><td><code>robotSelection/useSelectedRobot.ts</code></td><td>Hook: returns the full robot object + the raw context.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/components/ui/ — shared presentational components</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>AuthShell.tsx</code></td><td>Decorative background (drifting color blobs, pure CSS) wrapping auth pages.</td></tr>
+<tr><td><code>Avatar.tsx</code></td><td>Profile photo or initials-on-gradient avatar.</td></tr>
+<tr><td><code>Button.tsx</code></td><td>Styled button with 4 variants (primary/secondary/danger/ghost) + loading spinner state.</td></tr>
+<tr><td><code>Card.tsx</code></td><td>Generic rounded/blurred card container.</td></tr>
+<tr><td><code>Input.tsx</code></td><td>Labeled text input with error display.</td></tr>
+<tr><td><code>PasswordInput.tsx</code></td><td><code>Input</code> variant with a show/hide-password toggle.</td></tr>
+<tr><td><code>PlaceholderPage.tsx</code></td><td>"Coming in a future milestone" generic placeholder UI.</td></tr>
+<tr><td><code>Spinner.tsx</code></td><td><code>FullPageSpinner</code> — full-screen loading indicator.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/features/analytics/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>pages/AnalyticsPlaceholderPage.tsx</code></td><td>Renders <code>PlaceholderPage</code> for the not-yet-built Analytics tab.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/features/auth/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>authApi.ts</code></td><td>RTK Query endpoints: <code>getMe</code>, <code>signup</code>, <code>login</code>, <code>googleToken</code>, <code>logout</code>, <code>forgotPassword</code>, <code>verifyOtp</code>, <code>resetPassword</code>.</td></tr>
+<tr><td><code>auth.schemas.ts</code></td><td>zod validation schemas for every auth form, hand-kept in sync with PlatformServer's validation.</td></tr>
+<tr><td><code>auth.types.ts</code></td><td><code>CurrentUser</code>, <code>RobotSummary</code>, request/response shape interfaces.</td></tr>
+<tr><td><code>useAuth.ts</code></td><td><code>useAuth()</code> hook — single source of truth for login status, derived straight from the <code>getMe</code> RTK Query cache (no separate auth Redux slice).</td></tr>
+<tr><td><code>components/GoogleSignInButton.tsx</code></td><td>Native Google Sign-In button (Credential Manager flow).</td></tr>
+<tr><td><code>components/LoginForm.tsx</code></td><td>Email/password login form.</td></tr>
+<tr><td><code>components/SignupForm.tsx</code></td><td>Signup form.</td></tr>
+<tr><td><code>pages/ForgotPasswordPage.tsx</code></td><td>3-step wizard: request OTP → verify OTP → set new password.</td></tr>
+<tr><td><code>pages/LoginPage.tsx</code></td><td>Composes <code>AuthShell</code> + <code>LoginForm</code> + <code>GoogleSignInButton</code>.</td></tr>
+<tr><td><code>pages/SignupPage.tsx</code></td><td>Composes <code>AuthShell</code> + <code>SignupForm</code> + <code>GoogleSignInButton</code>.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details open>
+<summary>src/features/control/ — the core teleop feature (see §4/§5g)</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>activeControlSession.ts</code></td><td>Process-wide pointer to the one currently-live <code>ControlSessionClient</code>, so native lifecycle listeners (registered outside React) can reach it.</td></tr>
+<tr><td><code>components/EstopButton.tsx</code></td><td>Large circular emergency-stop button.</td></tr>
+<tr><td><code>components/HealthGate.tsx</code></td><td>Screen shown before teleop is allowed, reporting link/ROS health check results.</td></tr>
+<tr><td><code>components/JoystickPad.tsx</code></td><td>Wraps <code>react-joystick-component</code>; converts stick x/y into linear/angular velocity.</td></tr>
+<tr><td><code>controlSession.client.ts</code></td><td><code>ControlSessionClient</code> class — raw WebSocket wrapper with auto-reconnect and backoff.</td></tr>
+<tr><td><code>controlSession.protocol.ts</code></td><td>TypeScript/zod definitions of every message shape sent/received over <code>/ws/control</code>.</td></tr>
+<tr><td><code>control.types.ts</code></td><td><code>RobotHealth</code> and related types, mirroring PlatformServer's health DTO.</td></tr>
+<tr><td><code>healthApi.ts</code></td><td>RTK Query endpoint <code>getRobotHealth</code> (polled, not cached).</td></tr>
+<tr><td><code>pages/ControlPage.tsx</code></td><td>The teleop screen — orchestrates health polling, the WS session, joystick, and e-stop.</td></tr>
+<tr><td><code>useControlSession.ts</code></td><td>Hook: owns a <code>ControlSessionClient</code> instance's lifecycle tied to a React effect.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/features/home/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>HomeShell.tsx</code></td><td>Authenticated app shell: bottom tab bar (Control / Analytics / Settings) + routed <code>&lt;Outlet/&gt;</code>.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/features/robot-access/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>robotAccessApi.ts</code></td><td>RTK Query endpoints: <code>lookupRobot</code>, <code>listMyRobotAccessRequests</code>, <code>createRobotAccessRequest</code>.</td></tr>
+<tr><td><code>robotAccess.types.ts</code></td><td><code>RobotAccessRequest</code>, <code>RobotOption</code> types.</td></tr>
+<tr><td><code>components/RequestStatusBanner.tsx</code></td><td>Shows pending/rejected status of a prior access request.</td></tr>
+<tr><td><code>pages/RequestAccessPage.tsx</code></td><td>Lookup a robot by ID, verify it exists, submit an access request.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/features/robot-select/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>pages/RobotSelectPage.tsx</code></td><td>Explicit robot picker shown when a user has &gt;1 robot and none chosen yet.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/features/settings/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>pages/SettingsPage.tsx</code></td><td>Profile info, velocity sliders, robot switcher (if &gt;1 robot), logout.</td></tr>
+<tr><td><code>useVelocitySettings.ts</code></td><td>Hook reading the velocity-settings context.</td></tr>
+<tr><td><code>velocitySettings.context.ts</code></td><td>React Context definition for linear/angular speed multipliers.</td></tr>
+<tr><td><code>VelocitySettingsProvider.tsx</code></td><td>Loads/persists the multipliers via native Preferences.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/native/ — the Capacitor "bridge" layer (see §4)</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>backButton.ts</code></td><td>Routes Android's hardware Back button through React Router's history instead of the WebView default.</td></tr>
+<tr><td><code>backgroundSafety.ts</code></td><td>Fires an immediate e-stop + closes the control session the instant the app is backgrounded/hidden/unloaded.</td></tr>
+<tr><td><code>googleSignIn.ts</code></td><td>Lazily initializes the native Google Sign-In plugin exactly once.</td></tr>
+<tr><td><code>preferences.ts</code></td><td>Thin wrapper around Capacitor Preferences (<code>readPreference</code>/<code>writePreference</code>/<code>removePreference</code>) for non-sensitive data.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>src/router/</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>index.tsx</code></td><td>Route table (<code>createBrowserRouter</code>) — all app routes and their guards.</td></tr>
+<tr><td><code>ProtectedRoute.tsx</code></td><td>Redirects to <code>/login</code> unless authenticated.</td></tr>
+<tr><td><code>PublicRoute.tsx</code></td><td>Redirects away from login/signup if already authenticated.</td></tr>
+<tr><td><code>RobotRequiredRoute.tsx</code></td><td>Gate in front of the main app shell: requires a robot assigned + a resolved robot selection.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>Other src/ files</summary>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>main.tsx</code></td><td>Entry point: registers native listeners, then mounts React with the Redux <code>Provider</code>.</td></tr>
+<tr><td><code>App.tsx</code></td><td>Top-level component: wraps the router in <code>RobotSelectionProvider</code>.</td></tr>
+<tr><td><code>styles/tailwind.css</code></td><td>Tailwind directives + custom CSS (safe-area padding, <code>glass-card</code>/<code>glass-panel</code> utility classes, blob animation, styled range slider).</td></tr>
+<tr><td><code>vite-env.d.ts</code></td><td>TypeScript ambient types for Vite's <code>import.meta.env</code>.</td></tr>
+</tbody>
+</table></div>
+</details>
+
+<details>
+<summary>android/ — the native Android project (generated + hand-edited)</summary>
+<p style="padding:.2rem .9rem .3rem">Generated by Capacitor (<code>npx cap add android</code> / <code>npx cap sync android</code>) but <strong>committed to git</strong> because it also carries hand-made native config a plain sync would not regenerate (network security policy, manifest permissions).</p>
+<div class="table-wrap"><table>
+<tbody>
+<tr><td><code>app/src/main/java/in/autonav/app/MainActivity.java</code></td><td>The native Android entry point — a near-empty subclass of Capacitor's <code>BridgeActivity</code>, which does all the real work of hosting the WebView.</td></tr>
+<tr><td><code>app/src/main/AndroidManifest.xml</code></td><td>Declares the app's package, single Activity, launcher intent filter, a <code>FileProvider</code>, and permissions (<code>INTERNET</code> only).</td></tr>
+<tr><td><code>app/src/main/res/xml/network_security_config.xml</code></td><td>Production/release policy: <strong>HTTPS only</strong>, cleartext HTTP traffic blocked.</td></tr>
+<tr><td><code>app/src/debug/res/xml/network_security_config.xml</code></td><td>Debug-build override: <strong>permits cleartext HTTP</strong> for local dev against a plain-HTTP LAN backend.</td></tr>
+<tr><td><code>app/src/main/res/values/styles.xml</code></td><td>Native themes, including the splash-screen theme.</td></tr>
+<tr><td><code>app/src/main/res/values/strings.xml</code></td><td>App name and package/URL-scheme strings.</td></tr>
+<tr><td><code>app/src/main/assets/capacitor.config.json</code></td><td>Capacitor config snapshot baked into the APK (mirrors <code>capacitor.config.ts</code>).</td></tr>
+<tr><td><code>app/src/main/assets/capacitor.plugins.json</code></td><td>List of native plugins Capacitor wires up at runtime (the 4 plugins from §2).</td></tr>
+<tr><td><code>app/src/main/assets/public/</code></td><td>The built web bundle (<code>dist/</code> output) that actually ships inside the APK — this is literally what <code>npx cap sync</code> copies in.</td></tr>
+<tr><td><code>app/build.gradle</code></td><td>Android module build config — app ID, SDK versions, dependencies on <code>capacitor-android</code>/Cordova compat libs.</td></tr>
+<tr><td><code>build.gradle</code>, <code>variables.gradle</code>, <code>gradle.properties</code>, <code>settings.gradle</code></td><td>Project-wide Gradle config; <code>gradle.properties</code> pins Gradle itself to run under <strong>JDK 21</strong> regardless of the shell's default Java.</td></tr>
+<tr><td><code>gradlew</code>, <code>gradlew.bat</code>, <code>gradle/wrapper/*</code></td><td>The Gradle wrapper (Gradle 8.14.3) so no one needs Gradle pre-installed.</td></tr>
+<tr><td><code>app/src/main/res/mipmap-*/</code>, <code>drawable*/splash.png</code></td><td>Launcher icons and splash images at every density (asset group, no code).</td></tr>
+<tr><td><code>capacitor-cordova-android-plugins/</code></td><td>Build glue for legacy Cordova-style plugin compatibility (mostly boilerplate; <code>build/</code> subtree is generated output).</td></tr>
+</tbody>
+</table></div>
+</details>
+</section>
+
+<section id="architecture">
+<h2>4. Architecture layers &amp; patterns</h2>
+
+<h3>Feature-folder pattern (shared with PlatformApp)</h3>
+<p>Code is organized by <strong>feature</strong>, not by technical layer. Instead of one global <code>components/</code> folder and one global <code>api/</code> folder for the whole app, each business capability (<code>auth</code>, <code>control</code>, <code>robot-access</code>, <code>robot-select</code>, <code>settings</code>, <code>analytics</code>, <code>home</code>) gets its own folder under <code>src/features/</code>, keeping its own <code>pages/</code> (full screens), <code>components/</code> (pieces used only within that feature), its own RTK Query API file, its own types, and its own hooks. <code>src/components/ui/</code> is the exception — genuinely generic, feature-agnostic building blocks (Button, Card, Input…) live there instead.</p>
+<p><strong>This is the exact same convention PlatformApp uses</strong> — a developer moving between the two repos recognizes the shape immediately; only the specific features differ (PlatformApp additionally has <code>admin</code>, <code>dashboard</code>, <code>legacy-robot-ui</code>; AndroidApp additionally has <code>control</code>, <code>robot-select</code>).</p>
+
+<figure class="diagram">
+  <svg viewBox="0 0 700 230" role="img" aria-label="Diagram of the shared feature-folder pattern: src/features contains one folder per business capability, each with its own pages, components, api, and types subfolders; src/components/ui holds only generic cross-feature building blocks. PlatformApp uses the identical shape with different feature names.">
+    <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="20" y="16" width="660" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="36" y="38" font-family="var(--font-mono)" font-size="12" font-weight="600">src/features/</text>
+    <text x="36" y="58" font-size="11" fill-opacity=".75">auth · control · robot-access · robot-select · settings · analytics · home</text>
+
+    <g font-family="var(--font-mono)" font-size="10.5">
+      <rect x="40" y="100" width="130" height="36" rx="6" style="fill:var(--surface-2);stroke:var(--accent);stroke-width:1.2"/>
+      <text x="105" y="122" text-anchor="middle">pages/</text>
+      <rect x="190" y="100" width="130" height="36" rx="6" style="fill:var(--surface-2);stroke:var(--accent);stroke-width:1.2"/>
+      <text x="255" y="122" text-anchor="middle">components/</text>
+      <rect x="340" y="100" width="130" height="36" rx="6" style="fill:var(--surface-2);stroke:var(--accent);stroke-width:1.2"/>
+      <text x="405" y="122" text-anchor="middle">*Api.ts</text>
+      <rect x="490" y="100" width="130" height="36" rx="6" style="fill:var(--surface-2);stroke:var(--accent);stroke-width:1.2"/>
+      <text x="555" y="122" text-anchor="middle">*.types.ts</text>
+    </g>
+    <text x="350" y="92" text-anchor="middle" font-size="10.5" fill-opacity=".7">— inside each feature folder —</text>
+
+    <rect x="20" y="166" width="660" height="48" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <text x="36" y="188" font-family="var(--font-mono)" font-size="12" font-weight="600">src/components/ui/</text>
+    <text x="36" y="205" font-size="11" fill-opacity=".75">exception: generic, feature-agnostic (Button, Card, Input, Spinner…)</text>
+  </svg>
+  <figcaption>Every feature folder repeats the same internal shape. PlatformApp (the web dashboard sibling) uses this identical convention, just with different feature names — reading one app's layout teaches you the other's.</figcaption>
+</figure>
+
+<h3>src/native/ as the bridge layer</h3>
+<p><code>src/native/</code> is this app's one deliberate departure from the pure feature-folder pattern, because it isn't a business feature — it's the seam between ordinary web code and Android-specific capability. Every file in it:</p>
+<ol class="flow-steps">
+  <li>Imports a Capacitor plugin (<code>@capacitor/app</code>, <code>@capacitor/preferences</code>, the Google Sign-In plugin).</li>
+  <li>Wraps it in a small, app-specific function with a plain-JS-feeling API (<code>readPreference(key)</code>, <code>registerBackButtonHandler(router)</code>), usually guarded by <code>Capacitor.isNativePlatform()</code> so the same code is safe to run as a no-op in a plain browser.</li>
+  <li>Is called from exactly one or two call sites elsewhere in the app (<code>main.tsx</code> for the two "register" functions, <code>tokenStore.ts</code>/<code>RobotSelectionProvider.tsx</code>/<code>VelocitySettingsProvider.tsx</code> for storage, <code>GoogleSignInButton.tsx</code> for sign-in, <code>activeControlSession.ts</code> for background safety).</li>
+</ol>
+<p>This keeps every other file in the app ignorant of Capacitor's plugin APIs — if a plugin were ever swapped out, only <code>src/native/*</code> and <code>src/app/tokenStore.ts</code> would need to change.</p>
+
+<h3>The control feature's internal structure (the most complex part of this app)</h3>
+<p>This feature has more internal layering than any other because it manages a <strong>stateful, long-lived, safety-critical connection</strong>, not a simple request/response API call.</p>
+
+<figure class="diagram wide">
+  <svg viewBox="0 0 760 560" role="img" aria-label="Layered pipeline of the control feature, bottom layer to top: controlSession.protocol.ts defines message shapes with zero logic; controlSession.client.ts owns the raw WebSocket with reconnect and backoff and has no knowledge of React; activeControlSession.ts is a module-level pointer to the live client, reachable from native lifecycle code such as backgroundSafety.ts outside React; useControlSession.ts is the React hook that creates and tears down a client inside an effect; ControlPage.tsx orchestrates health polling, the session, and the joystick and e-stop UI components, which do not talk to the WebSocket directly. A separate healthApi.ts HTTP endpoint feeds ControlPage independently of the WebSocket stack.">
+    <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+    <rect x="180" y="16" width="400" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <text x="380" y="38" text-anchor="middle" font-family="var(--font-mono)" font-weight="600" font-size="12.5">controlSession.protocol.ts</text>
+    <text x="380" y="56" text-anchor="middle" font-size="10.5" fill-opacity=".7">message shapes only — ClientFrame / ServerFrame, zod-validated inbound</text>
+
+    <line x1="380" y1="72" x2="380" y2="100" stroke="currentColor" stroke-width="1.6" marker-end="url(#m3)"/>
+
+    <rect x="160" y="100" width="440" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <text x="380" y="122" text-anchor="middle" font-family="var(--font-mono)" font-weight="600" font-size="12.5">controlSession.client.ts</text>
+    <text x="380" y="140" text-anchor="middle" font-size="10.5" fill-opacity=".7">ControlSessionClient: raw WebSocket, reconnect/backoff — no React</text>
+
+    <line x1="380" y1="156" x2="380" y2="184" stroke="currentColor" stroke-width="1.6" marker-end="url(#m3)"/>
+
+    <rect x="140" y="184" width="300" height="56" rx="8" fill="none" style="stroke:var(--accent);stroke-width:1.6"/>
+    <text x="290" y="206" text-anchor="middle" font-family="var(--font-mono)" font-weight="600" font-size="12.5">activeControlSession.ts</text>
+    <text x="290" y="224" text-anchor="middle" font-size="10.5" fill-opacity=".7">module-level pointer to the live client</text>
+
+    <line x1="440" y1="212" x2="590" y2="212" style="stroke:var(--accent);stroke-width:1.6" marker-end="url(#m3)"/>
+    <rect x="590" y="186" width="150" height="52" rx="8" fill="none" style="stroke:var(--accent);stroke-width:1.4" stroke-dasharray="4 3"/>
+    <text x="665" y="206" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" style="fill:var(--accent)">backgroundSafety.ts</text>
+    <text x="665" y="222" text-anchor="middle" font-size="9.5" style="fill:var(--accent)">outside React</text>
+
+    <line x1="290" y1="240" x2="290" y2="268" stroke="currentColor" stroke-width="1.6" marker-end="url(#m3)"/>
+
+    <rect x="130" y="268" width="320" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <text x="290" y="290" text-anchor="middle" font-family="var(--font-mono)" font-weight="600" font-size="12.5">useControlSession.ts</text>
+    <text x="290" y="308" text-anchor="middle" font-size="10.5" fill-opacity=".7">React hook — owns lifecycle inside a useEffect</text>
+
+    <line x1="290" y1="324" x2="290" y2="352" stroke="currentColor" stroke-width="1.6" marker-end="url(#m3)"/>
+
+    <rect x="480" y="268" width="200" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3"/>
+    <text x="580" y="290" text-anchor="middle" font-family="var(--font-mono)" font-size="11.5" font-weight="600">healthApi.ts</text>
+    <text x="580" y="308" text-anchor="middle" font-size="10" fill-opacity=".7">one-shot HTTP, not WS</text>
+    <line x1="480" y1="296" x2="400" y2="382" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#m3)"/>
+
+    <rect x="100" y="352" width="380" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <text x="290" y="374" text-anchor="middle" font-family="var(--font-mono)" font-weight="600" font-size="12.5">ControlPage.tsx</text>
+    <text x="290" y="392" text-anchor="middle" font-size="10.5" fill-opacity=".7">orchestrates health + session + joystick + e-stop</text>
+
+    <line x1="190" y1="408" x2="140" y2="440" stroke="currentColor" stroke-width="1.4" marker-end="url(#m3)"/>
+    <line x1="290" y1="408" x2="290" y2="440" stroke="currentColor" stroke-width="1.4" marker-end="url(#m3)"/>
+    <line x1="390" y1="408" x2="440" y2="440" stroke="currentColor" stroke-width="1.4" marker-end="url(#m3)"/>
+
+    <rect x="60" y="440" width="160" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="140" y="462" text-anchor="middle" font-family="var(--font-mono)" font-size="11.5" font-weight="600">HealthGate</text>
+    <text x="140" y="480" text-anchor="middle" font-size="9.5" fill-opacity=".7">shown while unhealthy</text>
+
+    <rect x="220" y="440" width="140" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="290" y="462" text-anchor="middle" font-family="var(--font-mono)" font-size="11.5" font-weight="600">JoystickPad</text>
+    <text x="290" y="480" text-anchor="middle" font-size="9.5" fill-opacity=".7">x/y → linear/angular</text>
+
+    <rect x="370" y="440" width="150" height="56" rx="8" fill="none" style="stroke:var(--danger);stroke-width:1.3"/>
+    <text x="445" y="462" text-anchor="middle" font-family="var(--font-mono)" font-size="11.5" font-weight="600" style="fill:var(--danger)">EstopButton</text>
+    <text x="445" y="480" text-anchor="middle" font-size="9.5" style="fill:var(--danger)">none talk to WS directly</text>
+
+    <text x="380" y="528" text-anchor="middle" font-size="10.5" fill-opacity=".65">lowest layer (pure data) ↑ top of pipeline (orchestration + UI) ↓ shown bottom-to-top above</text>
+  </svg>
+  <figcaption>The control feature's six layers, lowest to highest: protocol definitions → raw WebSocket client → a module-level live-session pointer reachable from native lifecycle code → the React hook → <code>ControlPage</code>'s orchestration → the leaf UI components, none of which touch the WebSocket directly.</figcaption>
+</figure>
+
+<ol class="flow-steps">
+  <li><strong><code>controlSession.protocol.ts</code></strong> — pure data shapes, zero logic. Outbound (<code>ClientFrame</code>): <code>{"type":"joystick","seq":&lt;n&gt;,"data":{"linear":&lt;n&gt;,"angular":&lt;n&gt;}}</code> or <code>{"type":"estop","data":{"engaged":&lt;bool&gt;}}</code> — plain TypeScript interfaces, not validated, because the app only ever sends its own correctly-shaped data. Inbound (<code>ServerFrame</code>, validated with <strong>zod</strong> as defense-in-depth): <code>{"type":"session","state":"ready"|"robot_offline"|"preempted"|"revoked"}</code>, <code>{"type":"estop_ack","engaged":&lt;bool&gt;}</code>, or <code>{"type":"error","code":&lt;str&gt;,"message":&lt;str&gt;}</code>. Explicitly a hand-kept mirror of PlatformServer's own <code>controlSession.protocol.ts</code>.</li>
+  <li><strong><code>controlSession.client.ts</code></strong> — the <code>ControlSessionClient</code> class: the one place that actually owns a raw <code>WebSocket</code> object. Opens the connection (token via the <code>Sec-WebSocket-Protocol</code> subprotocol, not a header or query string — §5g), parses/validates every incoming message against the protocol schema, auto-reconnects with a fixed 2-second backoff up to 5 attempts (but <strong>never</strong> after a terminal outcome like <code>preempted</code>/<code>revoked</code>, or after an explicit <code>.close()</code>), and exposes <code>send()</code>/<code>sendEstopImmediate()</code>/<code>close()</code>. No knowledge of React at all.</li>
+  <li><strong><code>activeControlSession.ts</code></strong> — a tiny module-level variable holding a pointer to "whichever <code>ControlSessionClient</code> is currently live, if any." Exists purely so <code>backgroundSafety.ts</code> — registered once in <code>main.tsx</code>, completely outside any React component — can reach into the live session and fire an e-stop when the app is backgrounded, without prop-drilling the session object through the whole component tree.</li>
+  <li><strong><code>useControlSession.ts</code></strong> — the React-facing hook. Creates a <code>ControlSessionClient</code> inside a <code>useEffect</code> whenever <code>(robotId, active)</code> say a session should exist, registers it as "the active session," tears it down (and un-registers it) on cleanup, and exposes React state (<code>status</code>, <code>lastServerFrame</code>) plus two callbacks (<code>sendJoystick</code>, <code>sendEstop</code>).</li>
+  <li><strong><code>healthApi.ts</code></strong> — a normal RTK Query endpoint (<code>getRobotHealth</code>), deliberately <em>not</em> part of the WebSocket session at all. A one-shot HTTP health probe, polled on an interval by <code>ControlPage</code>, that must come back <code>healthy: true</code> before a session is even allowed to open.</li>
+  <li><strong>UI components</strong> — <code>HealthGate</code> (shown while unhealthy/checking), <code>JoystickPad</code> (wraps the third-party joystick widget and converts its <code>{x, y}</code> into <code>(linear, angular)</code>), and <code>EstopButton</code> (a big stateful toggle button). None of these three talk to the WebSocket directly — <code>ControlPage.tsx</code> is the only component wiring health + session + joystick + estop together (full flow in §5g).</li>
+</ol>
+</section>
+
+<section id="flows">
+<h2>5. Key flows</h2>
+
+<h3>(a) Native app boot</h3>
+<p><strong>Trigger:</strong> user taps the AutoNav icon on their phone's home screen.</p>
+<figure class="diagram">
+  <svg viewBox="0 0 640 340" role="img" aria-label="Native app boot sequence: Android launches MainActivity, which is a Capacitor BridgeActivity that creates a full-screen WebView and loads the bundled index.html from local app storage. The WebView runs main.tsx, which registers native listeners then mounts React wrapped in the Redux Provider. App.tsx renders the RobotSelectionProvider and router. A route guard decides the first screen and triggers a getMe call to check for a valid stored session.">
+    <defs><marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <g font-size="11">
+      <rect x="20" y="10" width="600" height="38" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="320" y="33" text-anchor="middle">1 · Android OS launches <tspan font-family="var(--font-mono)">MainActivity</tspan> (near-empty <tspan font-family="var(--font-mono)">BridgeActivity</tspan> subclass)</text>
+      <line x1="320" y1="48" x2="320" y2="66" stroke="currentColor" marker-end="url(#m4)"/>
+
+      <rect x="20" y="66" width="600" height="38" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="320" y="89" text-anchor="middle">2 · <tspan font-family="var(--font-mono)">BridgeActivity</tspan> creates a full-screen WebView → loads local <tspan font-family="var(--font-mono)">assets/public/index.html</tspan></text>
+      <line x1="320" y1="104" x2="320" y2="122" stroke="currentColor" marker-end="url(#m4)"/>
+
+      <rect x="20" y="122" width="600" height="38" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="320" y="145" text-anchor="middle">3 · WebView parses HTML, loads bundled JS (compiled from <tspan font-family="var(--font-mono)">src/main.tsx</tspan>)</text>
+      <line x1="320" y1="160" x2="320" y2="178" stroke="currentColor" marker-end="url(#m4)"/>
+
+      <rect x="20" y="178" width="600" height="38" rx="7" style="fill:var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+      <text x="320" y="201" text-anchor="middle">4 · <tspan font-family="var(--font-mono)">main.tsx</tspan>: registerBackgroundSafety() + registerBackButtonHandler(), mounts React in Redux <tspan font-family="var(--font-mono)">&lt;Provider&gt;</tspan></text>
+      <line x1="320" y1="216" x2="320" y2="234" stroke="currentColor" marker-end="url(#m4)"/>
+
+      <rect x="20" y="234" width="600" height="38" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="320" y="257" text-anchor="middle">5 · <tspan font-family="var(--font-mono)">App.tsx</tspan> renders <tspan font-family="var(--font-mono)">RobotSelectionProvider</tspan> around <tspan font-family="var(--font-mono)">RouterProvider</tspan></text>
+      <line x1="320" y1="272" x2="320" y2="290" stroke="currentColor" marker-end="url(#m4)"/>
+
+      <rect x="20" y="290" width="600" height="40" rx="7" style="stroke:var(--accent);stroke-width:1.6" fill="none"/>
+      <text x="320" y="315" text-anchor="middle" style="fill:var(--accent)">6 · Route guard (Protected/Public/RobotRequired) picks the first screen → triggers <tspan font-family="var(--font-mono)">getMe</tspan> to check the stored session</text>
+    </g>
+  </svg>
+  <figcaption>Boot runs straight through from the Android OS to React Router's first route guard, which is what actually decides whether the user lands on Login or the authenticated shell.</figcaption>
+</figure>
+<p><strong>Participants:</strong> Android OS → <code>MainActivity</code> (native) → Capacitor Bridge → WebView → <code>main.tsx</code> → Redux <code>store</code> → <code>router</code>.</p>
+
+<h3>(b) Login flow (including native Google Sign-In)</h3>
+<p><strong>Trigger:</strong> user opens the app with no valid session, lands on <code>/login</code>.</p>
+<figure class="diagram wide">
+  <svg viewBox="0 0 740 360" role="img" aria-label="Login flow with two paths. Email and password: LoginForm validates with zod, useLoginMutation posts to auth login through baseApi with header X-Client mobile, the response tokens are persisted to tokenStore, getMe is explicitly refetched, then the app navigates home. Native Google Sign-In: GoogleSignInButton initializes the native plugin once, calls GoogleSignIn.signIn which opens Android's native Credential Manager account picker directly with no browser, sends the returned idToken to auth google token, PlatformServer verifies it against the web OAuth client id as audience, then the same persist-and-refetch-and-navigate steps follow.">
+    <defs><marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <text x="190" y="24" text-anchor="middle" font-weight="700" font-size="12">Email / password</text>
+    <text x="550" y="24" text-anchor="middle" font-weight="700" font-size="12" style="fill:var(--accent)">Native Google Sign-In</text>
+
+    <rect x="30" y="36" width="320" height="38" rx="7" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="190" y="59" text-anchor="middle" font-size="10.5">1 · LoginForm validates via zod (react-hook-form)</text>
+    <line x1="190" y1="74" x2="190" y2="92" stroke="currentColor" marker-end="url(#m5)"/>
+
+    <rect x="30" y="92" width="320" height="38" rx="7" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="190" y="115" text-anchor="middle" font-size="10.3">2 · useLoginMutation → POST /auth/login (X-Client: mobile)</text>
+    <line x1="190" y1="130" x2="190" y2="200" stroke="currentColor" marker-end="url(#m5)"/>
+
+    <rect x="390" y="36" width="320" height="38" rx="7" fill="none" style="stroke:var(--accent);stroke-width:1.2"/>
+    <text x="550" y="59" text-anchor="middle" font-size="10.3" style="fill:var(--accent)">1 · ensureGoogleSignInInitialized() (once)</text>
+    <line x1="550" y1="74" x2="550" y2="92" style="stroke:var(--accent)" marker-end="url(#m5)"/>
+
+    <rect x="390" y="92" width="320" height="42" rx="7" fill="none" style="stroke:var(--accent);stroke-width:1.2"/>
+    <text x="550" y="112" text-anchor="middle" font-size="10.3" style="fill:var(--accent)">2 · GoogleSignIn.signIn() → native Credential</text>
+    <text x="550" y="126" text-anchor="middle" font-size="10.3" style="fill:var(--accent)">Manager picker (no browser) → idToken</text>
+    <line x1="550" y1="134" x2="550" y2="152" style="stroke:var(--accent)" marker-end="url(#m5)"/>
+
+    <rect x="390" y="152" width="320" height="38" rx="7" fill="none" style="stroke:var(--accent);stroke-width:1.2"/>
+    <text x="550" y="175" text-anchor="middle" font-size="10.3" style="fill:var(--accent)">3 · POST /auth/google/token { idToken }</text>
+    <line x1="550" y1="190" x2="550" y2="200" style="stroke:var(--accent)" marker-end="url(#m5)"/>
+    <text x="550" y="212" text-anchor="middle" font-size="9.5" fill-opacity=".7">server verifies against the web OAuth client id</text>
+
+    <line x1="390" y1="195" x2="370" y2="200" style="stroke:var(--accent)" marker-end="url(#m5)"/>
+
+    <rect x="190" y="224" width="360" height="40" rx="7" style="fill:var(--surface-2)" stroke="currentColor" stroke-width="1.3" x2="0"/>
+    <rect x="190" y="224" width="360" height="40" rx="7" style="fill:var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+    <text x="370" y="248" text-anchor="middle" font-size="10.5">3/4 · persistTokensAndReturnUser() writes {accessToken, refreshToken} to tokenStore</text>
+    <line x1="370" y1="264" x2="370" y2="282" stroke="currentColor" marker-end="url(#m5)"/>
+
+    <rect x="190" y="282" width="360" height="36" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="370" y="304" text-anchor="middle" font-size="10.5">4/5 · refetchMe().unwrap() — forces a fresh getMe</text>
+    <line x1="370" y1="318" x2="370" y2="334" stroke="currentColor" marker-end="url(#m5)"/>
+
+    <rect x="240" y="334" width="260" height="22" rx="6" style="stroke:var(--accent);stroke-width:1.4" fill="none"/>
+    <text x="370" y="349" text-anchor="middle" font-size="10.3" style="fill:var(--accent)">5/6 · onSuccess() navigates to "/"</text>
+  </svg>
+  <figcaption>Both paths converge on the same persist → refetch → navigate steps. The Google path never opens a browser tab — Android's own account picker replaces the redirect PlatformApp uses.</figcaption>
+</figure>
+<p><strong>Steps — email/password:</strong></p>
+<ol class="flow-steps">
+  <li><code>LoginForm.tsx</code> validates input against <code>loginFormSchema</code> (zod) via <code>react-hook-form</code>.</li>
+  <li>On submit, <code>useLoginMutation()</code> calls <code>POST /auth/login</code> through <code>baseApi</code>'s <code>fetchBaseQuery</code> (header <code>X-Client: mobile</code> — tells PlatformServer to return tokens in the JSON response body rather than relying only on a cookie, since a Capacitor WebView's cross-origin cookie jar is not something a mobile app can depend on).</li>
+  <li><code>authApi.ts</code>'s <code>persistTokensAndReturnUser()</code> (shared by signup/login/google) writes the returned <code>{accessToken, refreshToken}</code> into <code>tokenStore</code> as a side effect of RTK Query's <code>transformResponse</code>.</li>
+  <li><code>refetchMe().unwrap()</code> is called explicitly — RTK Query's own cache invalidation alone wouldn't re-run <code>getMe</code> here because the <em>pre-login</em> <code>getMe</code> call had already cached a 401 result.</li>
+  <li><code>onSuccess()</code> navigates to <code>/</code>.</li>
+</ol>
+<p><strong>Steps — native Google Sign-In (this app's version):</strong></p>
+<ol class="flow-steps">
+  <li><code>GoogleSignInButton.tsx</code> calls <code>ensureGoogleSignInInitialized()</code> (<code>src/native/googleSignIn.ts</code>), which lazily (once) calls the native plugin's <code>GoogleSignIn.initialize({ clientId: VITE_GOOGLE_WEB_CLIENT_ID })</code>.</li>
+  <li>It then calls <code>GoogleSignIn.signIn()</code> — this invokes <strong>Android's native Credential Manager/account-picker UI directly</strong>, not a browser popup or redirect. The user picks a Google account already signed into their phone (or signs in natively) and the plugin returns an <code>idToken</code> without the app ever opening a browser tab.</li>
+  <li>The app sends that <code>idToken</code> to PlatformServer via <code>POST /auth/google/token</code> (<code>useGoogleTokenMutation</code>), which PlatformServer verifies server-side (<code>verifyGoogleIdToken</code>, checking the <strong>web</strong> client ID as audience — the Android app always uses the <em>web</em> OAuth client ID, never a separate Android one, so the audience check lines up on both apps).</li>
+  <li>Same <code>persistTokensAndReturnUser</code> + <code>refetchMe</code> + navigate pattern as above.</li>
+</ol>
+<p><strong>Contrast with PlatformApp:</strong> PlatformApp, running in an ordinary browser, does Google login via a full-page <strong>redirect</strong> to Google's OAuth consent screen and back — there's no "native credential picker," because a website has no access to the device's native account UI. This app skips that redirect entirely because Capacitor's plugin gives it direct access to Android's own sign-in surface — faster and no page navigation required.</p>
+
+<h3>(c) Token storage: why a mobile app needs native secure storage instead of cookies</h3>
+<p><strong>Context (foundational, not user-triggered):</strong> a browser automatically stores <code>Set-Cookie</code> cookies and attaches them to every subsequent request to that domain, with the OS/browser handling encryption-at-rest. A Capacitor WebView embedded inside a native app does <strong>not</strong> reliably behave the same way — its cookie jar is not something this app's authors chose to depend on. So this app manages its own credentials explicitly.</p>
+<figure class="diagram">
+  <svg viewBox="0 0 680 260" role="img" aria-label="Token storage split: the access token lives only in memory in tokenStore and is re-derived via auth refresh on every cold start, never written to disk. The refresh token is written to Android Keystore backed secure storage because it must survive an app restart. Non-sensitive data like selected robot id and velocity multipliers use the plain unencrypted Preferences plugin instead. On any 401, baseQueryWithReauth reads the refresh token from secure storage, calls auth refresh, stores the new pair, and retries once, with a single-flight guard so concurrent 401s trigger only one refresh call.">
+    <defs><marker id="m6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="20" y="20" width="300" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="170" y="44" text-anchor="middle" font-weight="600" font-size="11.5">Access token</text>
+    <text x="170" y="62" text-anchor="middle" font-size="10" fill-opacity=".75">in memory only · never on disk</text>
+
+    <rect x="360" y="20" width="300" height="60" rx="8" style="stroke:var(--accent);stroke-width:1.6" fill="none"/>
+    <text x="510" y="44" text-anchor="middle" font-weight="600" font-size="11.5" style="fill:var(--accent)">Refresh token</text>
+    <text x="510" y="62" text-anchor="middle" font-size="10" style="fill:var(--accent)">Secure Storage → Android Keystore</text>
+
+    <rect x="190" y="104" width="300" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="3 3"/>
+    <text x="340" y="123" text-anchor="middle" font-size="10.3" fill-opacity=".8">Non-sensitive data (robot id, velocity)</text>
+    <text x="340" y="139" text-anchor="middle" font-size="10" fill-opacity=".65">plain @capacitor/preferences — never credentials</text>
+
+    <line x1="510" y1="80" x2="510" y2="178" style="stroke:var(--accent)" marker-end="url(#m6)"/>
+    <rect x="300" y="178" width="420" height="68" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="510" y="200" text-anchor="middle" font-size="10.8" font-weight="600">baseQueryWithReauth on any 401:</text>
+    <text x="510" y="218" text-anchor="middle" font-size="10" fill-opacity=".8">read refresh token → POST /auth/refresh (body) → store new pair</text>
+    <text x="510" y="236" text-anchor="middle" font-size="10" fill-opacity=".8">→ retry original request once (single-flight guard)</text>
+  </svg>
+  <figcaption>Only the refresh token is persisted, and only inside Keystore-backed Secure Storage. Plain Preferences storage is explicitly reserved for non-sensitive values.</figcaption>
+</figure>
+<ul>
+  <li><strong>Access token:</strong> kept in memory only (a plain JS variable in <code>tokenStore.ts</code>), re-derived via <code>/auth/refresh</code> on every cold start. Never written to disk at all.</li>
+  <li><strong>Refresh token:</strong> the one credential that must survive an app restart. Written to <code>@aparajita/capacitor-secure-storage</code>, backed by <strong>Android Keystore</strong> — hardware/OS-level encrypted storage, specifically chosen because plain <code>localStorage</code> or Capacitor's own <code>Preferences</code> plugin are <strong>not encrypted at rest</strong> inside a WebView and are unsuitable for a credential.</li>
+  <li>Non-sensitive data (<code>src/native/preferences.ts</code>, used by selected-robot ID and velocity multipliers) deliberately uses the plain, unencrypted <code>@capacitor/preferences</code> plugin instead — real device storage, more durable than WebView <code>localStorage</code>, but with none of Secure Storage's encryption overhead, appropriate since nothing sensitive is stored there.</li>
+  <li><code>baseApi.ts</code>'s <code>baseQueryWithReauth</code> handles token refresh: on any <code>401</code>, it reads the refresh token out of secure storage, calls <code>POST /auth/refresh</code> with it in the request body (not a cookie), stores the new pair, and retries the original request exactly once — with a "single-flight" guard (<code>refreshInFlight</code>) so concurrent 401s only trigger one refresh call.</li>
+</ul>
+
+<h3>(d) Hardware back button + background safety</h3>
+<p><strong>Hardware back button</strong> (<code>src/native/backButton.ts</code>) — trigger: user presses Android's physical/gesture Back button anywhere in the app.</p>
+<figure class="diagram">
+  <svg viewBox="0 0 640 170" role="img" aria-label="Back button handling: the App plugin's backButton event fires with a canGoBack flag. If true, the app calls router.navigate minus one, going through React Router's own in-app history rather than the WebView's native page history. If there is nowhere left to go back to, the app calls CapacitorApp.exitApp and closes.">
+    <defs><marker id="m7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="200" y="14" width="240" height="42" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="320" y="40" text-anchor="middle" font-size="10.8">@capacitor/app "backButton" event</text>
+    <line x1="260" y1="56" x2="190" y2="92" stroke="currentColor" marker-end="url(#m7)"/>
+    <line x1="380" y1="56" x2="450" y2="92" stroke="currentColor" marker-end="url(#m7)"/>
+    <text x="300" y="78" font-size="10" fill-opacity=".7">canGoBack: true</text>
+    <text x="400" y="78" font-size="10" fill-opacity=".7">canGoBack: false</text>
+
+    <rect x="60" y="92" width="260" height="46" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="190" y="114" text-anchor="middle" font-size="10.5">router.navigate(-1)</text>
+    <text x="190" y="130" text-anchor="middle" font-size="9.5" fill-opacity=".7">React Router history, not WebView history</text>
+
+    <rect x="360" y="92" width="240" height="46" rx="7" fill="none" style="stroke:var(--accent);stroke-width:1.3"/>
+    <text x="480" y="114" text-anchor="middle" font-size="10.5" style="fill:var(--accent)">CapacitorApp.exitApp()</text>
+    <text x="480" y="130" text-anchor="middle" font-size="9.5" style="fill:var(--accent)">app actually closes</text>
+  </svg>
+  <figcaption>Back is rewired through React Router's own history, "which would otherwise behave unpredictably across routes" if left to the WebView's native page history.</figcaption>
+</figure>
+<p>On a native platform, the <code>@capacitor/app</code> plugin's <code>backButton</code> event fires with a <code>canGoBack</code> flag. If <code>canGoBack</code> is true, the app calls <code>router.navigate(-1)</code>. If there's nowhere left to go back to, the app calls <code>CapacitorApp.exitApp()</code> and actually closes.</p>
+
+<div class="callout safety">
+  <h4>Safety-critical: background e-stop</h4>
+  <p><strong><code>backgroundSafety.ts</code></strong> fires an immediate e-stop and <strong>terminally</strong> closes any open control session the instant the app is backgrounded, hidden, or unloaded. This is a real defense against a robot being left in motion — wheels still turning — if the operator backgrounds the app, switches apps, locks their phone, or the app is torn down mid-drive. It is confirmed by the file's own comments and code, not speculative.</p>
+  <figure class="diagram" style="background:transparent;border:none;padding:0;margin:.8rem 0 0">
+    <svg viewBox="0 0 680 220" role="img" aria-label="Background safety mechanism: three signals — the Android pause lifecycle event, the web visibilitychange event becoming hidden, and beforeunload — all trigger getActiveControlSession, which if a session exists calls sendEstopImmediate then close synchronously, bypassing React state. This is explicitly documented as defense-in-depth on top of a robot-side per-command TTL watchdog of about 500 milliseconds that is the real safety net.">
+      <defs><marker id="m8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--danger)"/></marker></defs>
+      <g font-size="10.2" style="fill:var(--danger)">
+        <rect x="10" y="16" width="190" height="34" rx="6" fill="none" style="stroke:var(--danger);stroke-width:1.3"/>
+        <text x="105" y="37" text-anchor="middle">Android "pause" event</text>
+        <rect x="245" y="16" width="190" height="34" rx="6" fill="none" style="stroke:var(--danger);stroke-width:1.3"/>
+        <text x="340" y="37" text-anchor="middle">visibilitychange → hidden</text>
+        <rect x="480" y="16" width="190" height="34" rx="6" fill="none" style="stroke:var(--danger);stroke-width:1.3"/>
+        <text x="575" y="37" text-anchor="middle">beforeunload</text>
+      </g>
+      <line x1="105" y1="50" x2="320" y2="84" style="stroke:var(--danger);stroke-width:1.4" marker-end="url(#m8)"/>
+      <line x1="340" y1="50" x2="340" y2="84" style="stroke:var(--danger);stroke-width:1.4" marker-end="url(#m8)"/>
+      <line x1="575" y1="50" x2="360" y2="84" style="stroke:var(--danger);stroke-width:1.4" marker-end="url(#m8)"/>
+
+      <rect x="180" y="84" width="320" height="38" rx="7" fill="none" style="stroke:var(--danger);stroke-width:1.6"/>
+      <text x="340" y="107" text-anchor="middle" font-size="10.8" style="fill:var(--danger)">getActiveControlSession()</text>
+      <line x1="340" y1="122" x2="340" y2="146" style="stroke:var(--danger);stroke-width:1.6" marker-end="url(#m8)"/>
+
+      <rect x="140" y="146" width="400" height="46" rx="7" style="fill:var(--danger-soft);stroke:var(--danger);stroke-width:1.8"/>
+      <text x="340" y="168" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--danger)">sendEstopImmediate() → close()</text>
+      <text x="340" y="184" text-anchor="middle" font-size="9.5" style="fill:var(--danger)">synchronous, bypasses React state entirely</text>
+    </svg>
+    <figcaption style="border-top:none;padding-top:0">Three independent signals converge on the same immediate kill switch.</figcaption>
+  </figure>
+  <p style="margin-top:.8rem">Explicitly documented as <strong>defense-in-depth</strong>: the real safety net is a server/robot-side per-command TTL watchdog (robot-side, ~500ms) that stops the robot on its own if it simply stops receiving commands. This client-side kill switch is just a faster, best-effort reaction on the happy path — the app's own comment is explicit that "safety doesn't depend on" this working. Because this closes the session <em>terminally</em>, <code>ControlPage.tsx</code> separately listens for the app's <code>resume</code> event (and <code>visibilitychange</code> back to <code>"visible"</code>) to force a brand-new connection attempt when the user returns to the foreground — otherwise they'd be stuck on "Disconnected" until manually navigating away and back.</p>
+</div>
+
+<h3>(e) Robot selection flow</h3>
+<p><strong>Trigger:</strong> an authenticated user with ≥1 assigned robot reaches the main app shell.</p>
+<figure class="diagram wide">
+  <svg viewBox="0 0 740 260" role="img" aria-label="Robot selection flow: RobotSelectionProvider reads a previously remembered robot id from preferences. If it still matches a current robot it is used directly. If nothing valid is stored and the user has exactly one robot, that one is auto-selected and persisted. If the user has more than one robot and nothing valid is stored, selection stays null on purpose, and RobotRequiredRoute redirects to the robot select page where tapping a card persists the choice and navigates to control.">
+    <defs><marker id="m9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="230" y="10" width="280" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="370" y="35" text-anchor="middle" font-size="10.8">1 · read stored robot id (Preferences)</text>
+    <line x1="370" y1="50" x2="370" y2="68" stroke="currentColor" marker-end="url(#m9)"/>
+    <path d="M280 68 L460 68 L370 90 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="370" y="82" text-anchor="middle" font-size="9.5">still valid?</text>
+
+    <line x1="330" y1="88" x2="150" y2="118" stroke="currentColor" marker-end="url(#m9)"/>
+    <line x1="400" y1="90" x2="480" y2="118" stroke="currentColor" marker-end="url(#m9)"/>
+    <text x="180" y="108" font-size="9.5" fill-opacity=".7">yes</text>
+    <text x="470" y="108" font-size="9.5" fill-opacity=".7">no</text>
+
+    <rect x="40" y="118" width="220" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="150" y="143" text-anchor="middle" font-size="10.3">2 · use it directly</text>
+
+    <path d="M380 118 L580 118 L480 140 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="480" y="128" text-anchor="middle" font-size="9.3">exactly 1 robot?</text>
+    <line x1="440" y1="140" x2="350" y2="168" stroke="currentColor" marker-end="url(#m9)"/>
+    <line x1="520" y1="140" x2="610" y2="168" stroke="currentColor" marker-end="url(#m9)"/>
+    <text x="370" y="158" font-size="9.3" fill-opacity=".7">yes</text>
+    <text x="600" y="158" font-size="9.3" fill-opacity=".7">no (&gt;1)</text>
+
+    <rect x="240" y="168" width="220" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="350" y="193" text-anchor="middle" font-size="10.3">3 · auto-select + persist</text>
+
+    <rect x="500" y="168" width="220" height="40" rx="7" fill="none" style="stroke:var(--accent);stroke-width:1.5"/>
+    <text x="610" y="187" text-anchor="middle" font-size="10" style="fill:var(--accent)">4 · stays null on purpose</text>
+    <text x="610" y="202" text-anchor="middle" font-size="9.3" style="fill:var(--accent)">→ /robot-select</text>
+
+    <line x1="610" y1="208" x2="610" y2="236" style="stroke:var(--accent)" marker-end="url(#m9)"/>
+    <rect x="420" y="236" width="280" height="22" rx="6" style="stroke:var(--accent);stroke-width:1.3" fill="none"/>
+    <text x="560" y="251" text-anchor="middle" font-size="9.8" style="fill:var(--accent)">6 · tap card → persist → navigate /control</text>
+  </svg>
+  <figcaption>An unambiguous default only ever happens with exactly one robot; with more than one, the app always asks rather than guessing which robot to arm.</figcaption>
+</figure>
+<ol class="flow-steps">
+  <li><code>RobotSelectionProvider</code> (wraps the whole app in <code>App.tsx</code>) watches the logged-in user's robot list and, on change, calls <code>readPreference("autonav-selected-robot:&lt;userId&gt;")</code> to look for a previously-remembered choice.</li>
+  <li>If the stored ID still matches one of the user's current robots, it's used directly.</li>
+  <li>If nothing valid is stored but the user has <strong>exactly one</strong> robot, that one is auto-selected and immediately persisted (an unambiguous default, not a guess).</li>
+  <li>If the user has <strong>more than one</strong> robot and nothing valid is stored, <code>selectedRobotId</code> stays <code>null</code> on purpose.</li>
+  <li><code>RobotRequiredRoute</code> (wraps <code>HomeShell</code>) reads <code>{hasRobot, robots, selectedRobotId, isReady}</code> and redirects: no robot at all → <code>/request-access</code>; not ready yet → spinner; more than one robot and none chosen → <code>/robot-select</code>; otherwise renders the requested page.</li>
+  <li><code>RobotSelectPage.tsx</code> lets the user tap a robot card, calling <code>setSelectedRobotId(robotId)</code>, which updates state and persists the choice via <code>writePreference</code>, then navigates to <code>/control</code>.</li>
+</ol>
+
+<h3>(f) Robot access request flow</h3>
+<p><strong>Trigger:</strong> a logged-in user has zero robots assigned (<code>hasRobot === false</code>).</p>
+<figure class="diagram">
+  <svg viewBox="0 0 680 200" role="img" aria-label="Robot access request flow: RobotRequiredRoute redirects to request access page, which shows any pending or rejected request status, lets the user verify a robot id via lookupRobot, then submit an access request which invalidates the request list cache. Approval itself happens out of band by an administrator through PlatformApp, outside this app.">
+    <defs><marker id="m10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="20" y="14" width="300" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="170" y="39" text-anchor="middle" font-size="10.5">1-2 · /request-access shows pending/rejected status</text>
+    <line x1="170" y1="54" x2="170" y2="72" stroke="currentColor" marker-end="url(#m10)"/>
+
+    <rect x="20" y="72" width="300" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="170" y="97" text-anchor="middle" font-size="10.3">3 · GET /robots/lookup/:robotId</text>
+    <line x1="170" y1="112" x2="170" y2="130" stroke="currentColor" marker-end="url(#m10)"/>
+
+    <rect x="20" y="130" width="300" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <text x="170" y="155" text-anchor="middle" font-size="10.3">4 · POST /robot-access-requests</text>
+    <line x1="320" y1="150" x2="380" y2="150" stroke="currentColor" marker-end="url(#m10)"/>
+
+    <rect x="380" y="90" width="280" height="80" rx="8" fill="none" style="stroke:var(--accent);stroke-width:1.4" stroke-dasharray="4 3"/>
+    <text x="520" y="118" text-anchor="middle" font-size="10.5" style="fill:var(--accent)">5 · administrator approval</text>
+    <text x="520" y="136" text-anchor="middle" font-size="9.8" style="fill:var(--accent)">via PlatformApp admin screens</text>
+    <text x="520" y="154" text-anchor="middle" font-size="9.5" style="fill:var(--accent)">(outside this app) — user polls by reopening</text>
+  </svg>
+  <figcaption>This app only submits the request; approval is entirely out of band, handled by PlatformApp's admin screens.</figcaption>
+</figure>
+<ol class="flow-steps">
+  <li><code>RobotRequiredRoute</code> redirects to <code>/request-access</code>.</li>
+  <li>The page loads any existing requests via <code>useListMyRobotAccessRequestsQuery()</code> and shows a <code>RequestStatusBanner</code> for pending/rejected ones.</li>
+  <li>User types a robot ID and taps "Verify" → <code>useLazyLookupRobotQuery()</code> hits <code>GET /robots/lookup/:robotId</code>. A <code>null</code> result means the ID isn't recognized/available.</li>
+  <li>If found, and not already pending, the user taps "Request robot access" → <code>useCreateRobotAccessRequestMutation()</code> posts <code>POST /robot-access-requests</code>, which invalidates the <code>RobotAccessRequest</code> RTK Query cache tag so the request list refetches.</li>
+  <li>The actual approval happens out-of-band by an administrator (via PlatformApp's admin screens, not part of this app) — the user just waits, polling by reopening/reloading this screen.</li>
+</ol>
+
+<h3>(g) Core remote-control / teleop flow (end to end) <span class="badge">signature feature</span></h3>
+<p><strong>Trigger:</strong> user navigates to the Control tab (<code>/control</code>) with a robot selected.</p>
+<p><strong>Participants:</strong> <code>ControlPage</code> → <code>healthApi</code> (HTTP) → <code>useControlSession</code> → <code>ControlSessionClient</code> (WebSocket) → PlatformServer's <code>/ws/control</code> relay → (PlatformServer then relays to RobotServer, outside this app's knowledge) → <code>JoystickPad</code> / <code>EstopButton</code> (UI inputs).</p>
+
+<figure class="diagram wide">
+  <svg viewBox="0 0 820 920" role="img" aria-label="Full end-to-end teleop sequence across four lanes: UI components JoystickPad and EstopButton, ControlPage, ControlSessionClient over WebSocket, and PlatformServer. Step 1: ControlPage polls GET robots id health every 4 seconds. Step 2: health response drives HealthGate until healthy is true. Step 3: useControlSession opens a WebSocket with the access token carried in the Sec-WebSocket-Protocol subprotocol as bearer and token, not a header or query string. Step 4: the handshake completes. Step 5: PlatformServer sends a session frame with state ready, or a terminal state like robot_offline, preempted, or revoked which stops auto-reconnect. Step 6: dragging the joystick fires move events up to every 100 milliseconds converted to linear and angular velocity scaled by the user's sensitivity sliders and the robot's real max velocity from the health check. Step 7: ControlPage calls sendJoystick. Step 8: the client sends a joystick frame with an incrementing sequence number over the WebSocket. Step 9: releasing the stick sends a zero velocity stop command. Step 10: tapping EstopButton sends an estop engaged true frame and the button stays locked until the server confirms with an estop_ack frame reflecting the server's authoritative state. Step 11: on an unexpected disconnect the client auto-reconnects after a fixed 2000 millisecond delay up to 5 attempts unless the session ended in a terminal state. Step 12: leaving the screen or the app being backgrounded both tear the session down via ControlSessionClient.close().">
+    <defs><marker id="m11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+    <marker id="m11a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
+    <marker id="m11d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--danger)"/></marker>
+    </defs>
+
+    <!-- lane headers -->
+    <g font-family="var(--font-mono)" font-size="11" font-weight="700">
+      <text x="90" y="24" text-anchor="middle">UI inputs</text>
+      <text x="300" y="24" text-anchor="middle">ControlPage</text>
+      <text x="520" y="24" text-anchor="middle">ControlSessionClient</text>
+      <text x="730" y="24" text-anchor="middle">PlatformServer</text>
+    </g>
+    <line x1="90" y1="34" x2="90" y2="900" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+    <line x1="300" y1="34" x2="300" y2="900" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+    <line x1="520" y1="34" x2="520" y2="900" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+    <line x1="730" y1="34" x2="730" y2="900" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+
+    <!-- step 1 -->
+    <line x1="300" y1="56" x2="720" y2="56" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="310" y="50" font-size="10.5">1 · GET /robots/:id/health — polled every 4s, forever</text>
+
+    <!-- step 2 -->
+    <line x1="720" y1="80" x2="310" y2="80" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="330" y="74" font-size="10.5">2 · health response — HealthGate shown until healthy:true</text>
+
+    <!-- step 3 -->
+    <line x1="300" y1="118" x2="510" y2="118" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="305" y="112" font-size="10.5">3 · useControlSession opens client</text>
+
+    <!-- step 4 -->
+    <line x1="520" y1="150" x2="720" y2="150" style="stroke:var(--accent);stroke-width:1.6" marker-end="url(#m11a)"/>
+    <text x="310" y="138" font-size="10.3" style="fill:var(--accent)">4 · new WebSocket(url, ["bearer", token]) — auth rides</text>
+    <text x="310" y="150" font-size="10.3" style="fill:var(--accent)">the Sec-WebSocket-Protocol subprotocol header</text>
+
+    <!-- step 5 -->
+    <line x1="720" y1="180" x2="530" y2="180" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="330" y="174" font-size="10.3">5 · session frame &#123;"state":"ready"&#125; — or a terminal</text>
+    <text x="330" y="186" font-size="10.3">state (robot_offline/preempted/revoked) stops reconnects</text>
+
+    <!-- step 6 -->
+    <line x1="90" y1="222" x2="290" y2="222" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="95" y="210" font-size="10.3">6 · JoystickPad onMove(y,-x)</text>
+    <text x="95" y="236" font-size="10" fill-opacity=".7">up to every 100ms (THROTTLE_MS)</text>
+
+    <rect x="220" y="250" width="320" height="58" rx="7" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="380" y="270" text-anchor="middle" font-size="10" font-family="var(--font-mono)">linear·mult·maxLinear, angular·mult·maxAngular</text>
+    <text x="380" y="286" text-anchor="middle" font-size="9.5" fill-opacity=".75">scaled by Settings sliders AND the robot's real</text>
+    <text x="380" y="300" text-anchor="middle" font-size="9.5" fill-opacity=".75">reported max velocity from the health check</text>
+
+    <!-- step 7/8 -->
+    <line x1="300" y1="326" x2="510" y2="326" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="305" y="320" font-size="10.3">7 · sendJoystick(linear, angular)</text>
+
+    <line x1="520" y1="354" x2="720" y2="354" style="stroke:var(--accent);stroke-width:1.5" marker-end="url(#m11a)"/>
+    <text x="330" y="348" font-size="9.8" font-family="var(--font-mono)" style="fill:var(--accent)">8 · &#123;"type":"joystick","seq":7,"data":&#123;"linear":0.42,"angular":-0.1&#125;&#125;</text>
+
+    <!-- step 9 -->
+    <line x1="90" y1="386" x2="290" y2="386" stroke="currentColor" stroke-width="1.3" marker-end="url(#m11)"/>
+    <text x="95" y="380" font-size="10.3">9 · onStop() → handleStop()</text>
+    <line x1="300" y1="402" x2="720" y2="402" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#m11)"/>
+    <text x="330" y="414" font-size="9.8" fill-opacity=".75">sends &#123;linear:0, angular:0&#125;</text>
+
+    <!-- step 10 -->
+    <line x1="90" y1="448" x2="290" y2="448" style="stroke:var(--danger);stroke-width:1.6" marker-end="url(#m11d)"/>
+    <text x="95" y="442" font-size="10.3" style="fill:var(--danger)">10 · EstopButton tap → handleEstopEngage()</text>
+
+    <line x1="300" y1="472" x2="720" y2="472" style="stroke:var(--danger);stroke-width:1.6" marker-end="url(#m11d)"/>
+    <text x="330" y="466" font-size="9.8" font-family="var(--font-mono)" style="fill:var(--danger)">&#123;"type":"estop","data":&#123;"engaged":true&#125;&#125;</text>
+
+    <line x1="720" y1="498" x2="300" y2="498" style="stroke:var(--danger);stroke-width:1.6" marker-end="url(#m11d)"/>
+    <text x="330" y="512" font-size="9.8" font-family="var(--font-mono)" style="fill:var(--danger)">estop_ack &#123;"engaged":true&#125; — server's authoritative state</text>
+
+    <rect x="140" y="528" width="320" height="34" rx="7" fill="none" style="stroke:var(--danger);stroke-width:1.2"/>
+    <text x="300" y="550" text-anchor="middle" font-size="9.8" style="fill:var(--danger)">button locked "engaged" until ack; tap again to release</text>
+
+    <!-- step 11 -->
+    <line x1="720" y1="596" x2="530" y2="596" stroke="currentColor" stroke-width="1.3" marker-end="url(#m11)"/>
+    <text x="330" y="590" font-size="10.3">11 · unexpected close() event</text>
+    <rect x="300" y="610" width="420" height="46" rx="7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <text x="510" y="630" text-anchor="middle" font-size="10" fill-opacity=".8">reconnect after fixed 2000ms, up to 5 attempts —</text>
+    <text x="510" y="645" text-anchor="middle" font-size="10" fill-opacity=".8">never after a terminal state (robot_offline/preempted/revoked)</text>
+
+    <!-- step 12 -->
+    <line x1="90" y1="692" x2="290" y2="692" stroke="currentColor" stroke-width="1.3" marker-end="url(#m11)"/>
+    <text x="95" y="686" font-size="10.3">12 · unmount / backgrounded</text>
+    <line x1="300" y1="710" x2="510" y2="710" stroke="currentColor" stroke-width="1.4" marker-end="url(#m11)"/>
+    <text x="310" y="704" font-size="10.3">ControlSessionClient.close()</text>
+
+    <rect x="140" y="740" width="540" height="58" rx="8" style="stroke:var(--danger);stroke-width:1.5;fill:var(--danger-soft)"/>
+    <text x="410" y="762" text-anchor="middle" font-size="10.3" font-weight="700" style="fill:var(--danger)">backgroundSafety.ts races this same close() with an</text>
+    <text x="410" y="780" text-anchor="middle" font-size="10.3" font-weight="700" style="fill:var(--danger)">immediate sendEstopImmediate() first — see the safety callout in (d)</text>
+
+    <text x="410" y="830" text-anchor="middle" font-size="10.3" fill-opacity=".7">Resuming (step 5d): ControlPage listens for "resume" / visibilitychange→visible</text>
+    <text x="410" y="846" text-anchor="middle" font-size="10.3" fill-opacity=".7">and forces a fresh connection attempt — otherwise the UI would stay "Disconnected."</text>
+  </svg>
+  <figcaption>The full teleop pipeline, numbered to match the steps below. Health (black), connection setup with its subprotocol-auth detail (amber), and the e-stop path (red) are visually distinguished because each has different safety and reconnect implications.</figcaption>
+</figure>
+
+<ol class="flow-steps">
+  <li><code>ControlPage.tsx</code> calls <code>useGetRobotHealthQuery(robotId, { pollingInterval: 4000 })</code> — polls <code>GET /robots/:id/health</code> every 4 seconds, forever (even once connected), so a robot going offline mid-session is still reflected.</li>
+  <li>While <code>health.healthy !== true</code>, <code>HealthGate.tsx</code> is rendered instead of any controls — "Checking robot status…", "Robot offline" (if <code>checks.link.ok === false</code>, in which case the ROS check is not even meaningful and is hidden), or "Couldn't reach the robot" (hard request error), with a manual "Check again" retry button.</li>
+  <li>Once <code>health.healthy === true</code>, <code>sessionActive</code> becomes <code>true</code>, and <code>useControlSession(robotId, sessionActive, retrySignal)</code> opens a <code>ControlSessionClient</code>:
+    <div class="code-wrap"><pre><code>const url = `${wsBaseUrl}/ws/control?robotId=${robotId}`;
+const ws = new WebSocket(url, ["bearer", token]);</code></pre></div>
+    The access token rides the <strong><code>Sec-WebSocket-Protocol</code> subprotocol</strong> (<code>["bearer", token]</code>) rather than a header or query string, because a WebSocket handshake can't carry a custom <code>Authorization</code> header and a token must never be put in a URL (logs, proxies, etc. could leak it).</li>
+  <li>On successful connect, the server is expected to send a <code>session</code> frame (<code>{"type":"session","state":"ready"}</code>). States <code>robot_offline</code>/<code>preempted</code>/<code>revoked</code> are treated as <strong>terminal</strong> — the client stops auto-reconnecting and shows a dedicated message + manual "Try reconnecting" button (<code>ControlPage</code>'s <code>terminalSessionState</code> branch).</li>
+  <li>Once the session is <code>"open"</code>, the UI shows the joystick (<code>JoystickPad</code>) and e-stop (<code>EstopButton</code>) side-by-side, positioned for one-handed thumb reach.</li>
+  <li><strong>Dragging the joystick:</strong> <code>react-joystick-component</code> fires <code>move({x, y})</code> up to every 100ms (<code>THROTTLE_MS</code>). <code>JoystickPad.handleMove</code> converts stick position to robot velocity:
+    <div class="code-wrap"><pre><code>onMove(y, -x); // forward/back -> linear; left/right -> angular (ROS REP-103 sign convention)</code></pre></div>
+  </li>
+  <li><code>ControlPage.handleMove(linear, angular)</code> scales these against <strong>both</strong> the user's own Settings sensitivity sliders <em>and</em> the robot's real reported velocity envelope from the health check (<code>health.checks.ros.maxLinear/maxAngular</code> — so full stick deflection always maps to this specific robot's actual max speed, not a guessed constant):
+    <div class="code-wrap"><pre><code>sendJoystick(linear * linearMultiplier * maxLinear, angular * angularMultiplier * maxAngular);</code></pre></div>
+  </li>
+  <li><code>sendJoystick</code> (from <code>useControlSession</code>) increments a monotonic sequence number and sends:
+    <div class="code-wrap"><pre><code>{ "type": "joystick", "seq": 7, "data": { "linear": 0.42, "angular": -0.1 } }</code></pre></div>
+  </li>
+  <li>Releasing the stick fires <code>onStop</code> → <code>handleStop()</code> → sends <code>{linear: 0, angular: 0}</code>.</li>
+  <li><strong>Emergency stop:</strong> tapping <code>EstopButton</code> calls <code>handleEstopEngage()</code> → <code>sendEstop(true)</code> → <code>{"type":"estop","data":{"engaged":true}}</code>. The button is visually locked into "engaged" state (a hand icon, "Tap to resume") until the server confirms via an <code>estop_ack</code> frame (<code>{"type":"estop_ack","engaged":true}</code>), which <code>ControlPage</code>'s effect listens for and syncs into local <code>estopEngaged</code> state — so the UI reflects the server's authoritative state, not just local optimism. Releasing calls <code>sendEstop(false)</code>.</li>
+  <li><strong>Disconnection/reconnection:</strong> if the socket drops unexpectedly (not terminal), <code>onclose</code> schedules a reconnect after a fixed 2000ms, up to 5 attempts, then gives up and reports <code>"closed"</code>. <code>ControlPage</code> shows this status in a colored badge (live/busy/down tones) with text like "Connecting…", "Reconnecting…", "Disconnected".</li>
+  <li><strong>Leaving the screen / backgrounding:</strong> unmounting <code>ControlPage</code> (e.g. switching tabs) or the OS backgrounding the app (<code>backgroundSafety.ts</code>, flow (d)) both tear the session down via <code>ControlSessionClient.close()</code>.</li>
+</ol>
+</section>
+
+<section id="cross">
+<h2>6. Cross-component interaction</h2>
+<figure class="diagram">
+  <svg viewBox="0 0 680 260" role="img" aria-label="Cross-component interaction: AndroidApp only ever talks to PlatformServer, over REST for most calls and a dedicated WebSocket for ws control, with the WebSocket auth carried in the Sec-WebSocket-Protocol subprotocol header rather than a query string. A dashed crossed-out line shows AndroidApp never reaching RobotServer directly; PlatformServer alone relays teleop sessions on to RobotServer.">
+    <defs><marker id="m12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="30" y="100" width="190" height="60" rx="9" style="stroke:var(--accent);stroke-width:2" fill="none"/>
+    <text x="125" y="126" text-anchor="middle" font-weight="700" style="fill:var(--accent)">AndroidApp</text>
+    <text x="125" y="144" text-anchor="middle" font-size="10" style="fill:var(--accent)">you are here</text>
+
+    <rect x="280" y="100" width="190" height="60" rx="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <text x="375" y="126" text-anchor="middle" font-weight="600">PlatformServer</text>
+    <text x="375" y="144" text-anchor="middle" font-size="10" fill-opacity=".7">REST + /ws/control</text>
+
+    <rect x="500" y="100" width="170" height="60" rx="9" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 4" opacity=".55"/>
+    <text x="585" y="126" text-anchor="middle" font-weight="600" opacity=".6">RobotServer</text>
+    <text x="585" y="144" text-anchor="middle" font-size="10" opacity=".55">never reached directly</text>
+
+    <line x1="220" y1="118" x2="278" y2="118" style="stroke:var(--accent);stroke-width:1.8" marker-end="url(#m12)"/>
+    <text x="225" y="108" font-size="9.8" style="fill:var(--accent)">HTTP: Bearer + X-Client: mobile</text>
+
+    <line x1="220" y1="142" x2="278" y2="142" style="stroke:var(--accent);stroke-width:1.8" marker-end="url(#m12)"/>
+    <text x="225" y="158" font-size="9.8" style="fill:var(--accent)">WS: Sec-WebSocket-Protocol ["bearer", token]</text>
+
+    <line x1="470" y1="130" x2="498" y2="130" stroke="currentColor" stroke-width="1.3" marker-end="url(#m12)"/>
+    <text x="440" y="118" font-size="9.5" fill-opacity=".7">relay</text>
+
+    <line x1="125" y1="160" x2="555" y2="210" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 5" opacity=".65"/>
+    <line x1="80" y1="190" x2="130" y2="220" stroke="currentColor" stroke-width="1.6" opacity=".65"/>
+    <line x1="80" y1="220" x2="130" y2="190" stroke="currentColor" stroke-width="1.6" opacity=".65"/>
+    <text x="300" y="230" text-anchor="middle" font-size="10" fill-opacity=".7">no direct connection — ever</text>
+  </svg>
+  <figcaption>AndroidApp's entire network surface is PlatformServer. The crossed-out dashed line marks the connection that never exists: PlatformServer alone is the thing that relays a teleop session on to the robot's RobotServer.</figcaption>
+</figure>
+<ul>
+  <li><strong>Base URL / auth:</strong> every HTTP call goes through <code>src/app/baseApi.ts</code>'s <code>fetchBaseQuery</code>, whose <code>baseUrl</code> is <code>import.meta.env.VITE_API_BASE_URL</code> (e.g. <code>https://platform-server.autonav.in/api</code>). Every request gets an <code>Authorization: Bearer &lt;token&gt;</code> header sourced from <code>tokenStore.getAccessToken()</code>, plus <code>X-Client: mobile</code> so PlatformServer returns fresh tokens in the JSON response body on auth endpoints (not just via <code>Set-Cookie</code>).</li>
+  <li><strong>WebSocket base URL</strong> is a <em>separate</em> env var, <code>VITE_WS_BASE_URL</code> (e.g. <code>wss://platform-server.autonav.in</code>), deliberately not derived by string-replacing <code>http</code>→<code>ws</code> on the API URL at runtime, because the API base includes an <code>/api</code> path suffix the WS endpoint does not use.</li>
+  <li><strong>This app never talks to RobotServer directly.</strong> Per the README and every control-related comment in the code, all traffic — REST and WebSocket alike — goes to <strong>PlatformServer</strong>, which (per the system context) is itself the thing that relays teleop sessions between this app and the robot's own RobotServer. From this app's point of view, RobotServer is entirely opaque; the only clue it exists is that <code>RobotHealth.checks.ros</code> and <code>checks.link</code> describe RobotServer/robot-side state that PlatformServer is relaying through.</li>
+  <li><strong>Protocol alignment:</strong> <code>controlSession.protocol.ts</code> is explicitly commented as a hand-kept mirror of "PlatformServer's <code>src/modules/control/controlSession.protocol.ts</code>," and <code>control.types.ts</code>'s <code>RobotHealth</code> shape is explicitly a mirror of PlatformServer's <code>robotHealth.dto.ts</code>. The frame shapes, state machine (<code>ready</code>/<code>robot_offline</code>/<code>preempted</code>/<code>revoked</code>), and subprotocol-based auth scheme are all consistent with a server deliberately designed to pair with exactly this client.</li>
+  <li><strong>Google OAuth audience:</strong> <code>VITE_GOOGLE_WEB_CLIENT_ID</code> must be the same <strong>web</strong> OAuth client ID PlatformServer's <code>verifyGoogleIdToken</code> checks as the token's audience — this holds even though the sign-in itself happens through Android's native Credential Manager, because a <em>separate</em> Android OAuth client (registered against this app's package name + signing-key SHA-1) only needs to exist in Google Cloud Console to authorize the native sign-in UI; it's never referenced in app code.</li>
+</ul>
+</section>
+
+<section id="running">
+<h2>7. Running &amp; developing locally + building the Android app</h2>
+
+<h3>Web-layer development (fastest inner loop)</h3>
+<div class="code-wrap"><pre><code>npm install
+cp .env.example .env   # fill in VITE_API_BASE_URL, VITE_WS_BASE_URL, VITE_GOOGLE_WEB_CLIENT_ID
+npm run dev             # Vite dev server on port 5190, runnable in a desktop browser</code></pre></div>
+<p>Running via <code>npm run dev</code> in a plain browser works for almost everything <em>except</em> the native-only pieces (Google Sign-In's native picker, secure storage, hardware back button) — those code paths are all guarded to no-op outside <code>Capacitor.isNativePlatform()</code>.</p>
+<p>Other scripts: <code>npm run build</code> (<code>tsc -b &amp;&amp; vite build</code> — type-checks then bundles to <code>dist/</code>), <code>npm run typecheck</code> (<code>tsc -b --noEmit</code>), <code>npm run lint</code> (ESLint over <code>src/**/*.{ts,tsx}</code>), <code>npm run preview</code> (serves the built <code>dist/</code> locally).</p>
+
+<h3>Why building the Android app is a two-step process</h3>
+<p>Unlike a pure web app, shipping a change here is <strong>always two separate steps</strong>, because the native Android project ships a <em>copy</em> of the built web bundle inside it (<code>android/app/src/main/assets/public/</code>) rather than loading it live from a server.</p>
+<figure class="diagram">
+  <svg viewBox="0 0 680 160" role="img" aria-label="Two-step build process: step one, npm run build produces the dist folder of web assets. Step two, npx cap sync android copies dist into the native Android project's assets/public folder and regenerates the Capacitor config and plugin manifest inside it. A web-only edit that skips step two will not appear in the installed app because the old bundle is still inside the native project.">
+    <defs><marker id="m13" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <rect x="20" y="20" width="260" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <text x="150" y="44" text-anchor="middle" font-weight="600" font-size="11.5">1 · npm run build</text>
+    <text x="150" y="62" text-anchor="middle" font-size="10" fill-opacity=".75">produces/updates dist/</text>
+
+    <line x1="280" y1="50" x2="330" y2="50" stroke="currentColor" stroke-width="1.6" marker-end="url(#m13)"/>
+
+    <rect x="330" y="20" width="330" height="60" rx="8" style="stroke:var(--accent);stroke-width:1.6" fill="none"/>
+    <text x="495" y="44" text-anchor="middle" font-weight="600" font-size="11.5" style="fill:var(--accent)">2 · npx cap sync android</text>
+    <text x="495" y="62" text-anchor="middle" font-size="10" style="fill:var(--accent)">copies dist/ into android/.../assets/public/</text>
+
+    <text x="340" y="110" font-size="10.5" fill-opacity=".75">Skipping step 2: a saved .tsx edit will not appear in the</text>
+    <text x="340" y="126" font-size="10.5" fill-opacity=".75">installed app — the old bundle is still sitting in assets/public/.</text>
+  </svg>
+  <figcaption>There is no single <code>npm run build</code> that ships a change — the web bundle and the native shell are built and synced as two distinct steps.</figcaption>
+</figure>
+<ol class="flow-steps">
+  <li><strong>Build the web assets:</strong> <code>npm run build</code> — produces/updates <code>dist/</code>.</li>
+  <li><strong>Sync into the native shell:</strong> <code>npx cap sync android</code> — copies <code>dist/</code> into <code>android/app/src/main/assets/public/</code> and regenerates <code>capacitor.config.json</code>/<code>capacitor.plugins.json</code> inside the native project from <code>capacitor.config.ts</code> and the installed Capacitor plugin packages.</li>
+</ol>
+<p>A web-only change (edit a <code>.tsx</code> file) that skips step 2 will <strong>not</strong> appear in the installed Android app — the old bundle is still sitting inside <code>android/app/src/main/assets/public/</code> until a sync happens.</p>
+
+<h3>Building and installing the APK</h3>
+<div class="code-wrap"><pre><code>npm run build
+npx cap sync android
+cd android && ./gradlew assembleDebug
+# -&gt; android/app/build/outputs/apk/debug/app-debug.apk
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk</code></pre></div>
+<p><code>npx cap run android</code> does build+sync+install+launch in one step onto a connected device/emulator. Live log streaming: <code>adb logcat --pid=$(adb shell pidof -s in.autonav.app) -v time</code>.</p>
+<p>Alternatively, <code>android/</code> can be opened directly in <strong>Android Studio</strong> (the standard Android IDE) for building/running/debugging the native shell, after the web <code>dist/</code> has been synced in at least once.</p>
+<p><strong>Gradle/JDK requirement:</strong> Gradle (the Android build tool) must run under <strong>JDK 21</strong> specifically — this is pinned via <code>org.gradle.java.home</code> in <code>android/gradle.properties</code>, independent of whatever Java the invoking shell defaults to, because Android Gradle Plugin 8.x fails outright under newer JDKs (e.g. JDK 25) with <code>Unsupported class file major version 69</code>.</p>
+
+<h3>Google Sign-In one-time setup</h3>
+<p>A <strong>native Android OAuth client</strong> must be registered in Google Cloud Console (same project as the web client used for <code>VITE_GOOGLE_WEB_CLIENT_ID</code>), bound to this app's package (<code>in.autonav.app</code>) and the signing key's SHA-1 fingerprint:</p>
+<div class="code-wrap"><pre><code>keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android</code></pre></div>
+<p>A second Android OAuth client must be registered for a release-signed build's SHA-1 once that keystore exists. Critically, the <code>clientId</code> actually passed in app code (<code>GoogleSignIn.initialize()</code>) is <strong>always the web client ID</strong>, never the Android one — the Android client's only job is to exist in Google Cloud Console so the native sign-in flow is authorized.</p>
+
+<h3>Environment variables summary</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Var</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>VITE_API_BASE_URL</code></td><td>PlatformServer REST base (e.g. <code>https://platform-server.autonav.in/api</code>). Use the dev machine's LAN IP, not <code>localhost</code>, when testing on a physical device unless using a reverse-proxy domain.</td></tr>
+<tr><td><code>VITE_WS_BASE_URL</code></td><td>PlatformServer WebSocket origin for <code>/ws/control</code> (e.g. <code>wss://platform-server.autonav.in</code>).</td></tr>
+<tr><td><code>VITE_GOOGLE_WEB_CLIENT_ID</code></td><td>Google OAuth <strong>web</strong> client ID — used both by the native sign-in plugin's <code>initialize()</code> and must match PlatformServer's verification audience.</td></tr>
+</tbody>
+</table>
+</div>
+<p>No Dockerfile exists for this app (it's a phone app, not a server), unlike RobotServer/RobotApp which do have Dockerfiles for their containerized deployments.</p>
+</section>
+
+<section id="gotchas">
+<h2>8. Gotchas &amp; things a new developer must know</h2>
+
+<div class="callout gotcha">
+  <h4>Build sync</h4>
+  <p>A code change isn't "live" until synced. Forgetting <code>npx cap sync android</code> after <code>npm run build</code> is the single most common way to think a fix shipped when the installed app is still running the old bundle (§7).</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>Backgrounding kills the control session — on purpose</h4>
+  <p><code>backgroundSafety.ts</code> deliberately e-stops and <strong>terminally</strong> closes any open WebSocket the instant the app is backgrounded/hidden — this is a safety feature, not a bug, but it means switching apps mid-drive (even briefly, e.g. to answer a phone call) always requires reconnecting afterward. <code>ControlPage.tsx</code> has a matching <code>resume</code>/<code>visibilitychange</code> listener that auto-retries the connection when the app comes back to the foreground — if that listener is ever removed or broken, users would get permanently stuck on "Disconnected" until manually leaving and returning to the Control tab. See the full safety callout in §5(d).</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>The hardware Back button is intentionally rewired</h4>
+  <p>It goes through React Router's history (<code>router.navigate(-1)</code>), not the WebView's native page history. Adding a new route or a new in-app navigation pattern should be checked against this — an unexpected <code>canGoBack</code> value could either trap the user (back does nothing when they expect it to) or exit the app unexpectedly (back exits when they expected in-app navigation).</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>Only one native permission is declared</h4>
+  <p>Android manifest declares only <code>INTERNET</code> as a permission. No camera, location, storage, or notification permissions are requested — any future feature needing one of those must add it to <code>android/app/src/main/AndroidManifest.xml</code> explicitly.</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>Network security config is build-variant-specific</h4>
+  <p><code>android/app/src/main/res/xml/network_security_config.xml</code> (used by release and any build without its own override) blocks all cleartext (plain HTTP) traffic — only HTTPS/WSS is allowed. <code>android/app/src/debug/res/xml/network_security_config.xml</code> overrides this for debug builds to permit cleartext, specifically so local dev against a plain-HTTP LAN backend works. If a debug build is ever suspiciously unable to reach a plain-<code>http://</code> dev backend, or a release build needs to be checked for <em>not</em> allowing cleartext, these two files are where to look. <code>capacitor.config.ts</code> has matching logic (<code>allowMixedContent</code>, conditionally forcing <code>androidScheme: "http"</code>) computed automatically from whether <code>.env</code>'s <code>VITE_API_BASE_URL</code> starts with <code>http://</code> — don't hand-toggle these away from that derivation.</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>Tokens are never persisted in plain storage</h4>
+  <p>Only the Keystore-backed Secure Storage plugin holds the refresh token; the access token never touches disk at all. Any future feature that touches credentials must go through <code>tokenStore.ts</code>, not through <code>src/native/preferences.ts</code> (which is explicitly documented as "never used for credentials").</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>Porting a feature from PlatformApp needs real adaptation, not a blind copy</h4>
+  <ul style="margin:.4rem 0 0">
+    <li>PlatformApp's Google sign-in is a browser redirect; this app's is a native Credential Manager call (<code>src/native/googleSignIn.ts</code> + <code>@capawesome/capacitor-google-sign-in</code>). Don't copy PlatformApp's redirect-handling code here.</li>
+    <li>PlatformApp relies on cookies for session identity; this app cannot — it must always carry <code>Authorization: Bearer &lt;token&gt;</code> and the <code>X-Client: mobile</code> header explicitly (<code>baseApi.ts</code>).</li>
+    <li>PlatformApp's dashboard silently defaults to the user's first robot; this app's <code>RobotSelectionProvider</code>/<code>RobotRequiredRoute</code> deliberately never do that once a user has more than one robot, since this app is about to arm a specific physical robot for motion.</li>
+    <li>PlatformApp uses a desktop sidebar; this app uses a bottom tab bar (<code>HomeShell.tsx</code>) — a ported page's navigation chrome needs to be rebuilt, not copy-pasted.</li>
+    <li>This app has no persisted theme toggle (<code>darkMode: "media"</code>, follows the OS setting automatically) whereas PlatformApp has its own theme state — don't assume a <code>ThemeProvider</code> exists here.</li>
+    <li>Any UI screen ported over should account for <code>env(safe-area-inset-*)</code> (notches/status bars/gesture bars) — handled globally in <code>src/styles/tailwind.css</code>'s <code>body</code> padding and exposed as Tailwind spacing tokens (<code>safe-top</code>/<code>safe-bottom</code>/etc.) in <code>tailwind.config.ts</code>; PlatformApp, being a plain browser page, has no equivalent need.</li>
+  </ul>
+</div>
+
+<div class="callout gotcha">
+  <h4>Placeholder/incomplete features</h4>
+  <p><code>AnalyticsPlaceholderPage.tsx</code> is a literal "This feature is coming in a future milestone" placeholder — there is no analytics implementation to extend, only a page to replace outright. The Settings page's "Robot"/"Switch robot" card only renders at all when <code>robots.length &gt; 1</code>, so it's easy to miss during single-robot testing.</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>No TODO/FIXME comments exist in src/</h4>
+  <p>As of this read, the codebase's few caveats are instead documented inline as explanatory comments (e.g. the safety-net framing in <code>backgroundSafety.ts</code>, the hand-synced protocol/DTO mirrors in <code>control.types.ts</code>/<code>controlSession.protocol.ts</code>, and the hand-synced Tailwind brand palette in <code>tailwind.config.ts</code>) — worth reading those comments directly since they record real architectural decisions and known manual-sync obligations rather than being throwaway notes.</p>
+</div>
+
+<div class="callout gotcha">
+  <h4>Strict TypeScript is on</h4>
+  <p><code>tsconfig.app.json</code>: <code>strict</code>, <code>noUnusedLocals</code>, <code>noUnusedParameters</code>, <code>noFallthroughCasesInSwitch</code> — <code>npm run build</code> will fail on unused variables/parameters, not just type errors.</p>
+</div>
+
+<p class="foot">AutoNav internal onboarding doc &middot; sourced from a full read of the AndroidApp codebase &middot; sibling docs cover PlatformServer, RobotServer, RobotApp and PlatformApp</p>
+</section>
+
+</div>
+
+</body></html>

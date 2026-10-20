@@ -1,0 +1,1491 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PlatformApp</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ----------------------------------------------------------------------
+   Design plan
+   Layout: single reading column (doc-site convention) under a compact
+   header that carries the 5-node system map; sections run top-to-bottom
+   in report order, each anchored for the TOC; diagrams and tables get
+   their own horizontal-scroll lanes so the page body never scrolls sideways.
+   Color: violet/purple accent (PlatformApp's slot among 5 coordinated docs),
+   a warm-neutral violet-tinted grey for surfaces, independent muted-grey
+   tokens for legacy/dead-code so it reads as visually "quieter" than live docs.
+   Type: Manrope (display/headings) + IBM Plex Sans (body) + IBM Plex Mono
+   (code, schema snippets, diagram labels, file paths).
+   ------------------------------------------------------------------- */
+:root{
+  --bg:#faf9fd;
+  --bg-raised:#ffffff;
+  --bg-sunken:#f1eef9;
+  --fg:#231f2e;
+  --fg-muted:#6b6478;
+  --border:#e1dcee;
+  --accent:#6d28d9;
+  --accent-strong:#4c1d95;
+  --accent-soft:#ede9fe;
+  --accent-fg:#ffffff;
+  --code-bg:#f5f3fa;
+  --code-fg:#3b2e5a;
+  --warn-bg:#fdf1e4;
+  --warn-border:#c2760f;
+  --warn-fg:#6b3f06;
+  --live:#157a3d;
+  --live-bg:#e4f5ea;
+  --stub:#b45309;
+  --stub-bg:#fdf0dd;
+  --legacy-bg:#f1f0f2;
+  --legacy-fg:#8a8790;
+  --legacy-border:#d7d4da;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15121f;
+    --bg-raised:#1d1930;
+    --bg-sunken:#221d37;
+    --fg:#ece9f5;
+    --fg-muted:#a79fc0;
+    --border:#342c4d;
+    --accent:#a78bfa;
+    --accent-strong:#c9b7fb;
+    --accent-soft:#2c2450;
+    --accent-fg:#1a1333;
+    --code-bg:#1c1830;
+    --code-fg:#dcd4f3;
+    --warn-bg:#2d2311;
+    --warn-border:#d98b1f;
+    --warn-fg:#f3cb8a;
+    --live:#5fd896;
+    --live-bg:#13301f;
+    --stub:#f2b35c;
+    --stub-bg:#332408;
+    --legacy-bg:#1b1a20;
+    --legacy-fg:#817e88;
+    --legacy-border:#353339;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15121f;
+  --bg-raised:#1d1930;
+  --bg-sunken:#221d37;
+  --fg:#ece9f5;
+  --fg-muted:#a79fc0;
+  --border:#342c4d;
+  --accent:#a78bfa;
+  --accent-strong:#c9b7fb;
+  --accent-soft:#2c2450;
+  --accent-fg:#1a1333;
+  --code-bg:#1c1830;
+  --code-fg:#dcd4f3;
+  --warn-bg:#2d2311;
+  --warn-border:#d98b1f;
+  --warn-fg:#f3cb8a;
+  --live:#5fd896;
+  --live-bg:#13301f;
+  --stub:#f2b35c;
+  --stub-bg:#332408;
+  --legacy-bg:#1b1a20;
+  --legacy-fg:#817e88;
+  --legacy-border:#353339;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:'IBM Plex Sans', system-ui, sans-serif;
+  line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+h1,h2,h3,h4{
+  font-family:'Manrope', system-ui, sans-serif;
+  font-weight:800;
+  color:var(--fg);
+  text-wrap:balance;
+  line-height:1.2;
+}
+h1{font-size:2rem;margin:0 0 .35rem;}
+h2{font-size:1.45rem;margin:0 0 .9rem;padding-top:.1rem;}
+h3{font-size:1.1rem;margin:1.5rem 0 .6rem;color:var(--accent-strong);}
+h4{font-size:.95rem;margin:1.1rem 0 .4rem;}
+p{margin:0 0 .9rem;max-width:68ch;}
+a{color:var(--accent-strong);}
+a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+code{
+  font-family:'IBM Plex Mono', monospace;
+  background:var(--code-bg);
+  color:var(--code-fg);
+  padding:.1em .35em;
+  border-radius:4px;
+  font-size:.86em;
+}
+pre{
+  background:var(--code-bg);
+  color:var(--code-fg);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:1rem 1.1rem;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:.82rem;
+  line-height:1.55;
+  overflow-x:auto;
+}
+pre code{background:none;padding:0;border-radius:0;font-size:1em;}
+
+.wrap{max-width:860px;margin:0 auto;padding-block:2.25rem 4rem;}
+
+/* ---- header ---- */
+.page-header{margin-bottom:2.25rem;}
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  font-size:.72rem;
+  color:var(--fg-muted);
+  margin:0 0 .5rem;
+}
+.role-line{font-size:1.08rem;color:var(--fg-muted);max-width:60ch;}
+
+/* ---- TOC ---- */
+.toc{
+  background:var(--bg-raised);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:1.1rem 1.3rem 1.3rem;
+  margin:1.75rem 0 2.5rem;
+}
+.toc p.toc-label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:.72rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--fg-muted);
+  margin:0 0 .75rem;
+}
+.toc ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem .75rem;}
+@media (max-width:560px){.toc ol{grid-template-columns:1fr;}}
+.toc li a{
+  display:flex;gap:.6rem;align-items:baseline;
+  text-decoration:none;color:var(--fg);
+  padding:.4rem .5rem;border-radius:8px;
+  font-size:.92rem;
+}
+.toc li a:hover{background:var(--accent-soft);color:var(--accent-strong);}
+.toc li a .n{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:.82rem;min-width:1.2em;}
+
+section{margin:3rem 0;scroll-margin-top:1rem;}
+section > h2{
+  border-bottom:2px solid var(--border);
+  padding-bottom:.6rem;
+  display:flex; align-items:baseline; gap:.6rem;
+}
+section > h2 .num{
+  font-family:'IBM Plex Mono', monospace;
+  color:var(--accent);
+  font-size:1rem;
+}
+
+/* ---- diagrams ---- */
+figure{margin:1.25rem 0 1.5rem;}
+.diagram-wrap{
+  overflow-x:auto;
+  background:var(--bg-sunken);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1rem;
+}
+.diagram-wrap svg{display:block;max-width:100%;height:auto;min-width:560px;}
+.diagram-wrap.narrow svg{min-width:420px;}
+figcaption{font-size:.84rem;color:var(--fg-muted);margin-top:.6rem;}
+svg text{fill:currentColor;font-family:'IBM Plex Mono', monospace;}
+svg .lbl{font-size:11px;}
+svg .lbl-bold{font-size:11px;font-weight:600;}
+svg .node-title{font-size:12px;font-weight:600;font-family:'Manrope',sans-serif;}
+svg .lane-head{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+
+/* ---- tables ---- */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin:1rem 0 1.5rem;}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:480px;}
+thead th{
+  text-align:left;background:var(--bg-sunken);
+  font-family:'Manrope',sans-serif;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--fg-muted);padding:.65rem .9rem;border-bottom:1px solid var(--border);
+}
+tbody td{padding:.65rem .9rem;border-bottom:1px solid var(--border);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+td code, th code{white-space:nowrap;}
+
+.pill{
+  display:inline-flex;align-items:center;gap:.35rem;
+  padding:.18rem .6rem;border-radius:999px;
+  font-family:'IBM Plex Mono',monospace;font-size:.74rem;font-weight:600;
+  white-space:nowrap;
+}
+.pill.live{background:var(--live-bg);color:var(--live);}
+.pill.stub{background:var(--stub-bg);color:var(--stub);}
+.pill::before{content:"";width:.5em;height:.5em;border-radius:50%;background:currentColor;}
+
+/* ---- cards ---- */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:1.25rem 0;}
+.card{
+  background:var(--bg-raised);border:1px solid var(--border);border-radius:14px;
+  padding:1.1rem 1.2rem;min-width:0;
+}
+.card h4{margin-top:0;color:var(--accent-strong);font-size:1rem;}
+.card p{font-size:.9rem;margin-bottom:.6rem;}
+.card p:last-child{margin-bottom:0;}
+.card .usage{
+  font-size:.84rem;color:var(--fg-muted);border-top:1px dashed var(--border);
+  padding-top:.6rem;margin-top:.6rem;
+}
+.card.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+
+/* ---- disclosure (directory map) ---- */
+details{
+  background:var(--bg-raised);border:1px solid var(--border);border-radius:12px;
+  margin-bottom:.75rem;overflow:hidden;
+}
+summary{
+  cursor:pointer;padding:.85rem 1.1rem;font-family:'Manrope',sans-serif;font-weight:700;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  list-style:none;
+}
+summary::-webkit-details-marker{display:none;}
+summary .path{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent-strong);font-size:.88rem;}
+summary::after{content:"+";font-family:'IBM Plex Mono',monospace;color:var(--fg-muted);font-size:1.1rem;flex-shrink:0;}
+details[open] summary::after{content:"\2212";}
+details > div.body{padding:0 1.1rem 1.1rem;}
+
+details.legacy{
+  background:var(--legacy-bg);border:1px dashed var(--legacy-border);color:var(--legacy-fg);
+}
+details.legacy summary{color:var(--legacy-fg);}
+details.legacy summary .path{color:var(--legacy-fg);}
+details.legacy .tag{
+  font-family:'IBM Plex Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+  background:var(--legacy-border);color:var(--legacy-fg);padding:.2rem .55rem;border-radius:999px;
+}
+details.legacy td, details.legacy th{color:var(--legacy-fg);border-color:var(--legacy-border);}
+details.legacy thead th{background:transparent;}
+
+/* ---- gotcha callouts ---- */
+.gotcha{
+  border-left:4px solid var(--accent);background:var(--accent-soft);
+  border-radius:0 12px 12px 0;padding:1rem 1.2rem;margin:1.25rem 0;
+}
+.gotcha h4{margin:0 0 .4rem;color:var(--accent-strong);}
+.gotcha p{font-size:.92rem;margin-bottom:0;}
+.gotcha.warn{border-left-color:var(--warn-border);background:var(--warn-bg);}
+.gotcha.warn h4{color:var(--warn-fg);}
+.gotcha.warn p{color:var(--warn-fg);}
+
+.minor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:.8rem;margin:1.25rem 0;}
+.minor{
+  background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;
+  padding:.8rem 1rem;font-size:.87rem;
+}
+.minor .idx{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:700;margin-right:.3rem;}
+
+.step-list{padding-left:1.3rem;margin:0 0 1rem;}
+.step-list li{margin-bottom:.4rem;font-size:.93rem;}
+.step-list.sub{margin-top:.3rem;margin-bottom:1rem;}
+
+hr.div{border:none;border-top:1px solid var(--border);margin:2.5rem 0;}
+
+.flow-block{
+  background:var(--bg-raised);border:1px solid var(--border);border-radius:16px;
+  padding:1.4rem 1.5rem 1.6rem;margin-bottom:1.75rem;
+}
+.flow-block h3{margin-top:0;}
+.flow-trigger{
+  font-size:.85rem;color:var(--fg-muted);margin:-.3rem 0 1rem;
+  font-family:'IBM Plex Mono',monospace;
+}
+.flow-trigger b{color:var(--fg);font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+
+footer.page-footer{
+  margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);
+  color:var(--fg-muted);font-size:.82rem;
+}
+</style>
+
+<div class="wrap">
+
+<header class="page-header">
+  <p class="eyebrow">AutoNav &middot; 1 of 5 sub-projects</p>
+  <h1>PlatformApp</h1>
+  <p class="role-line">The cloud dashboard for users and admins — the website where people sign up, request access to a robot, and where admins run the fleet.</p>
+
+  <div class="diagram-wrap narrow">
+    <figure>
+      <svg viewBox="0 0 640 440" role="img" aria-label="System map: PlatformApp and AndroidApp both talk only to PlatformServer over HTTPS with httpOnly cookies; PlatformServer bridges over VPN to each robot's RobotServer; RobotServer serves the on-robot RobotApp. PlatformApp never talks to RobotServer or RobotApp directly. PlatformApp is marked you are here.">
+        <defs>
+          <marker id="sm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- PlatformApp (you are here) -->
+        <rect x="20" y="20" width="190" height="60" rx="10" fill="var(--accent)" stroke="var(--accent-strong)" stroke-width="1.5"/>
+        <text x="115" y="45" text-anchor="middle" class="node-title" fill="var(--accent-fg)">PlatformApp</text>
+        <text x="115" y="62" text-anchor="middle" class="lbl" fill="var(--accent-fg)">web dashboard (cloud)</text>
+        <text x="115" y="14" text-anchor="middle" class="lbl-bold" fill="currentColor">YOU ARE HERE ▾</text>
+
+        <!-- AndroidApp -->
+        <rect x="430" y="20" width="190" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="525" y="45" text-anchor="middle" class="node-title">AndroidApp</text>
+        <text x="525" y="62" text-anchor="middle" class="lbl">mobile (has teleop)</text>
+
+        <!-- PlatformServer -->
+        <rect x="225" y="170" width="190" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="320" y="195" text-anchor="middle" class="node-title">PlatformServer</text>
+        <text x="320" y="212" text-anchor="middle" class="lbl">cloud/VPN backend + MongoDB</text>
+
+        <!-- RobotServer -->
+        <rect x="225" y="300" width="190" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="320" y="325" text-anchor="middle" class="node-title">RobotServer</text>
+        <text x="320" y="342" text-anchor="middle" class="lbl">on-robot, bridges ROS2</text>
+
+        <!-- RobotApp -->
+        <rect x="225" y="365" width="190" height="55" rx="10" fill="none" stroke="currentColor" stroke-width="1.3" transform="translate(0,15)"/>
+        <text x="320" y="395" text-anchor="middle" class="node-title" transform="translate(0,15)">RobotApp</text>
+        <text x="320" y="412" text-anchor="middle" class="lbl" transform="translate(0,15)">on-robot touchscreen UI</text>
+
+        <!-- arrows -->
+        <line x1="115" y1="80" x2="300" y2="168" stroke="currentColor" stroke-width="1.3" marker-end="url(#sm-arrow)"/>
+        <text x="150" y="130" class="lbl">HTTPS + httpOnly cookies</text>
+
+        <line x1="525" y1="80" x2="345" y2="168" stroke="currentColor" stroke-width="1.3" marker-end="url(#sm-arrow)"/>
+        <text x="420" y="130" class="lbl">HTTPS + httpOnly cookies</text>
+
+        <line x1="320" y1="230" x2="320" y2="298" stroke="currentColor" stroke-width="1.3" marker-end="url(#sm-arrow)"/>
+        <text x="330" y="268" class="lbl">bridges ROS2 (VPN)</text>
+
+        <line x1="320" y1="360" x2="320" y2="378" stroke="currentColor" stroke-width="1.3" marker-end="url(#sm-arrow)"/>
+        <text x="330" y="374" class="lbl">local UI</text>
+      </svg>
+      <figcaption>Where PlatformApp sits: it only ever calls PlatformServer. PlatformServer is the single backend that in turn reaches each robot's RobotServer over the VPN. RobotApp is the robot's own touchscreen, served by that RobotServer. AndroidApp is a sibling client of PlatformServer that already has the joystick/teleop feature PlatformApp doesn't yet.</figcaption>
+    </figure>
+  </div>
+
+  <nav class="toc" aria-label="Table of contents">
+    <p class="toc-label">On this page</p>
+    <ol>
+      <li><a href="#purpose"><span class="n">01</span> Purpose &amp; Role in the System</a></li>
+      <li><a href="#stack"><span class="n">02</span> Tech Stack Explained</a></li>
+      <li><a href="#files"><span class="n">03</span> Directory &amp; File Map</a></li>
+      <li><a href="#architecture"><span class="n">04</span> Architecture Layers &amp; Patterns</a></li>
+      <li><a href="#flows"><span class="n">05</span> Key Flows</a></li>
+      <li><a href="#interop"><span class="n">06</span> Cross-Component Interaction</a></li>
+      <li><a href="#running"><span class="n">07</span> Running &amp; Developing Locally</a></li>
+      <li><a href="#gotchas"><span class="n">08</span> Gotchas</a></li>
+    </ol>
+  </nav>
+</header>
+
+<!-- ================================================================ -->
+<section id="purpose">
+  <h2><span class="num">01</span> Purpose &amp; Role in the System</h2>
+
+  <p><strong>PlatformApp</strong> is the web "operator dashboard" for AutoNav — a website (not an app you install) that regular users and admins open in a browser to:</p>
+  <ul class="step-list">
+    <li>Sign up / log in (email+password, or "Continue with Google")</li>
+    <li>Request access to a specific robot (by typing in a robot ID printed on the robot)</li>
+    <li>See which robot(s) they've been granted, and switch between robots if they have more than one</li>
+    <li>(Admins only) approve/reject pending access requests, provision new robots, and manage which users are linked to which robots</li>
+    <li>(Future) operate/monitor a robot — mapping, navigation, analytics, documentation — these screens currently exist only as "coming soon" placeholders (see Section 08)</li>
+  </ul>
+
+  <p>It is one of five Node.js/TypeScript sub-projects in AutoNav. Concretely:</p>
+  <ul class="step-list">
+    <li><strong>PlatformApp never talks to a robot directly.</strong> It only ever calls <strong>PlatformServer</strong> (the cloud/VPN backend) over HTTPS. PlatformServer is the single source of truth for accounts, the robot fleet registry, auth, and approval workflows, and it's also the component that would broker any live robot data to a browser in the future.</li>
+    <li>A robot's own local touchscreen UI is a <em>different</em> app (<strong>RobotApp</strong>), served by that robot's own on-board <strong>RobotServer</strong> — PlatformApp has no code path to it.</li>
+    <li><strong>AndroidApp</strong> is a sibling mobile client that shares many of the same patterns (feature folders, RTK Query, Zod schemas) but is a separate Capacitor-wrapped app, not part of PlatformApp.</li>
+  </ul>
+
+  <p>In short: PlatformApp is the "front door + fleet admin console" of AutoNav, PlatformServer is its only backend, and actual robot control/telemetry is explicitly out of scope today (per the README: <em>"it never calls a robot's RobotServer directly"</em>).</p>
+</section>
+
+<!-- ================================================================ -->
+<section id="stack">
+  <h2><span class="num">02</span> Tech Stack Explained</h2>
+  <p>Plain-English explanations come first, followed by exactly how/where AutoNav uses the package.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>React / React DOM</h4>
+      <p>A library for building UIs out of reusable "components" — JavaScript functions that return a description of some HTML. The UI re-renders automatically whenever the data it depends on changes, instead of you manually editing the DOM.</p>
+      <p class="usage">The entire UI (every <code>.tsx</code> file in <code>src/</code>) is built as React components. <code>src/main.tsx</code> mounts the root component into the page's <code>&lt;div id="root"&gt;</code>.</p>
+    </div>
+    <div class="card">
+      <h4>TypeScript</h4>
+      <p>A superset of JavaScript that adds optional type annotations ("this function takes a string and returns a number") checked <em>before</em> the code runs, catching a large class of bugs at build/edit time instead of in the browser.</p>
+      <p class="usage">Every source file is <code>.ts</code>/<code>.tsx</code>. Types live in files like <code>auth.types.ts</code>. <code>npm run build</code> runs <code>tsc -b</code> first, so type errors fail the build.</p>
+    </div>
+    <div class="card">
+      <h4>Vite</h4>
+      <p>A fast frontend build tool/dev server. It serves source files to the browser almost instantly during development and produces an optimized production bundle for deployment.</p>
+      <p class="usage">Configured in <code>vite.config.ts</code>. <code>npm run dev</code> starts the dev server (port 5175 — see the doc-drift gotcha). This project was migrated off Create React App, which is unmaintained.</p>
+    </div>
+    <div class="card featured">
+      <h4>React Router</h4>
+      <p>Maps URL paths (<code>/login</code>, <code>/admin/users</code>) to which React component should be shown, without a full page reload — a "single-page app" router.</p>
+      <p class="usage"><code>src/router/index.tsx</code> defines the whole route tree via <code>createBrowserRouter</code>. "Route guard" wrapper components (Section 04) decide whether a route is actually allowed to render.</p>
+    </div>
+  </div>
+
+  <h3>Redux Toolkit &amp; RTK Query — the part most worth slowing down for</h3>
+  <p><strong>Redux</strong> is a pattern for holding an app's shared state in one central, predictable "store" object, updated only through well-defined actions, instead of scattering state across many components. <strong>Redux Toolkit (RTK)</strong> is the modern, boilerplate-reduced way to write Redux. In this app the store holds almost nothing <em>except</em> the RTK Query cache below — there is deliberately no hand-written slice for "current user," because that would risk going out of sync (see Gotcha 6).</p>
+
+  <p><strong>RTK Query</strong> is a data-fetching layer built on top of Redux specifically for talking to a backend API. Instead of manually calling <code>fetch()</code> and writing <code>useState</code>/<code>useEffect</code> to track loading/error/data yourself, you declare "endpoints" once and RTK Query gives you a React hook (e.g. <code>useGetMeQuery()</code>) that automatically fetches, caches, de-duplicates concurrent requests, and refetches when told to.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>"Slice"</h4>
+      <p><code>src/app/baseApi.ts</code> defines the shared <code>baseApi</code> — the one RTK Query "base" that every feature attaches to. Each feature then calls <code>baseApi.injectEndpoints(...)</code> to add its own piece: <code>authApi.ts</code>, <code>adminApi.ts</code>, <code>robotAccessApi.ts</code>. Think of a slice as "this feature's own corner of the shared API client."</p>
+    </div>
+    <div class="card">
+      <h4>Queries vs. mutations</h4>
+      <p>A <strong>query</strong> reads data — <code>getMe</code>, <code>listAllRobots</code>. A <strong>mutation</strong> writes data — <code>login</code>, <code>approveRequest</code>, <code>createRobot</code>. Queries auto-fetch on mount; mutations you trigger yourself (on submit, on click).</p>
+    </div>
+    <div class="card">
+      <h4>Cache invalidation</h4>
+      <p>An endpoint can be tagged (e.g. <code>"Me"</code>), and a mutation can declare <code>invalidatesTags: ["Me"]</code> — "anything cached under tag <code>Me</code> is now stale, refetch it." Approving a request invalidates <code>AdminRobotAccessRequests</code> and <code>AdminRobots</code> so both admin lists refresh themselves automatically.</p>
+    </div>
+  </div>
+
+  <p><strong>Why RTK Query over plain <code>fetch</code>:</strong> it removes the need for manual loading/error state and de-dupes identical in-flight requests — and, critically here, <code>useAuth()</code> (<code>src/features/auth/useAuth.ts</code>) treats RTK Query's cache for <code>GET /users/me</code> as the <strong>single source of truth for "who is logged in,"</strong> rather than duplicating that into a separate Redux slice that could drift out of sync after login/logout/refresh.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Zod + React Hook Form</h4>
+      <p><strong>Zod</strong> is a schema/validation library: you describe the "shape" a piece of data must have (e.g. "email must be valid, password ≥ 8 chars"), and Zod both validates data at runtime <em>and</em> lets TypeScript infer a matching type automatically, so the rule and the type can't drift apart. <strong>React Hook Form</strong> manages form field values, touched/dirty state, and validation errors efficiently; <code>@hookform/resolvers</code> is the small adapter that lets it use a Zod schema as its validation rules.</p>
+      <p class="usage">Every form has a matching <code>*.schemas.ts</code> file (<code>auth.schemas.ts</code>, <code>admin.schemas.ts</code>), explicitly commented as mirroring PlatformServer's own validation. Every form component calls <code>useForm({ resolver: zodResolver(someSchema) })</code> then spreads <code>register("fieldName")</code> onto each input — this replaced earlier manual <code>useState</code> wiring.</p>
+    </div>
+    <div class="card">
+      <h4>Tailwind CSS</h4>
+      <p>A "utility-first" CSS framework: instead of writing custom CSS classes, you compose a look directly in markup from small pre-defined classes like <code>flex</code>, <code>rounded-xl</code>, <code>dark:bg-slate-900</code>.</p>
+      <p class="usage"><code>tailwind.config.ts</code> defines a custom <code>brand</code> palette and the Inter font, and sets <code>darkMode: "class"</code> (toggled by a class on <code>&lt;html&gt;</code>, not just OS preference). Virtually every component's <code>className</code> is Tailwind utilities.</p>
+    </div>
+  </div>
+
+  <h3>Theming system (<code>src/app/theme/</code>)</h3>
+  <ul class="step-list">
+    <li><code>theme.context.ts</code> defines a React <strong>Context</strong> (<code>ThemeContext</code>) — a mechanism for sharing a value (<code>{ theme, toggleTheme }</code>) with any descendant component without manually passing it down through every layer of props ("prop drilling").</li>
+    <li><code>ThemeProvider.tsx</code> actually owns the theme state: initializes from <code>localStorage</code> (falling back to OS <code>prefers-color-scheme</code>), toggles the <code>dark</code> class on <code>&lt;html&gt;</code> (which Tailwind's <code>darkMode: "class"</code> reads), and persists the choice back to <code>localStorage</code> on every change.</li>
+    <li><code>index.html</code> contains a small inline <code>&lt;script&gt;</code> that runs <em>before</em> React even loads, reading the same key and adding the <code>dark</code> class immediately — avoiding a "flash of the wrong theme" on first paint.</li>
+    <li><code>src/components/ui/ThemeToggle.tsx</code> is the sun/moon button that calls <code>toggleTheme()</code>.</li>
+  </ul>
+
+  <h3>Supporting libraries</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Package</th><th>What it is / why it's here</th></tr></thead>
+      <tbody>
+        <tr><td><code>react-redux</code></td><td>The official glue library that lets React components read from and dispatch to a Redux store. <code>src/main.tsx</code> wraps the app in <code>&lt;Provider store={store}&gt;</code>.</td></tr>
+        <tr><td><code>framer-motion</code></td><td>An animation library — declare "animate from this state to that state" and it interpolates. Used for the decorative animated background on auth screens: <code>src/components/ui/AuthShell.tsx</code> (drifting color blobs, rotating gradient halo, rising particles, card entrance animation).</td></tr>
+        <tr><td><code>lucide-react</code></td><td>Ready-made SVG icon components (<code>&lt;Sparkles /&gt;</code>, <code>&lt;Bot /&gt;</code>, <code>&lt;Construction /&gt;</code>). Used for sidebar nav icons, page headers, and the placeholder-page icon.</td></tr>
+        <tr><td><code>vitest</code> + <code>@testing-library/react</code> + <code>user-event</code> + <code>jsdom</code> + <code>jest-dom</code></td><td>Vitest is a Jest-like test runner built for Vite. React Testing Library renders a component and interacts with it the way a user would (click, type, query by visible text) instead of poking at internals. jsdom fakes a browser in Node; jest-dom adds readable assertions like <code>.toBeInTheDocument()</code>.</td></tr>
+        <tr><td><code>eslint</code> (+ <code>@typescript-eslint</code>, hooks/refresh plugins)</td><td>Static analysis that flags likely bugs and style issues without running the code. Explicitly excludes <code>src/legacy-robot-ui</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="files">
+  <h2><span class="num">02.5</span> Directory &amp; File Map</h2>
+  <p>From <code>find src -type f</code>, grouped by folder. Open a group to see every file in it.</p>
+
+  <details open>
+    <summary><span>src/ <em>(root)</em></span><span class="path">main.tsx · App.tsx · vite-env.d.ts</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>main.tsx</code></td><td>Entry point: mounts <code>&lt;App /&gt;</code> into the DOM, wrapped in Redux's <code>&lt;Provider&gt;</code>.</td></tr>
+          <tr><td><code>App.tsx</code></td><td>Top-level component: wraps the router in <code>&lt;ThemeProvider&gt;</code>.</td></tr>
+          <tr><td><code>vite-env.d.ts</code></td><td>TypeScript ambient types for Vite's <code>import.meta.env</code> (declares <code>VITE_API_BASE_URL</code>).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/app/</span><span class="path">global wiring — store, API client, cross-cutting contexts</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>store.ts</code></td><td>Creates the single Redux store; its only reducer is the RTK Query cache.</td></tr>
+          <tr><td><code>baseApi.ts</code></td><td>The shared RTK Query "base" API: base URL, cookie-based auth, silent-401-refresh wrapper, list of cache tag names.</td></tr>
+          <tr><td><code>apiError.ts</code></td><td><code>getApiErrorMessage()</code> helper — extracts a human-readable error message from an RTK Query error object.</td></tr>
+          <tr><td><code>robotSelection/robotSelection.context.ts</code></td><td>React Context definition for "which robot is currently selected."</td></tr>
+          <tr><td><code>robotSelection/RobotSelectionProvider.tsx</code></td><td>Provider: derives/persists the selected robot per logged-in user via <code>localStorage</code>.</td></tr>
+          <tr><td><code>robotSelection/useSelectedRobot.ts</code></td><td>Hook: returns the selected robot's full object plus the list of all the user's robots.</td></tr>
+          <tr><td><code>theme/theme.context.ts</code></td><td>React Context + <code>useTheme()</code> hook for light/dark mode.</td></tr>
+          <tr><td><code>theme/ThemeProvider.tsx</code></td><td>Provider: owns theme state, persists to <code>localStorage</code>, toggles the <code>dark</code> class.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/components/ui/</span><span class="path">shared, feature-agnostic building blocks</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>AuthShell.tsx</code></td><td>Animated gradient/particle backdrop wrapper used by every pre-login page.</td></tr>
+          <tr><td><code>Button.tsx</code></td><td>Styled <code>&lt;button&gt;</code> with variants (primary/secondary/danger/ghost) and a loading spinner state.</td></tr>
+          <tr><td><code>Card.tsx</code></td><td>Generic rounded/bordered/blurred panel container.</td></tr>
+          <tr><td><code>Input.tsx</code></td><td>Labeled text input with error-message display.</td></tr>
+          <tr><td><code>PasswordInput.tsx</code></td><td>Like <code>Input</code> but with a show/hide-password eye toggle.</td></tr>
+          <tr><td><code>PlaceholderPage.tsx</code></td><td>Generic "this feature is coming in a future milestone" screen.</td></tr>
+          <tr><td><code>Spinner.tsx</code></td><td><code>FullPageSpinner</code> — centered full-screen loading spinner.</td></tr>
+          <tr><td><code>ThemeToggle.tsx</code></td><td>Sun/moon button that calls <code>useTheme().toggleTheme()</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/router/</span><span class="path">route tree + access-control guards</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>index.tsx</code></td><td>Defines every route and which guard wraps it.</td></tr>
+          <tr><td><code>PublicRoute.tsx</code></td><td>Guard: redirects <em>away</em> from auth pages if already logged in.</td></tr>
+          <tr><td><code>ProtectedRoute.tsx</code></td><td>Guard: redirects to <code>/login</code> if not logged in.</td></tr>
+          <tr><td><code>AdminRoute.tsx</code></td><td>Guard: <code>ProtectedRoute</code> + redirects non-admins to <code>/</code>.</td></tr>
+          <tr><td><code>RobotRequiredRoute.tsx</code></td><td>Guard: <code>ProtectedRoute</code> + redirects robot-less non-admin users to <code>/request-access</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/features/auth/</span><span class="path">signup / login / password / session</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>authApi.ts</code></td><td>RTK Query endpoints: <code>getMe</code>, <code>signup</code>, <code>login</code>, <code>logout</code>, <code>setPassword</code>, <code>forgotPassword</code>, <code>verifyOtp</code>, <code>resetPassword</code>; plus <code>googleLoginUrl()</code>.</td></tr>
+          <tr><td><code>auth.schemas.ts</code></td><td>Zod validation schemas for every auth form, mirroring PlatformServer's validation.</td></tr>
+          <tr><td><code>auth.types.ts</code></td><td>Types: <code>CurrentUser</code>, <code>RobotSummary</code>, <code>UserRole</code>, <code>SignupRequest</code>, <code>LoginRequest</code>.</td></tr>
+          <tr><td><code>useAuth.ts</code></td><td>Derives <code>{status, user, isAdmin, hasRobot}</code> purely from the <code>getMe</code> RTK Query cache.</td></tr>
+          <tr><td><code>components/GoogleAuthButton.tsx</code></td><td>"Continue with Google" link (plain <code>&lt;a href&gt;</code> to PlatformServer's OAuth start endpoint).</td></tr>
+          <tr><td><code>components/LoginForm.tsx</code></td><td>Email/password login form.</td></tr>
+          <tr><td><code>components/LoginForm.test.tsx</code></td><td>Vitest/RTL tests for <code>LoginForm</code> (validation errors, typing).</td></tr>
+          <tr><td><code>components/SetPasswordForm.tsx</code></td><td>Lets a Google-only account add a local password.</td></tr>
+          <tr><td><code>components/SignupForm.tsx</code></td><td>Name/email/password signup form.</td></tr>
+          <tr><td><code>pages/LoginPage.tsx</code></td><td>Full login screen (form + Google button + links).</td></tr>
+          <tr><td><code>pages/SignupPage.tsx</code></td><td>Full signup screen.</td></tr>
+          <tr><td><code>pages/OAuthCallbackPage.tsx</code></td><td>Landing page after Google OAuth redirect; re-fetches <code>/me</code> then routes onward.</td></tr>
+          <tr><td><code>pages/ForgotPasswordPage.tsx</code></td><td>3-step reset-password wizard (email → OTP → new password).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/features/robot-access/</span><span class="path">requesting access to a robot</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>robotAccessApi.ts</code></td><td>Endpoints: <code>lookupRobot</code>, <code>listMyRobotAccessRequests</code>, <code>createRobotAccessRequest</code>.</td></tr>
+          <tr><td><code>robotAccess.types.ts</code></td><td><code>RobotAccessRequest</code>, <code>RobotOption</code> types.</td></tr>
+          <tr><td><code>components/RequestStatusBanner.tsx</code></td><td>Shows "pending review" / "rejected: reason" banners.</td></tr>
+          <tr><td><code>pages/RequestAccessPage.tsx</code></td><td>Full flow: type robot ID → verify → submit request → shown to robot-less users.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/features/admin/</span><span class="path">fleet / user / request management (admin-only)</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>adminApi.ts</code></td><td>Endpoints for pending requests, approve/reject, robots CRUD, users list/role, robot↔user assignment grant/revoke/update-access.</td></tr>
+          <tr><td><code>admin.schemas.ts</code></td><td>Zod schema for the "add a robot" form.</td></tr>
+          <tr><td><code>admin.types.ts</code></td><td><code>AdminRobot</code>, <code>AdminUser</code> (= <code>CurrentUser</code>), <code>CreateRobotRequest</code>, <code>RobotAssignment</code>.</td></tr>
+          <tr><td><code>components/AddRobotForm.tsx</code></td><td>Form to provision a new robot.</td></tr>
+          <tr><td><code>components/ApproveRequestDialog.tsx</code></td><td>Modal: pick which robot to assign when approving a request.</td></tr>
+          <tr><td><code>components/ManageRobotUsersDialog.tsx</code></td><td>Modal: assign/unassign users for one robot (robot-centric view).</td></tr>
+          <tr><td><code>components/ManageUserRobotsDialog.tsx</code></td><td>Modal: assign/unassign robots for one user (user-centric view).</td></tr>
+          <tr><td><code>components/RequestsTable.tsx</code></td><td>Table of pending requests with Approve/Reject actions.</td></tr>
+          <tr><td><code>components/RobotsList.tsx</code></td><td>Table of all provisioned robots with Manage/Delete actions.</td></tr>
+          <tr><td><code>components/UsersTable.tsx</code></td><td>Table of all users with promote/demote/manage-robots/delete actions.</td></tr>
+          <tr><td><code>pages/AdminRequestsPage.tsx</code></td><td><code>/admin/requests</code> screen.</td></tr>
+          <tr><td><code>pages/AdminRobotsPage.tsx</code></td><td><code>/admin/robots</code> screen (add-robot form + robots list).</td></tr>
+          <tr><td><code>pages/AdminUsersPage.tsx</code></td><td><code>/admin/users</code> screen.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/features/dashboard/</span><span class="path">logged-in shell + home + stub feature pages</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>layout/DashboardLayout.tsx</code></td><td>Shell: wraps <code>Sidebar</code> + <code>Topbar</code> + an <code>&lt;Outlet&gt;</code> (React Router's "render the matched child route here") inside <code>RobotSelectionProvider</code>.</td></tr>
+          <tr><td><code>layout/Sidebar.tsx</code></td><td>Left nav: Overview/Mapping/Navigation/Analytics/Docs, plus Admin section if <code>isAdmin</code>.</td></tr>
+          <tr><td><code>layout/Topbar.tsx</code></td><td>Top bar: robot-selector dropdown (if multiple robots), user name, theme toggle, logout.</td></tr>
+          <tr><td><code>pages/DashboardHome.tsx</code></td><td><code>/</code> — lists the user's assigned robot(s) + online/offline status; shows <code>SetPasswordForm</code> for Google-only accounts.</td></tr>
+          <tr><td><code>pages/AnalyticsPlaceholderPage.tsx</code></td><td>Stub — "Analytics" coming soon.</td></tr>
+          <tr><td><code>pages/DocumentationPlaceholderPage.tsx</code></td><td>Stub — "Documentation" coming soon.</td></tr>
+          <tr><td><code>pages/MappingPlaceholderPage.tsx</code></td><td>Stub — "Mapping" coming soon; shows the selected robot's name.</td></tr>
+          <tr><td><code>pages/NavigationPlaceholderPage.tsx</code></td><td>Stub — "Navigation" coming soon; shows the selected robot's name.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>src/test/ &amp; src/styles/</span><span class="path">test infrastructure &amp; global CSS</span></summary>
+    <div class="body table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>test/renderWithProviders.tsx</code></td><td>Renders a component wrapped in a fresh Redux store + <code>MemoryRouter</code>, for isolated tests.</td></tr>
+          <tr><td><code>test/setup.ts</code></td><td>Vitest global setup: stubs <code>fetch</code> to return 401 (no real backend in unit tests) and loads <code>jest-dom</code> matchers.</td></tr>
+          <tr><td><code>styles/tailwind.css</code></td><td>Tailwind's three <code>@tailwind</code> directives + custom CSS variables for the gradient background and <code>.glass-card</code>/<code>.glass-panel</code>/<code>.animate-blob</code> helper classes.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="legacy">
+    <summary><span>src/legacy-robot-ui/ <span class="tag">legacy &middot; dead code &middot; reference only</span></span><span class="path">do not build on this</span></summary>
+    <div class="body">
+      <p>This is the <strong>pre-rewrite, plain-JavaScript (not TypeScript) React app</strong> that the whole PlatformApp was before this architecture existed — back when the frontend was built with Create React App and talked directly to a robot. It contains <code>App.js</code>, <code>RobotControl.js</code>, <code>JoystickView.js</code>, <code>MappingPage.js</code>, <code>MapPosePage.js</code>, <code>MapView.js</code>, <code>MappingMap.js</code>, <code>NavigationPage.js</code>, <code>NextPage.js</code>, associated <code>.css</code> files, image assets (<code>robot.png</code>, <code>fusion.png</code>, etc.), and a hardcoded <code>env.js</code> pointing at a specific IP (<code>13.201.73.66:5747</code>) — a relic of directly hitting a robot's bridge server over plain HTTP/WS, which is no longer the architecture (PlatformServer now brokers everything).</p>
+      <p>Per the README and CHANGELOG, these files were <em>"moved verbatim&nbsp;… disconnected from routing. Not ported or deleted — a future milestone decides their fate."</em> It is explicitly excluded from linting (<code>.eslintrc.cjs</code>) and from the test runner (<code>vite.config.ts</code>'s <code>test.exclude</code>).</p>
+    </div>
+  </details>
+</section>
+
+<!-- ================================================================ -->
+<section id="architecture">
+  <h2><span class="num">03</span> Architecture Layers &amp; Patterns</h2>
+
+  <h3>Feature-folder pattern</h3>
+  <p>Instead of organizing code by <em>type</em> (all API calls in one giant folder, all components in another), this app organizes by <strong>feature</strong> — a self-contained slice of functionality. Each feature folder under <code>src/features/&lt;name&gt;/</code> typically contains an API slice, type definitions, Zod schemas, components, and pages. This keeps everything related to "robot access requests," for instance, in one place rather than spread across generic <code>api/</code>, <code>types/</code>, <code>components/</code> folders — a new developer working on one feature rarely needs to touch another feature's files.</p>
+
+  <div class="diagram-wrap">
+    <figure>
+      <svg viewBox="0 0 740 300" role="img" aria-label="Feature folder pattern: pages compose components, components call hooks from the feature's API slice and validate forms against the feature's Zod schemas, and the API slice defines data shapes from the feature's types file and talks to PlatformServer.">
+        <defs>
+          <marker id="ff-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <rect x="10" y="10" width="720" height="280" rx="14" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".5"/>
+        <text x="28" y="34" class="lbl-bold">src/features/&lt;name&gt;/</text>
+
+        <rect x="40" y="55" width="150" height="50" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/>
+        <text x="115" y="85" text-anchor="middle" class="node-title">pages/</text>
+
+        <rect x="40" y="140" width="150" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="115" y="170" text-anchor="middle" class="node-title">components/</text>
+
+        <rect x="260" y="140" width="150" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="335" y="165" text-anchor="middle" class="node-title">&lt;name&gt;.schemas.ts</text>
+        <text x="335" y="180" text-anchor="middle" class="lbl">Zod form rules</text>
+
+        <rect x="260" y="55" width="150" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="335" y="80" text-anchor="middle" class="node-title">&lt;name&gt;.types.ts</text>
+        <text x="335" y="95" text-anchor="middle" class="lbl">TS interfaces</text>
+
+        <rect x="480" y="140" width="150" height="50" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/>
+        <text x="555" y="165" text-anchor="middle" class="node-title">&lt;name&gt;Api.ts</text>
+        <text x="555" y="180" text-anchor="middle" class="lbl">RTK Query endpoints</text>
+
+        <rect x="480" y="230" width="150" height="45" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="555" y="257" text-anchor="middle" class="node-title">PlatformServer</text>
+
+        <!-- arrows -->
+        <line x1="115" y1="105" x2="115" y2="138" stroke="currentColor" marker-end="url(#ff-arrow)"/>
+        <text x="122" y="125" class="lbl">composes</text>
+
+        <line x1="190" y1="165" x2="258" y2="165" stroke="currentColor" marker-end="url(#ff-arrow)"/>
+        <text x="197" y="158" class="lbl">validates with</text>
+
+        <line x1="190" y1="155" x2="478" y2="160" stroke="currentColor" marker-end="url(#ff-arrow)"/>
+        <text x="260" y="145" class="lbl">calls hooks from</text>
+
+        <line x1="555" y1="140" x2="335" y2="105" stroke="currentColor" marker-end="url(#ff-arrow)"/>
+        <text x="420" y="110" class="lbl">typed by</text>
+
+        <line x1="555" y1="190" x2="555" y2="228" stroke="currentColor" marker-end="url(#ff-arrow)"/>
+        <text x="562" y="213" class="lbl">HTTPS</text>
+      </svg>
+      <figcaption>The feature-folder shape: pages compose components; components call the feature's RTK Query hooks and validate forms against its Zod schemas; the API slice's data is shaped by the feature's types file and talks only to PlatformServer.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Route-guarding pattern</h3>
+  <p>React Router (<code>src/router/index.tsx</code>) renders a tree of routes, but several routes need to be conditionally allowed based on <strong>who is logged in and what state they're in</strong>. This is done with small wrapper components ("guards") that each call <code>useAuth()</code> and either render their <code>children</code> or redirect elsewhere via React Router's <code>&lt;Navigate&gt;</code>:</p>
+
+  <pre><code>// src/router/ProtectedRoute.tsx
+export function ProtectedRoute({ children }: PropsWithChildren) {
+  const { status } = useAuth();
+  if (status === "loading") return &lt;FullPageSpinner /&gt;;
+  if (status === "unauthenticated") return &lt;Navigate to="/login" replace /&gt;;
+  return &lt;&gt;{children}&lt;/&gt;;
+}</code></pre>
+
+  <p>The four guards, composed from simplest to most specific:</p>
+  <ul class="step-list">
+    <li><strong>PublicRoute</strong> — for <code>/login</code>, <code>/signup</code>, <code>/forgot-password</code>: if you're <em>already</em> authenticated, bounce you to <code>/</code> instead of showing the login form again.</li>
+    <li><strong>ProtectedRoute</strong> — the base guard: must be authenticated, else bounce to <code>/login</code>.</li>
+    <li><strong>AdminRoute</strong> — wraps <code>ProtectedRoute</code>, additionally requires <code>isAdmin</code>, else bounce to <code>/</code>. Used for <code>/admin/requests</code>, <code>/admin/users</code>, <code>/admin/robots</code>.</li>
+    <li><strong>RobotRequiredRoute</strong> — wraps <code>ProtectedRoute</code>, additionally requires <code>hasRobot</code> <strong>unless</strong> the user <code>isAdmin</code>, else bounce to <code>/request-access</code>. This wraps the entire dashboard shell.</li>
+  </ul>
+  <p>All four derive their decision from the <em>same</em> <code>useAuth()</code> hook, so there is one consistent definition of "logged in," "admin," and "has a robot" used everywhere.</p>
+
+  <div class="diagram-wrap">
+    <figure>
+      <svg viewBox="0 0 760 300" role="img" aria-label="Route guard chain: a request for a page first checks useAuth status - loading shows a spinner, unauthenticated redirects to login. If authenticated, an admin-only route checks isAdmin and redirects non-admins home; a dashboard route checks hasRobot-or-isAdmin and redirects robot-less users to request-access. Otherwise the page renders.">
+        <defs>
+          <marker id="rg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <rect x="10" y="110" width="130" height="50" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/>
+        <text x="75" y="140" text-anchor="middle" class="node-title">Request page</text>
+
+        <polygon points="220,135 275,105 330,135 275,165" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="275" y="124" text-anchor="middle" class="lbl">useAuth()</text>
+        <text x="275" y="139" text-anchor="middle" class="lbl">status?</text>
+
+        <rect x="235" y="10" width="80" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.1"/>
+        <text x="275" y="34" text-anchor="middle" class="lbl">Spinner</text>
+
+        <rect x="235" y="225" width="100" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.1"/>
+        <text x="285" y="249" text-anchor="middle" class="lbl">→ /login</text>
+
+        <polygon points="420,135 480,105 540,135 480,165" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="480" y="124" text-anchor="middle" class="lbl">AdminRoute:</text>
+        <text x="480" y="139" text-anchor="middle" class="lbl">isAdmin?</text>
+
+        <rect x="440" y="225" width="90" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.1"/>
+        <text x="485" y="249" text-anchor="middle" class="lbl">→ /</text>
+
+        <polygon points="560,15 640,-15 720,15 640,45" fill="none" stroke="currentColor" stroke-width="1.2" transform="translate(0,95)"/>
+        <text x="640" y="124" text-anchor="middle" class="lbl">RobotRequiredRoute:</text>
+        <text x="640" y="139" text-anchor="middle" class="lbl">hasRobot or isAdmin?</text>
+
+        <rect x="610" y="225" width="130" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.1"/>
+        <text x="675" y="249" text-anchor="middle" class="lbl">→ /request-access</text>
+
+        <rect x="600" y="10" width="140" height="40" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/>
+        <text x="670" y="34" text-anchor="middle" class="node-title">Render page</text>
+
+        <!-- flow arrows -->
+        <line x1="140" y1="135" x2="218" y2="135" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <line x1="275" y1="105" x2="275" y2="52" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="282" y="80" class="lbl">loading</text>
+        <line x1="275" y1="165" x2="275" y2="223" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="282" y="200" class="lbl">unauthenticated</text>
+        <line x1="330" y1="135" x2="418" y2="135" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="345" y="128" class="lbl">authenticated</text>
+        <line x1="480" y1="165" x2="480" y2="223" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="487" y="200" class="lbl">no</text>
+        <line x1="540" y1="135" x2="615" y2="135" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="548" y="128" class="lbl">yes (admin route)</text>
+        <line x1="675" y1="110" x2="675" y2="52" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="682" y="80" class="lbl">yes</text>
+        <line x1="640" y1="165" x2="675" y2="223" stroke="currentColor" marker-end="url(#rg-arrow)"/>
+        <text x="650" y="200" class="lbl">no</text>
+      </svg>
+      <figcaption>Gating a request to a protected page: every guard reads the same <code>useAuth()</code> status, so "loading," "unauthenticated," "admin," and "has a robot" mean one thing everywhere. AdminRoute and RobotRequiredRoute apply only to the routes that need them.</figcaption>
+    </figure>
+  </div>
+
+  <h3>"Robot selection" context</h3>
+  <p>A single user can be granted access to <strong>more than one robot</strong> (<code>CurrentUser.robots[]</code> — changed from a single <code>CurrentUser.robot</code> specifically to support that). Once inside the dashboard, most screens (and, eventually, any robot-specific API calls) need to know <em>which one</em> of the user's robots is currently "in focus":</p>
+  <ul class="step-list">
+    <li><code>RobotSelectionContext</code> holds <code>{ selectedRobotId, setSelectedRobotId }</code>.</li>
+    <li><code>RobotSelectionProvider</code> wraps the dashboard and: reads the user's robot list from <code>useAuth()</code>; restores a previously-chosen robot from <code>localStorage</code> (keyed per-user-id); falls back to the first robot if the stored choice is no longer valid (e.g. access was revoked); exposes <code>setSelectedRobotId()</code>, persisting back to <code>localStorage</code>.</li>
+    <li><code>useSelectedRobot()</code> is the hook components actually use — it resolves the raw id into the full robot object.</li>
+    <li>Consumers: <code>Topbar.tsx</code> (the switcher dropdown, 2+ robots only), <code>MappingPlaceholderPage.tsx</code> and <code>NavigationPlaceholderPage.tsx</code> (show the selected robot's name — a hint for how future robot-specific screens would scope themselves).</li>
+  </ul>
+  <p>This is the mechanism by which an eventual "Mapping" or "Navigation" screen would know <em>which</em> robot's data/control to request — without it, a multi-robot user would have no way to disambiguate.</p>
+</section>
+
+<!-- ================================================================ -->
+<section id="flows">
+  <h2><span class="num">04</span> Key Flows</h2>
+
+  <!-- (a) App boot -->
+  <div class="flow-block">
+    <h3>(a) App boot &amp; auth hydration</h3>
+    <p class="flow-trigger"><b>Trigger:</b> browser loads the page, any URL.</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 260" role="img" aria-label="App boot sequence: inline script sets theme class, main.tsx renders the Redux Provider and App, App renders ThemeProvider and RouterProvider, the matched route's guard calls useAuth which fires getMe against PlatformServer, and the guard shows a spinner then renders the page or redirects based on the result.">
+          <defs><marker id="a-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="24" class="lane-head">Browser</text>
+          <text x="280" y="24" class="lane-head">PlatformApp</text>
+          <text x="480" y="24" class="lane-head">RTK Query</text>
+          <text x="650" y="24" class="lane-head">PlatformServer</text>
+          <line x1="60" y1="36" x2="60" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="280" y1="36" x2="280" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="480" y1="36" x2="480" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="36" x2="650" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="40" cy="60" r="9" fill="var(--accent)"/><text x="40" y="64" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <text x="55" y="80" class="lbl">index.html inline script sets dark class</text>
+
+          <circle cx="40" cy="105" r="9" fill="var(--accent)"/><text x="40" y="109" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <line x1="60" y1="105" x2="278" y2="105" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="90" y="98" class="lbl">main.tsx renders Provider + App</text>
+
+          <circle cx="260" cy="140" r="9" fill="var(--accent)"/><text x="260" y="144" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <text x="280" y="135" class="lbl">App renders ThemeProvider +</text>
+          <text x="280" y="150" class="lbl">RouterProvider → matches route + guard</text>
+
+          <circle cx="260" cy="180" r="9" fill="var(--accent)"/><text x="260" y="184" text-anchor="middle" class="lbl" fill="var(--accent-fg)">4</text>
+          <line x1="280" y1="180" x2="478" y2="180" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="290" y="173" class="lbl">guard calls useAuth() → useGetMeQuery()</text>
+          <line x1="480" y1="188" x2="648" y2="188" stroke="currentColor" marker-end="url(#a-arrow)"/>
+          <text x="495" y="201" class="lbl">GET /users/me (cookie)</text>
+
+          <circle cx="260" cy="225" r="9" fill="var(--accent)"/><text x="260" y="229" text-anchor="middle" class="lbl" fill="var(--accent-fg)">5</text>
+          <text x="280" y="220" class="lbl">loading → spinner; resolves → guard renders</text>
+          <text x="280" y="235" class="lbl">page or redirects. No separate "check login" step.</text>
+        </svg>
+        <figcaption>Boot sequence: there is no dedicated "check if logged in" step — it's just the natural first fetch of the <code>getMe</code> query, whose result every route guard reads.</figcaption>
+      </figure>
+    </div>
+    <ol class="step-list">
+      <li><code>index.html</code>'s inline <code>&lt;script&gt;</code> runs synchronously, reading <code>localStorage["autonav-theme"]</code> and adding the <code>dark</code> class to <code>&lt;html&gt;</code> if needed (avoids a theme flash).</li>
+      <li><code>src/main.tsx</code> renders <code>&lt;Provider store={store}&gt;&lt;App /&gt;&lt;/Provider&gt;</code> into <code>#root</code>.</li>
+      <li><code>App.tsx</code> renders <code>&lt;ThemeProvider&gt;&lt;RouterProvider router={router} /&gt;&lt;/ThemeProvider&gt;</code> — <code>ThemeProvider</code> re-derives/owns theme state; <code>RouterProvider</code> starts matching the current URL against <code>src/router/index.tsx</code>.</li>
+      <li>Whichever route matches wraps its page in a guard (e.g. <code>ProtectedRoute</code>), which calls <code>useAuth()</code> → <code>useGetMeQuery()</code> → fires <code>GET /users/me</code> against PlatformServer (cookie-based, Section 06).</li>
+      <li>While in flight, <code>status === "loading"</code> shows a <code>FullPageSpinner</code>. Once resolved, the guard either renders the real page or redirects — this <em>is</em> "auth state hydration."</li>
+    </ol>
+  </div>
+
+  <!-- (b) Signup -->
+  <div class="flow-block">
+    <h3>(b) Signup flow</h3>
+    <p class="flow-trigger"><b>Trigger:</b> user submits the signup form on <code>/signup</code>.</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 280" role="img" aria-label="Signup flow: user submits SignupForm, Zod schema validates, on success authApi.signup posts to PlatformServer slash auth slash signup tagged to invalidate Me, response becomes CurrentUser, the form force-refetches getMe since a cached 401 would not auto-retry, then navigates home where RobotRequiredRoute redirects a robotless new signup to request-access.">
+          <defs><marker id="b-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="24" class="lane-head">User</text>
+          <text x="260" y="24" class="lane-head">SignupForm</text>
+          <text x="470" y="24" class="lane-head">authApi</text>
+          <text x="650" y="24" class="lane-head">PlatformServer</text>
+          <line x1="60" y1="36" x2="60" y2="270" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="260" y1="36" x2="260" y2="270" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="470" y1="36" x2="470" y2="270" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="36" x2="650" y2="270" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="60" r="9" fill="var(--accent)"/><text x="60" y="64" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <text x="75" y="55" class="lbl">renders inside AuthShell/Card,</text>
+          <text x="75" y="68" class="lbl">onSuccess navigates to "/"</text>
+
+          <circle cx="60" cy="95" r="9" fill="var(--accent)"/><text x="60" y="99" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <line x1="60" y1="95" x2="258" y2="95" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="80" y="90" class="lbl">submit → validate against signupFormSchema</text>
+
+          <circle cx="260" cy="135" r="9" fill="var(--accent)"/><text x="260" y="139" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <line x1="280" y1="135" x2="648" y2="135" stroke="currentColor" marker-end="url(#b-arrow)"/>
+          <text x="290" y="128" class="lbl">signup(values) → POST /auth/signup (invalidatesTags: Me)</text>
+
+          <circle cx="470" cy="165" r="9" fill="var(--accent)"/><text x="470" y="169" text-anchor="middle" class="lbl" fill="var(--accent-fg)">4</text>
+          <text x="490" y="160" class="lbl">response { user } transformed to CurrentUser</text>
+
+          <circle cx="260" cy="200" r="9" fill="var(--accent)"/><text x="260" y="204" text-anchor="middle" class="lbl" fill="var(--accent-fg)">5</text>
+          <line x1="280" y1="200" x2="648" y2="200" stroke="currentColor" marker-end="url(#b-arrow)" stroke-dasharray="5 3"/>
+          <text x="290" y="193" class="lbl">cached 401 won't auto-retry → force refetchMe().unwrap()</text>
+
+          <circle cx="60" cy="240" r="9" fill="var(--accent)"/><text x="60" y="244" text-anchor="middle" class="lbl" fill="var(--accent-fg)">6</text>
+          <text x="75" y="235" class="lbl">onSuccess() → navigate("/"); RobotRequiredRoute sees</text>
+          <text x="75" y="248" class="lbl">hasRobot=false → redirects to /request-access</text>
+        </svg>
+        <figcaption>A brand-new signup lands on <code>/request-access</code>, not the dashboard, because <code>hasRobot</code> is false until an admin grants access (flow f).</figcaption>
+      </figure>
+    </div>
+    <ol class="step-list">
+      <li><code>SignupPage.tsx</code> renders <code>&lt;SignupForm onSuccess={() =&gt; navigate("/")} /&gt;</code> inside <code>AuthShell</code>/<code>Card</code>.</li>
+      <li><code>SignupForm.tsx</code> uses <code>useForm({ resolver: zodResolver(signupFormSchema) })</code>; on submit, validates first (<code>name</code> 1–100 chars, valid <code>email</code>, <code>password</code> ≥ 8 chars) — if invalid, errors render inline and nothing is sent.</li>
+      <li>On valid submit, <code>signup(values).unwrap()</code> fires <code>POST /auth/signup</code> with <code>SignupRequest</code>. Tagged <code>invalidatesTags: ["Me"]</code>.</li>
+      <li>Response is transformed from <code>{ user: CurrentUser }</code> to just <code>CurrentUser</code>.</li>
+      <li>Because the <em>pre-signup</em> <code>getMe()</code> cache entry was a cached 401 (invalidating a tag doesn't retrigger a query that's errored/cached-401 the same way), the form explicitly calls <code>await refetchMe().unwrap()</code> before calling <code>onSuccess()</code>.</li>
+      <li><code>onSuccess()</code> calls <code>navigate("/")</code>, where <code>RobotRequiredRoute</code> decides (based on the now-populated <code>hasRobot</code>) whether to show the dashboard or redirect to <code>/request-access</code> (a brand-new signup has no robots yet).</li>
+    </ol>
+    <pre><code>interface SignupRequest {
+  email: string;    // valid email
+  password: string; // &ge; 8 chars
+  name: string;     // 1&ndash;100 chars
+}</code></pre>
+  </div>
+
+  <!-- (c) Login incl Google -->
+  <div class="flow-block">
+    <h3>(c) Login flow, including Google OAuth</h3>
+    <p class="flow-trigger"><b>Trigger:</b> user submits the login form, or clicks "Continue with Google," on <code>/login</code>.</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 360" role="img" aria-label="Login flow with two paths. Password path: LoginForm validates then posts to auth login, refetches getMe, navigates; errors surface via getApiErrorMessage. Google path: GoogleAuthButton is a plain link causing a full browser navigation to PlatformServer slash auth slash google, which redirects to Google, sets cookies, and redirects back to the callback page, which refetches getMe and navigates.">
+          <defs><marker id="c-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="22" class="lane-head">User</text>
+          <text x="260" y="22" class="lane-head">PlatformApp</text>
+          <text x="470" y="22" class="lane-head">RTK Query</text>
+          <text x="650" y="22" class="lane-head">PlatformServer</text>
+
+          <text x="10" y="48" class="lbl-bold">Password path</text>
+          <line x1="60" y1="55" x2="60" y2="150" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="260" y1="55" x2="260" y2="150" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="470" y1="55" x2="470" y2="150" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="55" x2="650" y2="150" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="70" r="9" fill="var(--accent)"/><text x="60" y="74" text-anchor="middle" class="lbl" fill="var(--accent-fg)">P1</text>
+          <line x1="60" y1="70" x2="258" y2="70" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="75" y="64" class="lbl">validate (email, non-empty password)</text>
+
+          <circle cx="260" cy="100" r="9" fill="var(--accent)"/><text x="260" y="104" text-anchor="middle" class="lbl" fill="var(--accent-fg)">P2</text>
+          <line x1="280" y1="100" x2="648" y2="100" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="290" y="94" class="lbl">login(values) → POST /auth/login (invalidatesTags: Me)</text>
+
+          <circle cx="260" cy="128" r="9" fill="var(--accent)"/><text x="260" y="132" text-anchor="middle" class="lbl" fill="var(--accent-fg)">P3</text>
+          <text x="280" y="123" class="lbl">refetchMe() same as signup → navigate("/")</text>
+          <text x="280" y="140" class="lbl" fill="var(--fg-muted)">P4: errors surface via getApiErrorMessage(error)</text>
+
+          <text x="10" y="178" class="lbl-bold">Google path</text>
+          <line x1="60" y1="185" x2="60" y2="340" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="260" y1="185" x2="260" y2="340" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="185" x2="650" y2="340" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="205" r="9" fill="var(--accent)"/><text x="60" y="209" text-anchor="middle" class="lbl" fill="var(--accent-fg)">G1</text>
+          <line x1="60" y1="205" x2="258" y2="205" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="75" y="199" class="lbl">clicks &lt;a href={googleLoginUrl()}&gt; — full page nav, not fetch</text>
+
+          <line x1="280" y1="225" x2="648" y2="225" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="290" y="219" class="lbl">browser leaves SPA → GET /auth/google</text>
+
+          <rect x="560" y="245" width="150" height="34" rx="6" fill="none" stroke="currentColor" stroke-dasharray="3 3"/>
+          <text x="635" y="267" text-anchor="middle" class="lbl">PlatformServer ↔ Google</text>
+
+          <line x1="648" y1="295" x2="282" y2="295" stroke="currentColor" marker-end="url(#c-arrow)"/>
+          <text x="400" y="289" class="lbl">302 → /auth/callback (cookies set)</text>
+
+          <circle cx="260" cy="320" r="9" fill="var(--accent)"/><text x="260" y="324" text-anchor="middle" class="lbl" fill="var(--accent-fg)">G2</text>
+          <text x="280" y="315" class="lbl">OAuthCallbackPage mounts → refetch(getMe) → navigate("/")</text>
+          <text x="280" y="332" class="lbl" fill="var(--fg-muted)">or "/login" on failure</text>
+        </svg>
+        <figcaption>Two independent paths converge on the same post-login state: a successful <code>getMe</code> refetch followed by <code>navigate("/")</code>.</figcaption>
+      </figure>
+    </div>
+    <h4>Steps (password)</h4>
+    <ol class="step-list">
+      <li><code>LoginForm</code> validates with <code>loginFormSchema</code> (<code>email</code>, non-empty <code>password</code>).</li>
+      <li><code>login(values).unwrap()</code> → <code>POST /auth/login</code> with <code>LoginRequest { email, password }</code>; mutation tagged <code>invalidatesTags: ["Me"]</code>.</li>
+      <li>Same <code>refetchMe()</code> pattern as signup, then <code>navigate("/")</code>.</li>
+      <li>Any error (wrong password, etc.) surfaces via the mutation's <code>error</code> field through <code>getApiErrorMessage(error)</code>.</li>
+    </ol>
+    <h4>Steps (Google)</h4>
+    <ol class="step-list">
+      <li><code>GoogleAuthButton</code> is literally <code>&lt;a href={googleLoginUrl()}&gt;</code> — <code>googleLoginUrl()</code> returns <code>${'{'}VITE_API_BASE_URL{'}'}/auth/google</code>. Clicking it is a full page navigation, not a fetch — the browser leaves the SPA entirely and goes to PlatformServer, which redirects to Google, handles the OAuth callback itself, sets the auth cookies, and 302-redirects back to PlatformApp's <code>/auth/callback</code>.</li>
+      <li><code>OAuthCallbackPage.tsx</code> mounts, immediately calls <code>refetch()</code> on <code>getMe</code>, and on success navigates to <code>/</code>, or to <code>/login</code> on failure.</li>
+    </ol>
+  </div>
+
+  <!-- (d) Forgot/reset -->
+  <div class="flow-block">
+    <h3>(d) Forgot/reset password flow</h3>
+    <p class="flow-trigger"><b>Trigger:</b> user clicks "Forgot password?" on <code>/login</code>.</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 300" role="img" aria-label="Forgot password wizard: step email validates and posts forgot-password, deliberately vague response moves to step otp; step otp validates a six digit code and posts verify-otp which returns a short-lived reset token held only in component state, moving to step reset; step reset validates new password and confirmation and posts reset-password, moving to step done which tells the user they are logged out everywhere.">
+          <defs><marker id="d-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="22" class="lane-head">User</text>
+          <text x="280" y="22" class="lane-head">ForgotPasswordPage (wizard)</text>
+          <text x="650" y="22" class="lane-head">PlatformServer</text>
+          <line x1="60" y1="34" x2="60" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="280" y1="34" x2="280" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="34" x2="650" y2="290" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="60" r="9" fill="var(--accent)"/><text x="60" y="64" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <text x="75" y="55" class="lbl">step "email": validate, submit</text>
+          <line x1="280" y1="70" x2="648" y2="70" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="290" y="64" class="lbl">POST /auth/forgot-password → vague "if account exists…" (no enumeration)</text>
+
+          <circle cx="60" cy="105" r="9" fill="var(--accent)"/><text x="60" y="109" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <text x="75" y="100" class="lbl">step "otp": enter 6-digit code</text>
+          <line x1="280" y1="115" x2="648" y2="115" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="290" y="109" class="lbl">POST /auth/verify-otp → { resetToken } (held in state only)</text>
+
+          <circle cx="60" cy="150" r="9" fill="var(--accent)"/><text x="60" y="154" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <text x="75" y="145" class="lbl">step "reset": newPassword + confirm</text>
+          <line x1="280" y1="160" x2="648" y2="160" stroke="currentColor" marker-end="url(#d-arrow)"/>
+          <text x="290" y="154" class="lbl">POST /auth/reset-password { resetToken, newPassword }</text>
+
+          <circle cx="280" cy="195" r="9" fill="var(--accent)"/><text x="280" y="199" text-anchor="middle" class="lbl" fill="var(--accent-fg)">✓</text>
+          <text x="295" y="190" class="lbl">step "done": "logged out everywhere" → link to /login</text>
+
+          <rect x="40" y="230" width="640" height="46" rx="8" fill="var(--warn-bg)" stroke="var(--warn-border)"/>
+          <circle cx="60" cy="253" r="9" fill="var(--warn-border)"/><text x="60" y="257" text-anchor="middle" class="lbl" fill="var(--bg)">4</text>
+          <text x="80" y="249" class="lbl" fill="var(--warn-fg)">isSendingOtpRef guard: a useRef blocks a double-click from firing</text>
+          <text x="80" y="264" class="lbl" fill="var(--warn-fg)">two OTP emails before isLoading re-renders (deliberate workaround)</text>
+        </svg>
+        <figcaption>A 3-step local wizard (email → otp → reset) backed by three separate PlatformServer endpoints; the reset token never touches persistent storage.</figcaption>
+      </figure>
+    </div>
+    <ol class="step-list">
+      <li><strong>Step "email":</strong> <code>forgotPasswordFormSchema</code> validates the email; <code>forgotPassword({ email })</code> → <code>POST /auth/forgot-password</code>. On success, moves to step "otp" (the response is intentionally vague — "if an account exists…" — so the UI can't be used to enumerate registered emails).</li>
+      <li><strong>Step "otp":</strong> <code>verifyOtpFormSchema</code> validates a 6-digit code; <code>verifyOtp({ email, otp })</code> → <code>POST /auth/verify-otp</code>, which returns <code>{ resetToken: string }</code> — a short-lived token proving the OTP was correct, stored only in component state (not persisted). Moves to step "reset".</li>
+      <li><strong>Step "reset":</strong> <code>resetPasswordFormSchema</code> validates <code>newPassword</code> (≥ 8 chars) and that it matches <code>confirmPassword</code>; <code>resetPassword({ resetToken, newPassword })</code> → <code>POST /auth/reset-password</code>. Moves to step "done," which tells the user they've been "logged out everywhere" and links back to <code>/login</code>.</li>
+      <li>A <code>useRef</code> guard (<code>isSendingOtpRef</code>) prevents a double-click from firing two OTP emails before RTK Query's <code>isLoading</code> flag has re-rendered — a deliberate workaround since <code>isLoading</code> only updates on the <em>next</em> render.</li>
+    </ol>
+    <pre><code>forgotPasswordFormSchema: { email: string }
+verifyOtpFormSchema:     { email: string; otp: string /* 6 digits */ }
+  // → POST /auth/verify-otp  ⇒  { resetToken: string }
+resetPasswordFormSchema: {
+  newPassword: string;     // &ge; 8 chars
+  confirmPassword: string; // must match newPassword
+}
+  // → POST /auth/reset-password { resetToken, newPassword }</code></pre>
+  </div>
+
+  <!-- (e) Robot access request -->
+  <div class="flow-block">
+    <h3>(e) Robot access request flow</h3>
+    <p class="flow-trigger"><b>Trigger:</b> a logged-in, robot-less, non-admin user is redirected to <code>/request-access</code> by <code>RobotRequiredRoute</code>.</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 260" role="img" aria-label="Robot access request flow: page loads the user's existing requests, user types a robot ID and triggers a lazy lookup query returning a robot option or null, then submits createRobotAccessRequest which invalidates the robot access request tag and refreshes the mine list, leaving the request pending until an admin acts and the user's session is refreshed with the new robot.">
+          <defs><marker id="e-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="22" class="lane-head">User</text>
+          <text x="280" y="22" class="lane-head">RequestAccessPage</text>
+          <text x="470" y="22" class="lane-head">robotAccessApi</text>
+          <text x="650" y="22" class="lane-head">PlatformServer</text>
+          <line x1="60" y1="34" x2="60" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="280" y1="34" x2="280" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="470" y1="34" x2="470" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="34" x2="650" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="280" cy="60" r="9" fill="var(--accent)"/><text x="280" y="64" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <line x1="300" y1="60" x2="648" y2="60" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="310" y="54" class="lbl">useListMyRobotAccessRequestsQuery() → GET /robot-access-requests/mine</text>
+
+          <circle cx="60" cy="95" r="9" fill="var(--accent)"/><text x="60" y="99" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <line x1="60" y1="95" x2="278" y2="95" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="75" y="90" class="lbl">types robot ID, clicks "Verify"</text>
+          <line x1="300" y1="110" x2="648" y2="110" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="310" y="104" class="lbl">useLazyLookupRobotQuery() → GET /robots/lookup/:robotId</text>
+
+          <circle cx="60" cy="150" r="9" fill="var(--accent)"/><text x="60" y="154" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <line x1="60" y1="150" x2="278" y2="150" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="75" y="145" class="lbl">clicks "Request robot access"</text>
+          <line x1="300" y1="165" x2="648" y2="165" stroke="currentColor" marker-end="url(#e-arrow)"/>
+          <text x="310" y="159" class="lbl">createRobotAccessRequest({robotId}) → POST (invalidatesTags: RobotAccessRequest)</text>
+
+          <circle cx="280" cy="200" r="9" fill="var(--accent)"/><text x="280" y="204" text-anchor="middle" class="lbl" fill="var(--accent-fg)">4</text>
+          <text x="300" y="195" class="lbl">request now status: "pending" — shown via RequestStatusBanner</text>
+
+          <circle cx="280" cy="230" r="9" fill="var(--accent)"/><text x="280" y="234" text-anchor="middle" class="lbl" fill="var(--accent-fg)">5</text>
+          <text x="300" y="225" class="lbl">RobotRequiredRoute blocks dashboard entry until an admin approves</text>
+          <text x="300" y="241" class="lbl">(flow f) and getMe's robots[] reflects it on next refetch</text>
+        </svg>
+        <figcaption>The request sits as <code>pending</code> until an admin acts on it — see flow (f1).</figcaption>
+      </figure>
+    </div>
+    <ol class="step-list">
+      <li>Page loads <code>useListMyRobotAccessRequestsQuery()</code> (<code>GET /robot-access-requests/mine</code>) to show any existing pending/rejected requests via <code>RequestStatusBanner</code>.</li>
+      <li>User types a robot ID (the physical ID printed on the robot) and clicks "Verify" → <code>useLazyLookupRobotQuery()</code> fires <code>GET /robots/lookup/:robotId</code> on demand (a "lazy" query is one you trigger imperatively rather than automatically on mount). Returns a minimal, non-admin-safe <code>RobotOption</code> or <code>null</code>.</li>
+      <li>If found and not already pending, clicking "Request robot access" calls <code>createRobotAccessRequest({ robotId: foundRobot.id })</code> → <code>POST /robot-access-requests</code>, tagged <code>invalidatesTags: ["RobotAccessRequest"]</code>, which refreshes the "mine" list to show the new pending request.</li>
+      <li>The request now sits as <code>status: "pending"</code> until an admin acts on it (flow f1).</li>
+      <li><code>RobotRequiredRoute</code> won't let the user into the dashboard until an admin approves a request <em>and</em> <code>getMe</code>'s cache is refreshed (login/refetch) to reflect the new <code>robots[]</code> entry.</li>
+    </ol>
+    <pre><code>interface RobotOption {
+  id: string;
+  robotId: string;
+  name: string;
+  displayName?: string;
+}
+// GET /robots/lookup/:robotId  ⇒  RobotOption | null
+// POST /robot-access-requests { robotId: foundRobot.id }</code></pre>
+  </div>
+
+  <!-- (f1) Admin approval -->
+  <div class="flow-block">
+    <h3>(f1) Admin workflow — approving a request</h3>
+    <p class="flow-trigger"><b>Trigger:</b> an admin visits <code>/admin/requests</code> (gated by <code>AdminRoute</code>).</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 240" role="img" aria-label="Admin approval flow: AdminRequestsPage lists pending requests, approve opens a dialog pre-populated with the requested robot but overridable from all robots excluding retired, confirming posts approve with id and robotId invalidating both the admin requests and admin robots tags so both lists refresh, while reject posts directly with an optional reason and no dialog.">
+          <defs><marker id="f1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="22" class="lane-head">Admin</text>
+          <text x="280" y="22" class="lane-head">RequestsTable / Dialog</text>
+          <text x="470" y="22" class="lane-head">adminApi</text>
+          <text x="650" y="22" class="lane-head">PlatformServer</text>
+          <line x1="60" y1="34" x2="60" y2="230" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="280" y1="34" x2="280" y2="230" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="470" y1="34" x2="470" y2="230" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="34" x2="650" y2="230" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="280" cy="60" r="9" fill="var(--accent)"/><text x="280" y="64" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <line x1="300" y1="60" x2="648" y2="60" stroke="currentColor" marker-end="url(#f1-arrow)"/>
+          <text x="310" y="54" class="lbl">useListPendingRequestsQuery() → GET /admin/robot-access-requests?status=pending</text>
+
+          <circle cx="60" cy="95" r="9" fill="var(--accent)"/><text x="60" y="99" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <text x="75" y="90" class="lbl">clicks "Approve" → ApproveRequestDialog opens,</text>
+          <text x="75" y="103" class="lbl">pre-filled with requested robot, overridable (excludes retired)</text>
+
+          <circle cx="60" cy="140" r="9" fill="var(--accent)"/><text x="60" y="144" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <line x1="80" y1="140" x2="278" y2="140" stroke="currentColor" marker-end="url(#f1-arrow)"/>
+          <text x="90" y="134" class="lbl">confirms</text>
+          <line x1="300" y1="155" x2="648" y2="155" stroke="currentColor" marker-end="url(#f1-arrow)"/>
+          <text x="310" y="149" class="lbl">approveRequest({id, robotId}) → POST .../approve (invalidates AdminRobotAccessRequests, AdminRobots)</text>
+
+          <circle cx="60" cy="195" r="9" fill="var(--accent)"/><text x="60" y="199" text-anchor="middle" class="lbl" fill="var(--accent-fg)">4</text>
+          <text x="75" y="190" class="lbl">or clicks "Reject" directly (no dialog)</text>
+          <line x1="80" y1="205" x2="648" y2="205" stroke="currentColor" marker-end="url(#f1-arrow)" stroke-dasharray="5 3"/>
+          <text x="90" y="220" class="lbl">rejectRequest({id, reason?}) → POST .../reject</text>
+        </svg>
+        <figcaption>Approving refreshes two admin lists at once because the mutation is tagged with both <code>AdminRobotAccessRequests</code> and <code>AdminRobots</code>.</figcaption>
+      </figure>
+    </div>
+    <ol class="step-list">
+      <li><code>AdminRequestsPage.tsx</code> loads <code>useListPendingRequestsQuery()</code> (<code>GET /admin/robot-access-requests?status=pending</code>) and renders <code>RequestsTable</code>.</li>
+      <li>Clicking "Approve" opens <code>ApproveRequestDialog</code>, pre-populated with the robot the user originally requested (defaulted from <code>request.robot?.id</code>), but overridable via a <code>&lt;select&gt;</code> populated from <code>useListAllRobotsQuery()</code> (excluding <code>"retired"</code> robots).</li>
+      <li>Confirming calls <code>approveRequest({ id, robotId })</code> → <code>POST /admin/robot-access-requests/:id/approve</code>, tagged <code>invalidatesTags: ["AdminRobotAccessRequests", "AdminRobots"]</code> — both the pending-requests list and the robots list refresh.</li>
+      <li>Clicking "Reject" directly calls <code>rejectRequest({ id, reason? })</code> → <code>POST /admin/robot-access-requests/:id/reject</code> (no dialog).</li>
+    </ol>
+    <pre><code>// POST /admin/robot-access-requests/:id/approve  { id, robotId }
+//   invalidatesTags: ["AdminRobotAccessRequests", "AdminRobots"]
+// POST /admin/robot-access-requests/:id/reject   { id, reason? }</code></pre>
+  </div>
+
+  <!-- (f2) Admin robot/user management -->
+  <div class="flow-block">
+    <h3>(f2) Admin workflow — robot &amp; user management</h3>
+    <p class="flow-trigger"><b>Trigger:</b> an admin visits <code>/admin/robots</code> or <code>/admin/users</code> (gated by <code>AdminRoute</code>).</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 320" role="img" aria-label="Admin robot and user management: AddRobotForm validates and posts createRobot invalidating AdminRobots, RobotsList shows robots with status badges and a delete action guarded by a confirm dialog; ManageRobotUsersDialog and ManageUserRobotsDialog both list and grant or revoke robot assignments, each assignment carrying hmiAccess and platformAccess flags toggled live; UsersTable additionally lets an admin change roles or delete users, both disabled for the admin's own row.">
+          <defs><marker id="f2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="22" class="lane-head">Admin</text>
+          <text x="280" y="22" class="lane-head">AdminRobotsPage / UsersTable</text>
+          <text x="650" y="22" class="lane-head">PlatformServer</text>
+
+          <text x="10" y="46" class="lbl-bold">Managing robots</text>
+          <line x1="60" y1="54" x2="60" y2="140" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="280" y1="54" x2="280" y2="140" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="54" x2="650" y2="140" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="68" r="9" fill="var(--accent)"/><text x="60" y="72" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <text x="75" y="63" class="lbl">AddRobotForm validates (robotId 3-32 chars, name, vpnHostname)</text>
+          <line x1="280" y1="80" x2="648" y2="80" stroke="currentColor" marker-end="url(#f2-arrow)"/>
+          <text x="290" y="74" class="lbl">createRobot(values) → POST /admin/robots (invalidates AdminRobots)</text>
+
+          <circle cx="60" cy="112" r="9" fill="var(--accent)"/><text x="60" y="116" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <text x="75" y="107" class="lbl">success: "no secret to copy" — robot authenticates by its own device id</text>
+
+          <circle cx="60" cy="135" r="9" fill="var(--accent)"/><text x="60" y="139" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <text x="75" y="130" class="lbl">RobotsList: status badges, "Manage users", "Delete" (window.confirm)</text>
+
+          <text x="10" y="175" class="lbl-bold">Managing user ↔ robot assignments</text>
+          <line x1="60" y1="183" x2="60" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="280" y1="183" x2="280" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="650" y1="183" x2="650" y2="310" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="200" r="9" fill="var(--accent)"/><text x="60" y="204" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <text x="75" y="195" class="lbl">opens ManageRobotUsersDialog (robot-centric) or</text>
+          <text x="75" y="208" class="lbl">ManageUserRobotsDialog (user-centric) — same relation, two views</text>
+
+          <line x1="280" y1="225" x2="648" y2="225" stroke="currentColor" marker-end="url(#f2-arrow)"/>
+          <text x="290" y="219" class="lbl">grantRobotAssignment({userId, robotId, hmiAccess, platformAccess}) → POST</text>
+
+          <circle cx="60" cy="245" r="9" fill="var(--accent)"/><text x="60" y="249" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <line x1="280" y1="255" x2="648" y2="255" stroke="currentColor" marker-end="url(#f2-arrow)"/>
+          <text x="290" y="249" class="lbl">updateRobotAssignmentAccess → PATCH .../access (toggles hmiAccess / platformAccess live)</text>
+
+          <circle cx="60" cy="280" r="9" fill="var(--accent)"/><text x="60" y="284" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <text x="75" y="275" class="lbl">UsersTable: promote/demote (PATCH .../role), delete (DELETE) —</text>
+          <text x="75" y="291" class="lbl">both disabled for the admin's own row (isSelf check)</text>
+        </svg>
+        <figcaption>Two independent flags per assignment — <code>hmiAccess</code> (robot kiosk login) and <code>platformAccess</code> (shows in PlatformApp) — are toggled live and independently.</figcaption>
+      </figure>
+    </div>
+    <h4>Managing robots</h4>
+    <ol class="step-list">
+      <li><code>AdminRobotsPage.tsx</code> shows <code>AddRobotForm</code> + <code>RobotsList</code> side by side.</li>
+      <li><code>AddRobotForm</code> validates with <code>createRobotFormSchema</code> (<code>robotId</code>: 3–32 chars, letters/digits/hyphens only; <code>name</code>; <code>vpnHostname</code>; optional <code>displayName</code>), then <code>createRobot(values)</code> → <code>POST /admin/robots</code>, tagged <code>invalidatesTags: ["AdminRobots"]</code>. On success, shows the created robot's info — the current code says "no secret to copy": the robot authenticates to PlatformServer using its own device id matching <code>robotId</code>, not a generated secret shown here.</li>
+      <li><code>RobotsList</code> shows <code>useListAllRobotsQuery()</code> with status badges (<code>provisioned</code>/<code>active</code>/<code>retired</code>), a "Manage users" button opening <code>ManageRobotUsersDialog</code>, and a "Delete" button (<code>deleteRobot</code>, with a <code>window.confirm</code> guard, tagged to invalidate <code>AdminRobots</code>, <code>AdminUsers</code>, <code>RobotOptions</code>).</li>
+    </ol>
+    <h4>Managing user ↔ robot assignments</h4>
+    <p>(many-to-many, reflected in two dialog components covering the same underlying <code>RobotAssignment</code> relation from each side)</p>
+    <ol class="step-list">
+      <li><code>ManageRobotUsersDialog</code> (opened from <code>RobotsList</code>, robot-centric) and <code>ManageUserRobotsDialog</code> (opened from <code>UsersTable</code>, user-centric) both list current active assignments (<code>useListAssignmentsForRobotQuery</code>/<code>useListAssignmentsForUserQuery</code>) and let the admin grant a new one (<code>grantRobotAssignment({ userId, robotId, hmiAccess, platformAccess })</code> → <code>POST /admin/robot-assignments</code>) or revoke one (<code>revokeRobotAssignment({ id })</code> → <code>POST /admin/robot-assignments/:id/revoke</code>).</li>
+      <li>Each assignment carries two independent boolean flags, toggled live via <code>updateRobotAssignmentAccess</code> (<code>PATCH /admin/robot-assignments/:id/access</code>): <code>hmiAccess</code> — can log into that robot's own on-device RobotApp kiosk (PIN login); <code>platformAccess</code> — shows up in that user's "my robots" list here in PlatformApp.</li>
+      <li><code>AdminUsersPage.tsx</code>/<code>UsersTable.tsx</code> additionally lets an admin promote/demote a user's role (<code>updateUserRole</code> → <code>PATCH /admin/users/:id/role</code>) and delete a user (<code>deleteUser</code> → <code>DELETE /admin/users/:id</code>), both disabled for the admin's own account (<code>isSelf</code> check) to prevent self-lockout.</li>
+    </ol>
+    <pre><code>interface CreateRobotRequest {
+  robotId: string;     // 3&ndash;32 chars, letters/digits/hyphens only
+  name: string;
+  vpnHostname: string;
+  displayName?: string;
+}
+interface RobotAssignment {
+  userId: string;
+  robotId: string;
+  hmiAccess: boolean;      // robot's own on-device kiosk login
+  platformAccess: boolean; // shows up in "my robots" in PlatformApp
+}</code></pre>
+  </div>
+
+  <!-- (g) Dashboard robot selection -->
+  <div class="flow-block">
+    <h3>(g) Dashboard / robot-selection flow</h3>
+    <p class="flow-trigger"><b>Trigger:</b> a robot-having user (or an admin) lands on <code>/</code> after <code>RobotRequiredRoute</code> passes.</p>
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 740 260" role="img" aria-label="Dashboard flow: DashboardLayout wraps Sidebar, Topbar, and the routed child inside RobotSelectionProvider, which reads the user's robots and restores the last choice from localStorage or defaults to the first robot; Topbar renders a dropdown only for two or more robots; DashboardHome lists all robots with status; placeholder pages read the selected robot's name as scaffolding for future scoped API calls, which do not exist yet.">
+          <defs><marker id="g-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <text x="60" y="22" class="lane-head">DashboardLayout</text>
+          <text x="300" y="22" class="lane-head">RobotSelectionProvider</text>
+          <text x="560" y="22" class="lane-head">Topbar / Pages</text>
+          <line x1="60" y1="34" x2="60" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="300" y1="34" x2="300" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+          <line x1="560" y1="34" x2="560" y2="250" stroke="currentColor" stroke-dasharray="3 4" opacity=".4"/>
+
+          <circle cx="60" cy="60" r="9" fill="var(--accent)"/><text x="60" y="64" text-anchor="middle" class="lbl" fill="var(--accent-fg)">1</text>
+          <line x1="80" y1="60" x2="298" y2="60" stroke="currentColor" marker-end="url(#g-arrow)"/>
+          <text x="90" y="54" class="lbl">wraps Sidebar + Topbar + &lt;Outlet&gt; inside Provider</text>
+
+          <circle cx="300" cy="100" r="9" fill="var(--accent)"/><text x="300" y="104" text-anchor="middle" class="lbl" fill="var(--accent-fg)">2</text>
+          <text x="320" y="95" class="lbl">reads user.robots from useAuth(); restores choice from</text>
+          <text x="320" y="110" class="lbl">localStorage (per user id) or defaults to first robot</text>
+
+          <circle cx="560" cy="145" r="9" fill="var(--accent)"/><text x="560" y="149" text-anchor="middle" class="lbl" fill="var(--accent-fg)">3</text>
+          <text x="580" y="140" class="lbl">Topbar: plain text (0-1 robot) or</text>
+          <text x="580" y="153" class="lbl">&lt;select&gt; dropdown (2+ robots) → setSelectedRobotId</text>
+
+          <circle cx="560" cy="185" r="9" fill="var(--accent)"/><text x="560" y="189" text-anchor="middle" class="lbl" fill="var(--accent-fg)">4</text>
+          <text x="580" y="180" class="lbl">DashboardHome lists ALL robots with online/offline badges</text>
+
+          <circle cx="560" cy="220" r="9" fill="var(--accent)"/><text x="560" y="224" text-anchor="middle" class="lbl" fill="var(--accent-fg)">5</text>
+          <text x="580" y="215" class="lbl">Mapping/NavigationPlaceholderPage read useSelectedRobot() —</text>
+          <text x="580" y="230" class="lbl">scaffolding only; scoped API calls don't exist yet</text>
+        </svg>
+        <figcaption>The scaffolding for a future robot-scoped screen already exists (<code>useSelectedRobot()</code>); the data channel it would call does not (Section 06).</figcaption>
+      </figure>
+    </div>
+    <ol class="step-list">
+      <li><code>DashboardLayout.tsx</code> wraps <code>Sidebar</code> + <code>Topbar</code> + the routed child (<code>&lt;Outlet&gt;</code>) inside <code>RobotSelectionProvider</code>.</li>
+      <li><code>RobotSelectionProvider</code> reads <code>user.robots</code> from <code>useAuth()</code>; if the user has exactly one robot, there's effectively nothing to choose; if they have multiple, it restores the last choice from <code>localStorage</code> (or defaults to the first robot).</li>
+      <li><code>Topbar.tsx</code> renders either plain text (0 or 1 robot) or a <code>&lt;select&gt;</code> dropdown (2+ robots) wired to <code>setSelectedRobotId</code>.</li>
+      <li><code>DashboardHome.tsx</code> lists <em>all</em> of the user's robots (not just the selected one) with online/offline badges (<code>robot.status === "online"</code>).</li>
+      <li><code>MappingPlaceholderPage</code>/<code>NavigationPlaceholderPage</code> call <code>useSelectedRobot()</code> and display the selected robot's name — demonstrating the intended pattern: once mapping/navigation are real features, they'd scope their API calls (likely proxied through PlatformServer) to <code>selectedRobot.id</code>/<code>vpnHostname</code>. <strong>This proxying/scoping is not implemented yet</strong> — see Sections 06 and 08.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="interop">
+  <h2><span class="num">05</span> Cross-Component Interaction</h2>
+
+  <h3>Base URL / API client configuration</h3>
+  <ul class="step-list">
+    <li><code>src/app/baseApi.ts</code> creates <code>fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_BASE_URL, credentials: "include" })</code>. <code>fetchBaseQuery</code> is RTK Query's thin wrapper around the browser's native <code>fetch</code>.</li>
+    <li><code>VITE_API_BASE_URL</code> is a Vite environment variable (prefixed <code>VITE_</code> so Vite exposes it to client code) — e.g. <code>.env.example</code> sets it to <code>http://localhost:4000/api</code> for local dev against a locally-run PlatformServer; <code>.env.local</code> points it at <code>https://platform-server.autonav.in/api</code>, the public API domain, so the app works correctly even when loaded through the EC2 nginx dev reverse-proxy rather than straight <code>localhost</code>.</li>
+    <li>In production, PlatformApp is a static build served from its own domain (<code>dashboard.autonav.in</code>) while PlatformServer's API lives on a separate subdomain (<code>platform-server.autonav.in</code>) — cross-origin, hence <code>credentials: "include"</code> being essential and presumably CORS configured server-side.</li>
+  </ul>
+
+  <h3>Auth token storage / attachment</h3>
+  <ul class="step-list">
+    <li><strong>Tokens are never touched by JavaScript in this app.</strong> <code>credentials: "include"</code> tells <code>fetch</code> to send cookies with every cross-origin request; PlatformServer issues the access/refresh JWTs as <strong>httpOnly cookies</strong> (cookies JavaScript cannot read), so there is no <code>localStorage</code>/<code>sessionStorage</code> token to manage or leak via XSS.</li>
+    <li><code>apiError.ts</code>'s helper logic only ever deals with <em>error messages</em> from response bodies, never tokens.</li>
+  </ul>
+
+  <h4>Silent refresh on 401</h4>
+  <pre><code>const baseQueryWithReauth: BaseQueryFn&lt;...&gt; = async (args, api, extraOptions) =&gt; {
+  let result = await rawBaseQuery(args, api, extraOptions);
+  if (result.error?.status === 401) {
+    refreshInFlight ??= refreshAccessToken(api, extraOptions).finally(() =&gt; { refreshInFlight = null; });
+    const refreshed = await refreshInFlight;
+    if (refreshed) result = await rawBaseQuery(args, api, extraOptions);
+  }
+  return result;
+};</code></pre>
+  <p>When any request gets a 401, this wrapper calls <code>POST /auth/refresh</code> exactly once even if several requests 401 concurrently (the module-level <code>refreshInFlight</code> promise is shared), then retries the original request(s) if the refresh succeeded. This is the <em>only</em> place in the frontend that needs to know a refresh mechanism exists — per the source comment: "The frontend never reads the JWTs themselves."</p>
+
+  <div class="diagram-wrap">
+    <figure>
+      <svg viewBox="0 0 700 260" role="img" aria-label="Cross-component interaction: PlatformApp talks only to PlatformServer over HTTPS with httpOnly cookies and a silent refresh-on-401 wrapper. A dashed crossed-out line shows PlatformApp does not talk to RobotServer directly. A side note points to AndroidApp, a sibling client of PlatformServer, as the app that already implements joystick and teleop control, which PlatformApp does not yet.">
+        <defs><marker id="x-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+        <rect x="20" y="30" width="170" height="60" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+        <text x="105" y="55" text-anchor="middle" class="node-title">PlatformApp</text>
+        <text x="105" y="72" text-anchor="middle" class="lbl">(this app)</text>
+
+        <rect x="270" y="30" width="190" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.3"/>
+        <text x="365" y="55" text-anchor="middle" class="node-title">PlatformServer</text>
+        <text x="365" y="72" text-anchor="middle" class="lbl">only backend PlatformApp calls</text>
+
+        <rect x="270" y="170" width="190" height="55" rx="10" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 4" opacity=".7"/>
+        <text x="365" y="193" text-anchor="middle" class="node-title" opacity=".7">RobotServer</text>
+        <text x="365" y="210" text-anchor="middle" class="lbl" opacity=".7">(no code path exists)</text>
+
+        <line x1="190" y1="60" x2="268" y2="60" stroke="currentColor" stroke-width="1.4" marker-end="url(#x-arrow)"/>
+        <text x="200" y="45" class="lbl">HTTPS + httpOnly cookies</text>
+        <text x="200" y="100" class="lbl">silent refresh on 401</text>
+
+        <line x1="130" y1="90" x2="300" y2="168" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2 5" opacity=".6"/>
+        <line x1="110" y1="172" x2="170" y2="100" stroke="currentColor" stroke-width="1.6" opacity=".8"/>
+        <line x1="170" y1="172" x2="110" y2="100" stroke="currentColor" stroke-width="1.6" opacity=".8"/>
+        <text x="60" y="140" class="lbl" opacity=".8">never calls</text>
+        <text x="60" y="153" class="lbl" opacity=".8">directly</text>
+
+        <rect x="500" y="40" width="180" height="70" rx="10" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="3 3"/>
+        <text x="590" y="62" text-anchor="middle" class="node-title">AndroidApp</text>
+        <text x="590" y="78" text-anchor="middle" class="lbl">sibling client of</text>
+        <text x="590" y="92" text-anchor="middle" class="lbl">PlatformServer — HAS teleop</text>
+        <line x1="460" y1="60" x2="498" y2="65" stroke="currentColor" stroke-dasharray="3 3" opacity=".6"/>
+
+        <text x="270" y="250" class="lbl" fill="var(--stub)">Remote-control / teleop: not implemented in PlatformApp yet</text>
+      </svg>
+      <figcaption>PlatformApp's only network relationship is to PlatformServer. It has no code path to RobotServer (crossed lines). AndroidApp, a sibling client, already ships the joystick/teleop feature that PlatformApp has only scaffolding for.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Remote-control / live video / teleop</h3>
+  <p><strong>Not implemented in PlatformApp today.</strong> There is no WebSocket client code anywhere in <code>src/</code> (outside the untouched <code>legacy-robot-ui</code>, which used a raw <code>ws://</code> URL to talk directly to a robot — an abandoned approach). The README is explicit: <em>"Live ROS telemetry/control, if ever surfaced here, would be proxied through PlatformServer … not fetched client-side."</em> The <code>MappingPlaceholderPage</code>/<code>NavigationPlaceholderPage</code> components and their <code>useSelectedRobot()</code> usage are essentially the <em>scaffolding</em> for where that would plug in later (you'd know which robot to target), but the actual data channel doesn't exist yet in this codebase. AndroidApp, PlatformServer's sibling mobile client, is ahead of PlatformApp here: it already has the joystick/teleop control feature implemented.</p>
+</section>
+
+<!-- ================================================================ -->
+<section id="running">
+  <h2><span class="num">06</span> Running &amp; Developing Locally</h2>
+
+  <h3>Scripts (<code>package.json</code>)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>npm run dev</code></td><td>Starts the Vite dev server with Hot Module Reloading (edits appear instantly without a full reload).</td></tr>
+        <tr><td><code>npm run build</code></td><td>Runs <code>tsc -b</code> (type-checks the whole project) then <code>vite build</code> (produces the optimized static site in <code>dist/</code>). The build fails if there are type errors.</td></tr>
+        <tr><td><code>npm run preview</code></td><td>Serves the already-built <code>dist/</code> folder locally, to sanity-check a production build.</td></tr>
+        <tr><td><code>npm run lint</code></td><td>Runs ESLint over <code>src/**/*.{ts,tsx}</code>.</td></tr>
+        <tr><td><code>npm run test</code></td><td>Runs the Vitest suite once (<code>vitest run</code>).</td></tr>
+        <tr><td><code>npm run test:watch</code></td><td>Runs Vitest in watch mode (reruns on file changes).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="gotcha warn">
+    <h4>Doc-drift: the dev server port</h4>
+    <p>The README's "Getting started" snippet says <code>http://localhost:5173</code> (Vite's default). <code>vite.config.ts</code> actually configures port <strong>5175</strong>. Copy-pasting from the README will silently point you at nothing.</p>
+  </div>
+
+  <h3>Dev server details (<code>vite.config.ts</code>)</h3>
+  <ul class="step-list">
+    <li>Listens on <strong>port 5175</strong> (not Vite's usual 5173).</li>
+    <li><code>host: true</code> plus <code>allowedHosts: ["dashboard.autonav.in"]</code> lets the project's EC2 nginx dev reverse-proxy forward <code>Host: dashboard.autonav.in</code> traffic to this local dev server over the VPN. This only affects <code>vite dev</code>; the production container serves a static build instead (no dev server involved).</li>
+    <li>Test config lives in the same file's <code>test</code> block: <code>environment: "jsdom"</code>, <code>globals: true</code> (so <code>describe</code>/<code>it</code>/<code>expect</code> don't need importing), <code>setupFiles: "./src/test/setup.ts"</code>, <code>css: true</code>, and excludes <code>src/legacy-robot-ui</code> (plus the usual <code>node_modules</code>/<code>dist</code>).</li>
+  </ul>
+
+  <h3>Environment variables</h3>
+  <pre><code># .env.example — template
+VITE_API_BASE_URL=http://localhost:4000/api
+
+# .env.local — actual local override used on this machine,
+# points at the public API through the reverse proxy instead of localhost:
+VITE_API_BASE_URL=https://platform-server.autonav.in/api</code></pre>
+  <p>To run fully locally against a locally-run backend instead, copy <code>.env.example</code> to <code>.env.local</code> and point it at your local PlatformServer per the README's "Getting started" section, then run PlatformServer separately.</p>
+
+  <h3>Docker / nginx deployment</h3>
+  <p><code>Dockerfile</code> is a two-stage build:</p>
+  <pre><code># Stage 1 — build (node:20-alpine)
+npm install
+npm run build        # → /app/dist
+
+# Stage 2 — runtime (nginx:alpine)
+#   copies dist/ into nginx's web root
+#   copies nginx.conf over nginx's default site config
+#   EXPOSE 80</code></pre>
+
+  <div class="gotcha warn">
+    <h4>nginx.conf has a stray leftover block</h4>
+    <p><code>nginx.conf</code> is otherwise a minimal static-SPA config: <code>try_files $uri $uri/ /index.html</code> — the standard rule that lets client-side routes like <code>/admin/users</code> survive a hard refresh (React Router handles it after <code>index.html</code> loads, since there's no real server route for them). But the file also carries a <strong>commented-out, apparently stale/experimental proxy <code>server</code> block</strong> (port 5747 → an internal IP <code>172.16.1.2:8000</code>) left in it — dead configuration, not active. Don't assume it does anything in production.</p>
+  </div>
+
+  <p>Actual production deployment (EC2, the <code>dashboard.autonav.in</code> domain, HTTPS termination) is documented outside this repo in <code>AWS/nginx/dashboard.autonav.in.conf</code> and <code>AWS/README.md</code> per the README's pointer — not part of this app's own files.</p>
+
+  <h3>Tests</h3>
+  <p><code>LoginForm.test.tsx</code> is the only test suite present. It uses <code>renderWithProviders</code> (fresh Redux store + <code>MemoryRouter</code>) and asserts: (1) submitting an empty form shows "enter a valid email" and does <em>not</em> call <code>onSuccess</code>; (2) typing into email/password fields actually updates their values.</p>
+  <p><code>src/test/setup.ts</code> stubs the global <code>fetch</code> to always return a 401 <code>Unauthorized</code> JSON body — since every component indirectly mounts <code>useGetMeQuery()</code> via <code>useAuth()</code>, tests need <em>some</em> deterministic fetch response rather than hitting a real (absent) backend. A documented, harmless console-noise caveat: a jsdom/undici <code>AbortSignal</code> identity mismatch logs a stderr warning during tests that doesn't affect results.</p>
+</section>
+
+<!-- ================================================================ -->
+<section id="gotchas">
+  <h2><span class="num">07</span> Gotchas &amp; Things a New Developer Must Know</h2>
+
+  <div class="gotcha">
+    <h4>1 &middot; Four dashboard nav items are placeholder stubs, not real features yet</h4>
+    <p>Mapping, Navigation, Analytics, and Documentation all render the generic <code>PlaceholderPage</code> component with a "This feature is coming in a future milestone" message. Only <strong>Overview</strong> has real content today. Don't assume clicking those sidebar links does anything functional.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nav item</th><th>Route</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Overview</td><td><code>/</code></td><td><span class="pill live">Live</span></td></tr>
+          <tr><td>Mapping</td><td><code>/mapping</code></td><td><span class="pill stub">Placeholder</span></td></tr>
+          <tr><td>Navigation</td><td><code>/navigation</code></td><td><span class="pill stub">Placeholder</span></td></tr>
+          <tr><td>Analytics</td><td><code>/analytics</code></td><td><span class="pill stub">Placeholder</span></td></tr>
+          <tr><td>Documentation</td><td><code>/documentation</code></td><td><span class="pill stub">Placeholder</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="gotcha">
+    <h4>2 &middot; <code>src/legacy-robot-ui/</code> is dead weight, explicitly quarantined</h4>
+    <p>It's the old plain-JS CRA app that talked straight to a robot over a hardcoded IP (<code>env.js</code>: <code>13.201.73.66:5747</code>). It is not imported by <code>router/index.tsx</code> or anything else live, is excluded from ESLint and from the Vitest test runner, and its fate ("port or retire") is explicitly left to "a future milestone." Treat it as reference-only archaeology, not a starting point.</p>
+  </div>
+
+  <div class="gotcha warn">
+    <h4>10 &middot; The README's quoted dev URL is stale</h4>
+    <p>README says <code>http://localhost:5173</code>; <code>vite.config.ts</code> actually configures port <strong>5175</strong>. Minor, but will trip up a new dev copy-pasting from the README.</p>
+  </div>
+
+  <div class="gotcha warn">
+    <h4>11 &middot; nginx config has a stray commented-out proxy block</h4>
+    <p>A dead, commented-out proxy <code>server</code> block (port 5747 → <code>172.16.1.2:8000</code>) is left in <code>nginx.conf</code> — inactive leftover from an earlier experiment. Don't assume it does anything in production.</p>
+  </div>
+
+  <h3>More to know</h3>
+  <div class="minor-grid">
+    <div class="minor"><span class="idx">3</span>No TODO/FIXME comments exist in the live (non-legacy) TypeScript source — open work is tracked via <code>PlaceholderPage</code> stubs and the CHANGELOG's "Unreleased" section instead.</div>
+    <div class="minor"><span class="idx">4</span>Theme persistence has two layers that must stay consistent: the <code>localStorage</code> key <code>"autonav-theme"</code> is read both by the inline pre-hydration script in <code>index.html</code> and by <code>ThemeProvider.tsx</code>'s <code>getInitialTheme()</code>. Rename it in one place only and you reintroduce the theme-flash bug.</div>
+    <div class="minor"><span class="idx">5</span>Robot selection is per-user <code>localStorage</code> state (key <code>"autonav-selected-robot:&lt;userId&gt;"</code>) — not server-persisted. Switching browsers or clearing site data resets it to "first robot in the list."</div>
+    <div class="minor"><span class="idx">6</span>Auth state is deliberately <em>not</em> a Redux slice. <code>useAuth()</code> reads directly from the <code>getMe</code> RTK Query cache. Don't add a <code>currentUser</code> slice "for convenience" — trigger a <code>refetchMe()</code> instead when you need to force the session state to update.</div>
+    <div class="minor"><span class="idx">7</span><code>baseQueryWithReauth</code> retries a request exactly once after a single shared <code>/auth/refresh</code> call. If the refresh itself fails, the original 401 is returned as-is — there's no explicit "force logout" side effect; it relies on the next <code>getMe</code> read reporting <code>"unauthenticated"</code> and the guards reacting.</div>
+    <div class="minor"><span class="idx">8</span>Form validation schemas are hand-mirrored from the backend, not shared via a common package. <code>auth.schemas.ts</code> and <code>admin.schemas.ts</code> both carry comments noting they'll drift if one side changes without the other — a shared <code>packages/shared-types</code> workspace is the flagged future upgrade.</div>
+    <div class="minor"><span class="idx">9</span><code>AddRobotForm</code> no longer shows a generated secret. An earlier design apparently revealed a <code>robotSecret</code> once after creation; the current component's success state explicitly says "No secret to copy" — the robot identifies itself by its own <code>robotId</code> device id. Verify against the <em>current</em> code if you see references elsewhere to a one-time secret.</div>
+    <div class="minor"><span class="idx">12</span>Role/self-action safeguards exist only in the UI. <code>UsersTable.tsx</code> disables promote/demote/delete for the admin's own row (<code>isSelf</code>) to prevent accidental self-lockout — but this is a client-side convenience; real enforcement would need confirming server-side in PlatformServer.</div>
+  </div>
+</section>
+
+<footer class="page-footer">
+  PlatformApp architecture guide &middot; AutoNav &middot; one of five sub-project docs sharing this system map.
+</footer>
+
+</div>
+
+</body></html>

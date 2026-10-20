@@ -1,0 +1,988 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>RobotApp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---- Design plan ----
+     Layout: single-column reference doc, max 880px reading column, sticky-free
+     header with inline system-map SVG, anchor TOC grid, numbered sections.
+     Color: warm moss-green accent on warm paper neutrals (not teal/emerald,
+     not cool grey) — distinguishes this doc from its 4 siblings at a glance.
+     Type: Fraunces (warm serif, display/headings) + Source Sans 3 (body) +
+     IBM Plex Mono (code, endpoint paths, file names, tabular data). */
+  :root{
+    --bg:#f7f4ea;
+    --surface:#fffdf6;
+    --surface-2:#efe8d4;
+    --border:#ddd3b4;
+    --fg:#262216;
+    --fg-muted:#6b6450;
+    --accent:#4f7030;
+    --accent-strong:#3a5420;
+    --accent-soft:#e3ecd4;
+    --accent-fg:#fbfff0;
+    --code-bg:#242318;
+    --code-fg:#e9e4d2;
+    --code-border:#3a3826;
+    --warn-bg:#fbe8db;
+    --warn-border:#c6621f;
+    --warn-fg:#7a3410;
+    --info-bg:#e7eef4;
+    --info-border:#5c7c9c;
+    --info-fg:#2d4356;
+    --shadow:rgba(42,36,16,0.14);
+    --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:'Source Sans 3', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono:'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#181a13;
+      --surface:#202218;
+      --surface-2:#272a1d;
+      --border:#3b3e2b;
+      --fg:#eae6d4;
+      --fg-muted:#a9a488;
+      --accent:#8fbb66;
+      --accent-strong:#a9d17f;
+      --accent-soft:#2a3620;
+      --accent-fg:#13200a;
+      --code-bg:#121309;
+      --code-fg:#dcd8c4;
+      --code-border:#33341f;
+      --warn-bg:#3b2615;
+      --warn-border:#e58a42;
+      --warn-fg:#ffcda0;
+      --info-bg:#172531;
+      --info-border:#7098b9;
+      --info-fg:#bedaf0;
+      --shadow:rgba(0,0,0,0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#181a13;
+    --surface:#202218;
+    --surface-2:#272a1d;
+    --border:#3b3e2b;
+    --fg:#eae6d4;
+    --fg-muted:#a9a488;
+    --accent:#8fbb66;
+    --accent-strong:#a9d17f;
+    --accent-soft:#2a3620;
+    --accent-fg:#13200a;
+    --code-bg:#121309;
+    --code-fg:#dcd8c4;
+    --code-border:#33341f;
+    --warn-bg:#3b2615;
+    --warn-border:#e58a42;
+    --warn-fg:#ffcda0;
+    --info-bg:#172531;
+    --info-border:#7098b9;
+    --info-fg:#bedaf0;
+    --shadow:rgba(0,0,0,0.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.65;
+    padding-left:max(16px, env(safe-area-inset-left,0px));
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+    padding-block:2rem 4rem;
+  }
+  .wrap{max-width:880px; margin:0 auto;}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:600; text-wrap:balance; color:var(--fg);}
+  h1{font-size:2.1rem; margin:0 0 .3rem;}
+  h2{font-size:1.5rem; margin:2.6rem 0 .9rem; padding-top:.6rem; border-top:1px solid var(--border);}
+  h3{font-size:1.15rem; margin:1.6rem 0 .6rem; color:var(--accent-strong);}
+  p{margin:.6rem 0; max-width:70ch;}
+  a{color:var(--accent-strong);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  code, .mono{font-family:var(--font-mono); font-size:.85em;}
+  code{background:var(--surface-2); padding:.12em .4em; border-radius:4px;}
+
+  .eyebrow{
+    font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.11em;
+    font-size:.72rem; color:var(--fg-muted); font-weight:500;
+  }
+
+  /* ---- header ---- */
+  header.page-head{
+    display:flex; flex-direction:column; gap:.9rem;
+    padding:1.4rem 0 1.6rem;
+  }
+  .role-line{font-size:1.05rem; color:var(--fg-muted); margin:0; max-width:60ch;}
+  .role-line strong{color:var(--fg); font-weight:600;}
+  .doc-chip{
+    display:inline-flex; align-items:center; gap:.4rem; width:fit-content;
+    background:var(--accent-soft); color:var(--accent-strong); border:1px solid var(--accent);
+    font-family:var(--font-mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:.25rem .6rem; border-radius:999px; font-weight:600;
+  }
+
+  /* ---- TOC ---- */
+  nav.toc{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:1.1rem 1.3rem; margin:1.4rem 0 2.2rem;
+    box-shadow:0 1px 2px var(--shadow);
+  }
+  nav.toc h2{margin:0 0 .8rem; border:none; padding:0; font-size:1rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.08em; color:var(--fg-muted);}
+  nav.toc ol{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,1fr); gap:.4rem .9rem;}
+  @media (max-width:560px){ nav.toc ol{grid-template-columns:1fr;} }
+  nav.toc li{min-width:0;}
+  nav.toc a{
+    display:flex; gap:.6rem; align-items:baseline; text-decoration:none; color:var(--fg);
+    padding:.35rem .4rem; border-radius:6px;
+  }
+  nav.toc a:hover{background:var(--surface-2);}
+  nav.toc .num{font-family:var(--font-mono); color:var(--accent-strong); font-weight:600; flex:none;}
+
+  /* ---- tables ---- */
+  .table-wrap{overflow-x:auto; margin:1rem 0; border:1px solid var(--border); border-radius:10px;}
+  table{border-collapse:collapse; width:100%; min-width:520px; background:var(--surface);}
+  th,td{text-align:left; padding:.6rem .8rem; border-bottom:1px solid var(--border); vertical-align:top; font-size:.92rem;}
+  th{background:var(--surface-2); font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--fg-muted); font-weight:600;}
+  tr:last-child td{border-bottom:none;}
+  td code{white-space:nowrap;}
+
+  /* ---- code blocks ---- */
+  .code-wrap{overflow-x:auto; margin:1rem 0;}
+  pre{
+    background:var(--code-bg); color:var(--code-fg); border:1px solid var(--code-border);
+    padding:1rem 1.1rem; border-radius:10px; font-family:var(--font-mono); font-size:.82rem;
+    line-height:1.6; margin:0; white-space:pre;
+  }
+
+  /* ---- details/summary file map ---- */
+  details{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    margin:.7rem 0; overflow:hidden;
+  }
+  summary{
+    cursor:pointer; padding:.7rem 1rem; font-family:var(--font-mono); font-weight:600;
+    font-size:.88rem; list-style:none; display:flex; align-items:center; gap:.5rem;
+    color:var(--accent-strong); background:var(--surface-2);
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::before{content:"▸"; display:inline-block; transition:transform .15s ease; color:var(--fg-muted);}
+  details[open] summary::before{transform:rotate(90deg);}
+  details .table-wrap{margin:0; border:none; border-radius:0; border-top:1px solid var(--border);}
+  details table{min-width:0;}
+
+  /* ---- callouts ---- */
+  .callout{
+    border-left:4px solid; border-radius:8px; padding:.8rem 1rem; margin:.9rem 0;
+    display:flex; flex-direction:column; gap:.3rem;
+  }
+  .callout .tag{
+    font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+    font-weight:700; width:fit-content; padding:.1rem .5rem; border-radius:4px;
+  }
+  .callout p{margin:0; max-width:none; font-size:.93rem;}
+  .callout-bug{background:var(--warn-bg); border-color:var(--warn-border); color:var(--warn-fg);}
+  .callout-bug .tag{background:var(--warn-border); color:#fff8f0;}
+  .callout-note{background:var(--info-bg); border-color:var(--info-border); color:var(--info-fg);}
+  .callout-note .tag{background:var(--info-border); color:#f3f9ff;}
+  .gotcha-plain{
+    border-left:4px solid var(--border); padding:.7rem 1rem; margin:.7rem 0;
+    background:var(--surface); border-radius:8px;
+  }
+  .gotcha-plain p{margin:0; font-size:.93rem;}
+  .gotcha-plain .tag{
+    font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--fg-muted); font-weight:700; display:block; margin-bottom:.25rem;
+  }
+
+  /* ---- diagrams ---- */
+  figure.diagram{margin:1.2rem 0; padding:0;}
+  .diagram-scroll{
+    overflow-x:auto; background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:.8rem;
+  }
+  figure.diagram svg{display:block; max-width:100%; height:auto; color:var(--fg); min-width:460px;}
+  figure.diagram svg text{fill:currentColor; font-family:var(--font-mono);}
+  figcaption{font-size:.82rem; color:var(--fg-muted); margin-top:.5rem; max-width:70ch;}
+
+  .card-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:.8rem; margin:1rem 0;}
+  .lib-card{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.8rem .9rem;}
+  .lib-card h4{margin:0 0 .3rem; font-family:var(--font-mono); font-size:.88rem; color:var(--accent-strong);}
+  .lib-card p{margin:.25rem 0 0; font-size:.85rem; color:var(--fg-muted);}
+
+  footer{margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--border); color:var(--fg-muted); font-size:.82rem;}
+  ul.step-list, ol.step-list{margin:.5rem 0 1rem; padding-left:1.3rem;}
+  ul.step-list li, ol.step-list li{margin:.35rem 0;}
+</style>
+
+<div class="wrap">
+
+<header class="page-head">
+  <span class="doc-chip">AutoNav · 1 of 5 system docs</span>
+  <h1>RobotApp</h1>
+  <p class="role-line"><strong>The robot's own touchscreen kiosk</strong> — a small on-device web app a person standing at the robot uses to log in with a PIN, check connectivity, and control lights and Wi-Fi/VPN.</p>
+
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 820 400" role="img" aria-label="System map: PlatformApp and AndroidApp talk to PlatformServer in the cloud over HTTPS; PlatformServer and RobotServer are linked by an outbound-only connection from the robot that relays remote-control sessions; RobotServer and RobotApp, both running on the robot's onboard computer, talk to each other same-origin over HTTP and WebSocket through nginx. RobotApp is highlighted as the current document's subject.">
+        <defs>
+          <marker id="arrowSys" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- cloud tier -->
+        <rect x="24" y="22" width="182" height="66" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="115" y="50" text-anchor="middle" font-size="13" font-weight="600">PlatformApp</text>
+        <text x="115" y="68" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">web dashboard</text>
+
+        <rect x="310" y="16" width="200" height="78" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="410" y="42" text-anchor="middle" font-size="13" font-weight="600">PlatformServer</text>
+        <text x="410" y="59" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">cloud/VPN · users, fleet,</text>
+        <text x="410" y="72" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">auth, MongoDB</text>
+
+        <rect x="614" y="22" width="182" height="66" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="705" y="50" text-anchor="middle" font-size="13" font-weight="600">AndroidApp</text>
+        <text x="705" y="68" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">mobile (Capacitor)</text>
+
+        <line x1="206" y1="55" x2="306" y2="55" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowSys)"/>
+        <text x="256" y="46" text-anchor="middle" font-size="10.5">HTTPS + cookies</text>
+
+        <line x1="614" y1="55" x2="514" y2="55" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowSys)"/>
+        <text x="564" y="46" text-anchor="middle" font-size="10.5">HTTPS · teleop relay</text>
+
+        <!-- robot boundary -->
+        <rect x="224" y="196" width="392" height="168" rx="12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.65"/>
+        <text x="240" y="216" font-size="10.5" fill="var(--fg-muted)">ROBOT — onboard computer (one machine)</text>
+
+        <!-- link from robot up to platform -->
+        <path d="M 336 232 L 336 150 L 390 150 L 390 98" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowSys)"/>
+        <text x="400" y="142" font-size="10" fill="var(--fg-muted)">outbound-only link ·</text>
+        <text x="400" y="155" font-size="10" fill="var(--fg-muted)">relays control sessions (wss)</text>
+
+        <rect x="256" y="246" width="160" height="78" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="336" y="276" text-anchor="middle" font-size="13" font-weight="600">RobotServer</text>
+        <text x="336" y="293" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">Node/TS · ROS2</text>
+        <text x="336" y="306" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">↔ HTTP/WS bridge</text>
+
+        <rect x="456" y="246" width="160" height="78" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.2"/>
+        <text x="536" y="276" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent-strong)">RobotApp</text>
+        <text x="536" y="293" text-anchor="middle" font-size="10.5" fill="var(--accent-strong)">kiosk UI</text>
+        <text x="536" y="306" text-anchor="middle" font-size="10.5" fill="var(--accent-strong)">(this document)</text>
+
+        <rect x="466" y="214" width="140" height="22" rx="11" fill="var(--accent)"/>
+        <text x="536" y="229" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--accent-fg)">YOU ARE HERE</text>
+        <line x1="536" y1="236" x2="536" y2="246" stroke="var(--accent)" stroke-width="2"/>
+
+        <line x1="416" y1="285" x2="454" y2="285" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrowSys)" marker-start="url(#arrowSys)"/>
+        <text x="435" y="332" text-anchor="middle" font-size="10">same-origin HTTP</text>
+        <text x="435" y="344" text-anchor="middle" font-size="10">+ WS, via nginx</text>
+      </svg>
+    </div>
+    <figcaption>All five AutoNav components. RobotApp runs on the robot's own screen and only ever talks to RobotServer on the same machine — never directly to PlatformServer or the other apps.</figcaption>
+  </figure>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#purpose"><span class="num">01</span> Purpose &amp; Role</a></li>
+    <li><a href="#tech-stack"><span class="num">02</span> Tech Stack Explained</a></li>
+    <li><a href="#directory-map"><span class="num">03</span> Directory &amp; File Map</a></li>
+    <li><a href="#architecture"><span class="num">04</span> Architecture Layers &amp; Patterns</a></li>
+    <li><a href="#key-flows"><span class="num">05</span> Key Flows</a></li>
+    <li><a href="#cross-component"><span class="num">06</span> Cross-Component Interaction</a></li>
+    <li><a href="#running-locally"><span class="num">07</span> Running &amp; Developing Locally</a></li>
+    <li><a href="#gotchas"><span class="num">08</span> Gotchas</a></li>
+  </ol>
+</nav>
+
+<!-- ======================= 1. PURPOSE ======================= -->
+<section id="purpose">
+  <h2><span class="eyebrow">01</span><br>Purpose &amp; Role in the System</h2>
+
+  <p><strong>What it is.</strong> RobotApp is a small touchscreen web application ("HMI" — Human-Machine Interface) that lets a person standing physically next to the robot log in and perform a handful of local actions: identify themselves, enter a 4-digit PIN, see whether the robot has internet connectivity, toggle the robot's LED light strip and brightness, and configure Wi-Fi/VPN.</p>
+
+  <p><strong>Where it physically runs.</strong> It runs <strong>on the robot itself</strong>, displayed full-screen ("kiosk mode" — a browser running with no address bar, tabs, or window chrome, so it looks like a dedicated appliance screen rather than a web browser) on a touchscreen bolted to the robot. It is built as static HTML/CSS/JavaScript files, served by an Nginx web server (a lightweight program that serves files and forwards network requests — a "reverse proxy") inside a Docker container (a packaged, isolated way of running software) running directly on the robot's onboard computer. A systemd service (<code>deploy/kiosk/robotapp-kiosk.service</code>) launches Google Chrome in app/kiosk mode pointed at this page on boot.</p>
+
+  <p><strong>Who uses it.</strong> Local operators — people physically standing at the robot — not remote users. It is the equivalent of a payment terminal's screen: whoever is standing there taps through it.</p>
+
+  <p><strong>Why it's separate from PlatformApp/AndroidApp.</strong> PlatformApp (cloud dashboard) and AndroidApp (mobile) are for <em>remote</em> users anywhere on the internet/VPN, authenticating against PlatformServer with full email+password/Google login, and they never talk to a robot's RobotServer directly — PlatformServer relays everything. RobotApp instead talks <strong>directly</strong> to the RobotServer process running on the same machine, using a lightweight, robot-local PIN login designed for a shared physical device standing in a warehouse/office, not a personal device. Keeping it a separate codebase/build also means RobotApp's build has no dependency on, and isn't bloated by, PlatformApp's dashboard code.</p>
+</section>
+
+<!-- ======================= 2. TECH STACK ======================= -->
+<section id="tech-stack">
+  <h2><span class="eyebrow">02</span><br>Tech Stack Explained</h2>
+  <p>All dependencies are listed in <code>RobotApp/package.json</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Package</th><th>Plain-English explanation</th><th>Where / why used here</th></tr></thead>
+      <tbody>
+        <tr><td><code>react</code> / <code>react-dom</code></td><td>React is a UI library: the screen is built out of reusable "components" — TypeScript functions that return a description of what should appear on screen. When data changes, React re-renders only the parts of the screen that need it, instead of you manually updating the DOM (the browser's in-memory representation of the page).</td><td>Every file under <code>src/components/</code> and <code>src/features/</code> is a React component. <code>src/main.tsx</code> is where React is told to take over the page.</td></tr>
+        <tr><td><code>typescript</code></td><td>JavaScript with an added type system: you declare what "shape" of data a variable/function expects (e.g. "this is a string", "this object has an <code>email</code> field"), and a compiler checks your code for mismatches before it ever runs.</td><td>All source files use <code>.ts</code>/<code>.tsx</code> (<code>.tsx</code> = TypeScript + JSX, React's HTML-like syntax). <code>tsconfig.json</code>/<code>tsconfig.app.json</code> set strict compiler rules (<code>strict: true</code>, <code>noUnusedLocals</code>, etc.).</td></tr>
+        <tr><td><code>vite</code></td><td>The build tool: in development it serves source files to the browser near-instantly with live reload; for production it bundles everything into a <code>dist/</code> folder of optimized static files.</td><td><code>vite.config.ts</code> is the config. <code>npm run dev</code> starts the dev server on port 5174; <code>npm run build</code> produces <code>dist/</code>.</td></tr>
+        <tr><td><code>@vitejs/plugin-react</code></td><td>A Vite add-on that teaches Vite to process React's JSX syntax and enables "Fast Refresh" — updating a component on screen without losing its state while you edit code.</td><td>Registered in <code>vite.config.ts</code>'s <code>plugins</code> array.</td></tr>
+        <tr><td><code>vite-plugin-pwa</code></td><td>Turns the built app into a PWA (Progressive Web App) — installable like a native app, backed by a service worker (a background script that caches files) and an app manifest (name/icon/colors).</td><td>Configured via <code>VitePWA({...})</code> in <code>vite.config.ts</code> — app name "AutoNav Robot", icons from <code>public/</code>, <code>display: "fullscreen"</code> (matches kiosk mode), <code>registerType: "autoUpdate"</code>. Build output includes <code>sw.js</code> and <code>manifest.webmanifest</code>.</td></tr>
+        <tr><td><code>tailwindcss</code> + <code>postcss</code> + <code>autoprefixer</code></td><td>Tailwind: a "utility-first" styling approach — stack small pre-defined classes directly in markup instead of writing custom CSS rules. PostCSS processes CSS through plugins (Tailwind is one); Autoprefixer adds vendor prefixes automatically.</td><td><code>tailwind.config.ts</code> defines a custom teal/green "brand" palette and "Inter" font. <code>postcss.config.js</code> wires it up. <code>src/styles/tailwind.css</code> pulls in Tailwind's layers plus custom classes (<code>.app-canvas</code>, <code>.glass-card</code>, <code>.glow-ring</code>, <code>blob-float</code>).</td></tr>
+        <tr><td><code>zod</code></td><td>A schema/validation library: describe the "shape" data should have, then check a real value against that shape <em>at runtime</em> (TypeScript's own checks only happen at compile time).</td><td><code>src/features/auth/auth.schemas.ts</code> — email format, 4-digit PIN regex, 6-digit OTP length, PIN-confirmation matching.</td></tr>
+        <tr><td><code>react-hook-form</code></td><td>Manages form state (field values, errors, submission status) efficiently without re-rendering the whole form on every keystroke.</td><td>Every form screen (<code>IdentifyPage</code>, <code>PinLoginPage</code>, <code>PinSetupWizard</code>) via the <code>useForm()</code> hook.</td></tr>
+        <tr><td><code>@hookform/resolvers</code></td><td>Small adapter that lets <code>react-hook-form</code> use a Zod schema as its validation logic.</td><td><code>zodResolver(identifyFormSchema)</code> etc. passed into <code>useForm({ resolver })</code>.</td></tr>
+        <tr><td><code>framer-motion</code></td><td>Animation library for React — declare "animate from this state to that state" and it handles frame-by-frame interpolation and enter/exit transitions.</td><td><code>App.tsx</code> cross-fades screens with <code>&lt;AnimatePresence&gt;</code>/<code>&lt;motion.div&gt;</code>. <code>AppShell.tsx</code> uses it for the animated background (drifting blobs, rotating glow, rising particles).</td></tr>
+        <tr><td><code>lucide-react</code></td><td>Ready-made SVG icon components (line icons) usable directly as React components.</td><td><code>ArrowLeft</code>, <code>Wifi</code>, <code>KeyRound</code>, <code>ShieldCheck</code>, <code>Lightbulb</code>, etc., across auth/settings pages.</td></tr>
+        <tr><td><code>vitest</code> + <code>jsdom</code> + Testing Library + <code>jest-dom</code></td><td>Vitest runs test files and reports pass/fail, built to integrate with Vite. jsdom simulates a browser DOM in Node. React Testing Library renders components into it and queries the way a user would. jest-dom adds readable assertions like <code>toBeInTheDocument()</code>.</td><td><code>src/App.test.tsx</code> is the only test file; <code>src/test/setup.ts</code> is global setup. Configured in <code>vite.config.ts</code>'s <code>test: {...}</code> block.</td></tr>
+        <tr><td><code>eslint</code> + TS/React plugins</td><td>A "linter" — statically scans code for likely bugs and style problems without running it.</td><td>Configured in <code>.eslintrc.cjs</code>; run via <code>npm run lint</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-note">
+    <span class="tag">Design choice</span>
+    <p><strong>No routing library.</strong> There is no React Router or similar — per the README and confirmed in code, navigation between screens is a hand-rolled state machine inside <code>App.tsx</code> using React's <code>useState</code> (a <code>flow</code>/<code>authedView</code> string decides what renders; no URL ever changes). Deliberate, for a small fixed set of kiosk screens rather than a URL-addressable multi-page app.</p>
+  </div>
+  <div class="callout callout-note">
+    <span class="tag">Design choice</span>
+    <p><strong>No Redux, no RTK Query, no React Query.</strong> Just the browser's native <code>fetch()</code> wrapped in small hand-written client modules (<code>src/api/*.ts</code>) returning Promises, called from <code>useEffect</code>/event handlers, with results kept in local <code>useState</code>. Matches the README: "a handful of screens, not a dashboard."</p>
+  </div>
+</section>
+
+<!-- ======================= 3. DIRECTORY MAP ======================= -->
+<section id="directory-map">
+  <h2><span class="eyebrow">03</span><br>Directory &amp; File Map</h2>
+  <p>From <code>find src -type f</code>, plus the top-level config and deploy files. Expand each group below.</p>
+
+  <details open>
+    <summary>Top level</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>package.json</code></td><td>Dependency list and npm scripts (<code>dev</code>, <code>build</code>, <code>preview</code>, <code>lint</code>, <code>test</code>, <code>test:watch</code>).</td></tr>
+      <tr><td><code>vite.config.ts</code></td><td>Vite build/dev-server config: React plugin, PWA plugin + manifest, dev server port 5174 with <code>/api</code> proxy to <code>localhost:8000</code>, and the Vitest test config block.</td></tr>
+      <tr><td><code>tailwind.config.ts</code></td><td>Theme customization: dark-mode via CSS class, custom <code>brand</code> teal color scale, "Inter" as default sans-serif.</td></tr>
+      <tr><td><code>postcss.config.js</code></td><td>Registers the Tailwind + Autoprefixer PostCSS plugins.</td></tr>
+      <tr><td><code>tsconfig*.json</code></td><td>TypeScript compiler config, split into "app code" (browser-targeted, strict) and "node code" (just <code>vite.config.ts</code>).</td></tr>
+      <tr><td><code>.eslintrc.cjs</code></td><td>Linter rules/config.</td></tr>
+      <tr><td><code>index.html</code></td><td>The single real HTML page. Loads <code>/src/main.tsx</code> as a module script, sets a fixed <code>1280px</code> viewport (kiosk screen width), favicon/apple-touch-icon links, preconnects to Google Fonts for "Inter".</td></tr>
+      <tr><td><code>README.md</code></td><td>Project overview: purpose, login flow summary, stack choices and why, dev/build instructions.</td></tr>
+      <tr><td><code>Dockerfile</code></td><td>Multi-stage build: Node 20 builds the static site, then an Nginx 1.27 Alpine image serves <code>dist/</code> plus a custom <code>nginx.conf</code>.</td></tr>
+      <tr><td><code>nginx.conf</code></td><td>Serves the static build, reverse-proxies <code>/api/</code>, <code>/health</code>, <code>/maps/</code>, <code>/ws/</code> to RobotServer on <code>127.0.0.1:8000</code>, disables caching on the service worker/manifest, falls back to <code>index.html</code>.</td></tr>
+      <tr><td><code>public/*.png</code></td><td>PWA/favicon icon assets referenced by <code>index.html</code> and the PWA manifest.</td></tr>
+      <tr><td><code>dist/</code></td><td>Build output (generated by <code>npm run build</code>; not hand-edited).</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/api/ — RobotServer client layer</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>apiError.ts</code></td><td>Defines <code>ApiError</code> (an <code>Error</code> subclass carrying an HTTP status code) and <code>getApiErrorMessage()</code>, turning any caught error into a user-displayable string. Shared by every other client.</td></tr>
+      <tr><td><code>hmiClient.ts</code></td><td>REST client for <code>/api/hmi-auth/*</code> (identify, login, logout, session, list roster users, OTP-based PIN setup). Implements silent-refresh-on-401.</td></tr>
+      <tr><td><code>firmwareClient.ts</code></td><td>REST client for <code>/api/firmware/*</code> (LED pattern, LED brightness) — talks to an ESP32 microcontroller via RobotServer.</td></tr>
+      <tr><td><code>networkClient.ts</code></td><td>REST client for <code>/api/system/network/*</code> (list Wi-Fi networks, current Wi-Fi, connect, toggle VPN). Deliberately unauthenticated.</td></tr>
+      <tr><td><code>topicsSocket.ts</code></td><td>WebSocket client to <code>/ws/topics</code>, multiplexing many named "topics" over one connection, with a <code>useTopic()</code> React hook to subscribe to a topic's latest value.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/components/ui/ — shared design-system primitives</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>AppShell.tsx</code></td><td>Full-screen animated kiosk background (drifting color blobs, rotating glow, dot grid, rising particles, vignette) plus a centered "glass" card container, wrapped around every screen.</td></tr>
+      <tr><td><code>Button.tsx</code></td><td>Styled <code>&lt;button&gt;</code> wrapper with 4 variants (<code>primary</code>, <code>secondary</code>, <code>danger</code>, <code>ghost</code>) and a built-in loading spinner state.</td></tr>
+      <tr><td><code>Card.tsx</code></td><td>Plain padded container <code>&lt;div&gt;</code> used as the content box inside <code>AppShell</code>.</td></tr>
+      <tr><td><code>Input.tsx</code></td><td>Styled <code>&lt;input&gt;</code> wrapper that also renders its <code>&lt;label&gt;</code> and an optional validation error message.</td></tr>
+      <tr><td><code>Spinner.tsx</code></td><td><code>FullPageSpinner</code> — full-screen centered spinner with "Starting up…" text, shown while session status is resolving.</td></tr>
+      <tr><td><code>UserAvatar.tsx</code></td><td>Renders a user's photo if available (falling back to their initial on a colored circle, including on image load failure), with an optional glowing ring.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/features/auth/ — identification &amp; PIN login flow</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>auth.schemas.ts</code></td><td>Zod validation schemas: email format, 4-digit PIN regex, 6-digit OTP, PIN+confirm-PIN pair that must match.</td></tr>
+      <tr><td><code>useSession.ts</code></td><td>Custom hook tracking whether a session exists, exposing <code>status</code>/<code>user</code>/<code>refresh()</code>/<code>logout()</code>, and deliberately force-logging-out on every page load/reload.</td></tr>
+      <tr><td><code>IdentifyPage.tsx</code></td><td>"Enter your email" screen for a user not already in the cached roster; calls <code>hmiClient.identify()</code> and branches to PIN login or PIN setup.</td></tr>
+      <tr><td><code>UserPickerPage.tsx</code></td><td>The default "lock screen" — lists known users with access to this robot (tap-to-select), with "+ New user" fallback and a link into Wi-Fi settings.</td></tr>
+      <tr><td><code>PinLoginPage.tsx</code></td><td>"Enter your 4-digit PIN" screen for a known, already-PIN-set user; calls <code>hmiClient.login()</code>.</td></tr>
+      <tr><td><code>PinSetupWizard.tsx</code></td><td>Two-step wizard (verify emailed OTP, then choose a 4-digit PIN) for a user's first time on this robot, or "forgot PIN."</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/features/home/</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>RobotAppHomePage.tsx</code></td><td>Authenticated landing screen: logged-in user, online/offline badge driven by a live WebSocket topic (<code>useTopic&lt;RobotStatus&gt;("robotStatus")</code>), a "future milestone" placeholder for teleop/navigation/mapping, and Settings/Switch user/Log out buttons.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/features/settings/</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>SettingsPage.tsx</code></td><td>LED on/off toggle and brightness slider (0–100%, converted to firmware's 0–255 range), calling <code>firmwareClient</code>; links to Wi-Fi settings.</td></tr>
+      <tr><td><code>WifiSettingsPage.tsx</code></td><td>Lists nearby Wi-Fi networks, shows current connection, lets the user pick a network/enter a password and connect, plus VPN connect/disconnect — calling <code>networkClient</code>. Reachable both before and after login.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/utils/</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>maskEmail.ts</code></td><td>Pure function that partially masks an email for on-screen display (e.g. <code>jatin.patil@example.com</code> → <code>ja***l@ex***.com</code>) since the kiosk screen may be visible to bystanders.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/test/ and root test file</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>test/setup.ts</code></td><td>Global Vitest setup: imports jest-dom's extra assertions, resets mocked globals (like <code>fetch</code>) after each test.</td></tr>
+      <tr><td><code>App.test.tsx</code></td><td>Two integration tests: (1) with no session, the user picker screen appears; (2) a brand-new user can click through to the PIN-setup wizard — using a hand-mocked <code>fetch</code>.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>src/ top-level files</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>main.tsx</code></td><td>Entry point: finds the <code>#root</code> DOM node and tells React to render <code>&lt;App /&gt;</code>, wrapped in <code>React.StrictMode</code>. Imports the global Tailwind stylesheet.</td></tr>
+      <tr><td><code>App.tsx</code></td><td>Root component: owns the hand-rolled navigation state machine, renders <code>useSession()</code>'s loading spinner or the right screen, wraps transitions in a Framer Motion fade.</td></tr>
+      <tr><td><code>styles/tailwind.css</code></td><td>The one global stylesheet: Tailwind directives, a fixed <code>1280×800</code> viewport, kiosk touch behavior (<code>user-select: none</code>, disabled overscroll/pull-to-refresh), CSS custom properties for the animated background (light+dark), and <code>.glass-card</code>/<code>.glow-ring</code>/<code>.animate-blob</code>.</td></tr>
+    </tbody></table></div>
+  </details>
+
+  <details>
+    <summary>Deployment files outside RobotApp/ that are part of its story</summary>
+    <div class="table-wrap"><table><tbody>
+      <tr><td><code>deploy/kiosk/robotapp-kiosk.service</code></td><td>A systemd unit that starts the kiosk launcher script on graphical login.</td></tr>
+      <tr><td><code>deploy/kiosk/robotapp-kiosk.sh</code></td><td>Waits for the RobotApp web server to respond, launches Google Chrome in app/kiosk mode pointed at it, forces fullscreen via a simulated F11 keypress (<code>xdotool</code>).</td></tr>
+      <tr><td><code>docker-compose.yml</code> (service <code>robotapp</code>)</td><td>Builds/runs the RobotApp image with <code>network_mode: host</code> (container shares the robot's network stack directly) and <code>depends_on: robotserver</code>.</td></tr>
+    </tbody></table></div>
+  </details>
+</section>
+
+<!-- ======================= 4. ARCHITECTURE ======================= -->
+<section id="architecture">
+  <h2><span class="eyebrow">04</span><br>Architecture Layers &amp; Patterns</h2>
+
+  <h3>Feature-based organization vs. type-based</h3>
+  <p>Rather than grouping files by <em>technical type</em> across the whole app (one giant <code>pages/</code> folder, one giant <code>hooks/</code> folder), RobotApp groups by <em>feature/domain</em> under <code>src/features/</code>: <code>auth/</code>, <code>home/</code>, <code>settings/</code>. Everything a feature needs — its page components, its own hook (<code>useSession.ts</code>), its own validation schemas (<code>auth.schemas.ts</code>) — lives together in one folder. This keeps related code physically close and easy to find, extend, or delete as a unit, at the cost of some things (like <code>auth.schemas.ts</code>) being specific to that folder rather than globally reusable.</p>
+  <p>Separate from features, <code>src/components/ui/</code> holds <em>generic, feature-agnostic</em> building blocks (<code>Button</code>, <code>Card</code>, <code>Input</code>, <code>Spinner</code>, <code>UserAvatar</code>, <code>AppShell</code>) — pure presentation primitives any feature composes together. This is effectively a tiny in-house "design system" layer, duplicated intentionally from PlatformApp (noted in the README) rather than shared as an installable package, so each app's build stays independent.</p>
+
+  <h3>How pages compose components</h3>
+  <p>A typical "page" component (e.g. <code>IdentifyPage.tsx</code>) is built as:</p>
+  <div class="code-wrap"><pre>&lt;AppShell&gt;                      {/* kiosk background + centered card frame */}
+  &lt;Card&gt;                        {/* padded content box */}
+    &lt;h1&gt;...&lt;/h1&gt;
+    &lt;form onSubmit={form.handleSubmit(onSubmit)}&gt;
+      &lt;Input label="Email" ... {...form.register("email")} /&gt;
+      &lt;Button type="submit" isLoading={isSubmitting}&gt;Continue&lt;/Button&gt;
+    &lt;/form&gt;
+  &lt;/Card&gt;
+&lt;/AppShell&gt;</pre></div>
+  <p><code>AppShell</code> and <code>Card</code> provide layout/visual chrome; <code>Input</code>/<code>Button</code> provide styled form controls; the page itself only supplies content, local state (<code>useState</code>), and the submit handler that calls into an <code>src/api/*</code> client.</p>
+
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 460 330" role="img" aria-label="Page composition diagram: AppShell wraps the full screen and paints the kiosk background, containing a Card which is the padded content box, which contains the page's own heading, form, inputs and button.">
+        <rect x="16" y="16" width="428" height="298" rx="14" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="30" y="36" font-size="12" font-weight="600">AppShell — kiosk background, animated blobs</text>
+
+        <rect x="54" y="60" width="352" height="228" rx="12" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="68" y="80" font-size="11.5" font-weight="600">Card — padded content box</text>
+
+        <rect x="84" y="100" width="292" height="24" rx="4" fill="none" stroke="currentColor" stroke-dasharray="3 3"/>
+        <text x="230" y="116" text-anchor="middle" font-size="11">&lt;h1&gt; heading</text>
+
+        <rect x="84" y="138" width="292" height="110" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <text x="98" y="156" font-size="10.5" fill="var(--fg-muted)">&lt;form onSubmit=handleSubmit&gt;</text>
+
+        <rect x="100" y="168" width="260" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <text x="230" y="189" text-anchor="middle" font-size="11" fill="var(--accent-strong)">Input — label + field + error text</text>
+
+        <rect x="100" y="212" width="130" height="30" rx="15" fill="var(--accent)"/>
+        <text x="165" y="231" text-anchor="middle" font-size="11" fill="var(--accent-fg)" font-weight="600">Button (submit)</text>
+
+        <text x="230" y="270" text-anchor="middle" font-size="10" fill="var(--fg-muted)">submit handler calls an src/api/* client</text>
+      </svg>
+    </div>
+    <figcaption>Containment, not flow: every page nests the same three layers — AppShell for chrome, Card for the content box, then heading/form/controls supplied by the page itself.</figcaption>
+  </figure>
+
+  <h3>The API client pattern (src/api/)</h3>
+  <p>Each file is a small object of async functions, one per RobotServer endpoint group, all built on the browser's native <code>fetch()</code>:</p>
+  <ul class="step-list">
+    <li><code>hmiClient.ts</code> → REST, <code>POST</code>/<code>GET</code> to <code>/api/hmi-auth/*</code>. Session-cookie authenticated. Includes a <strong>401-retry-once</strong> pattern: a 401 on a non-auth-handshake endpoint triggers one shared <code>/api/hmi-auth/refresh</code> call ("single-flight" — concurrent 401s share one refresh instead of racing to rotate the refresh token) and retries the original request once.</li>
+    <li><code>firmwareClient.ts</code> → REST, <code>POST</code> to <code>/api/firmware/*</code>. Session-gated. Treats HTTP 502 specially: a well-formed <code>{ success: false, message }</code> domain result (e.g. the ESP32 board is disconnected), not a thrown error — so the UI shows it as an inline message instead of crashing.</li>
+    <li><code>networkClient.ts</code> → REST, <code>GET</code>/<code>POST</code> to <code>/api/system/network/*</code>. Deliberately <strong>not authenticated</strong> — a robot may need Wi-Fi configured before anyone can log in at all. Also treats 502 as a domain result (e.g. <code>nmcli</code> rejected a connection).</li>
+    <li><code>topicsSocket.ts</code> → <strong>WebSocket</strong>, not REST, to <code>/ws/topics</code>. One persistent connection opens lazily on first subscribe and is reused; incoming JSON frames look like <code>{ type: string, data: unknown }</code>, fanned out to whichever <code>subscribe(topic, listener)</code> callbacks registered for that type. Reconnects automatically after a fixed 3-second delay if dropped — a kiosk is expected to stay open indefinitely.</li>
+  </ul>
+  <p>All of these assume <strong>same-origin</strong> deployment (no base URL is hardcoded beyond the path, e.g. <code>fetch("/api/hmi-auth...")</code>) — in production Nginx serves both the static RobotApp files and proxies these API paths to RobotServer, so from the browser's point of view it's all one origin, avoiding CORS and cookie SameSite complications entirely.</p>
+
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 740 340" role="img" aria-label="The four API client modules, each a small file in src/api, each talking to its own group of RobotServer endpoints: hmiClient to /api/hmi-auth/*, firmwareClient to /api/firmware/*, networkClient to /api/system/network/*, and topicsSocket over a persistent WebSocket to /ws/topics.">
+        <defs>
+          <marker id="arrowApi" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <rect x="520" y="14" width="200" height="312" rx="12" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="620" y="44" text-anchor="middle" font-size="13" font-weight="600">RobotServer</text>
+        <text x="620" y="60" text-anchor="middle" font-size="10" fill="var(--fg-muted)">same-origin, behind nginx</text>
+
+        <!-- hmiClient -->
+        <rect x="16" y="14" width="210" height="58" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="121" y="48" text-anchor="middle" font-size="12" font-weight="600">hmiClient.ts</text>
+        <line x1="226" y1="43" x2="518" y2="100" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrowApi)"/>
+        <text x="370" y="78" text-anchor="middle" font-size="10.5">/api/hmi-auth/*</text>
+        <text x="370" y="91" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">REST · cookie · 401-retry-once</text>
+
+        <!-- firmwareClient -->
+        <rect x="16" y="90" width="210" height="58" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="121" y="124" text-anchor="middle" font-size="12" font-weight="600">firmwareClient.ts</text>
+        <line x1="226" y1="119" x2="518" y2="150" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrowApi)"/>
+        <text x="370" y="142" text-anchor="middle" font-size="10.5">/api/firmware/*</text>
+        <text x="370" y="155" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">REST · 502 = domain result</text>
+
+        <!-- networkClient -->
+        <rect x="16" y="166" width="210" height="58" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="121" y="200" text-anchor="middle" font-size="12" font-weight="600">networkClient.ts</text>
+        <line x1="226" y1="195" x2="518" y2="210" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrowApi)"/>
+        <text x="370" y="210" text-anchor="middle" font-size="10.5">/api/system/network/*</text>
+        <text x="370" y="223" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">REST · unauthenticated</text>
+
+        <!-- topicsSocket -->
+        <rect x="16" y="242" width="210" height="58" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="121" y="276" text-anchor="middle" font-size="12" font-weight="600">topicsSocket.ts</text>
+        <line x1="226" y1="271" x2="518" y2="265" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrowApi)"/>
+        <text x="370" y="270" text-anchor="middle" font-size="10.5">/ws/topics</text>
+        <text x="370" y="283" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">WebSocket · persistent, auto-reconnect</text>
+      </svg>
+    </div>
+    <figcaption>Each API client owns exactly one RobotServer endpoint group and one transport; nothing calls a different client's endpoints.</figcaption>
+  </figure>
+</section>
+
+<!-- ======================= 5. KEY FLOWS ======================= -->
+<section id="key-flows">
+  <h2><span class="eyebrow">05</span><br>Key Flows</h2>
+
+  <h3>Flow 1 — App boot sequence</h3>
+  <p><strong>Trigger:</strong> device powers on / kiosk Chrome window starts / page is reloaded.</p>
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 640 260" role="img" aria-label="Boot sequence: kiosk Chrome loads index.html and main.tsx which render App; App calls useSession, which logs out unconditionally against RobotServer; RobotServer confirms unauthenticated; App then renders the user picker screen.">
+        <defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="10" y="10" width="170" height="38" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="95" y="34" text-anchor="middle" font-size="11.5" font-weight="600">Kiosk Chrome</text>
+        <rect x="265" y="10" width="190" height="38" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="360" y="34" text-anchor="middle" font-size="11.5" font-weight="600">App.tsx + useSession</text>
+        <rect x="540" y="10" width="170" height="38" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="625" y="34" text-anchor="middle" font-size="11.5" font-weight="600">RobotServer</text>
+
+        <line x1="95" y1="48" x2="95" y2="235" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <line x1="360" y1="48" x2="360" y2="235" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <line x1="625" y1="48" x2="625" y2="235" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+
+        <line x1="95" y1="75" x2="358" y2="75" stroke="currentColor" marker-end="url(#a1)"/>
+        <text x="227" y="68" text-anchor="middle" font-size="10.5">① loads index.html → main.tsx renders &lt;App/&gt;</text>
+
+        <line x1="362" y1="112" x2="623" y2="112" stroke="currentColor" marker-end="url(#a1)"/>
+        <text x="492" y="105" text-anchor="middle" font-size="10.5">② POST /api/hmi-auth/logout</text>
+
+        <line x1="623" y1="145" x2="362" y2="145" stroke="currentColor" marker-end="url(#a1)"/>
+        <text x="492" y="138" text-anchor="middle" font-size="10.5">③ 200 OK → status = unauthenticated</text>
+
+        <path d="M 360 175 C 430 175 430 205 360 205" fill="none" stroke="currentColor" marker-end="url(#a1)"/>
+        <text x="440" y="195" font-size="10.5">④ renders FullPageSpinner,</text>
+        <text x="440" y="208" font-size="10.5">then UserPickerPage</text>
+      </svg>
+    </div>
+    <figcaption>Every boot forces a fresh logout before any screen is shown — there is no auto-resume of a prior session.</figcaption>
+  </figure>
+  <ol class="step-list">
+    <li>systemd (<code>deploy/kiosk/robotapp-kiosk.service</code>) runs <code>robotapp-kiosk.sh</code>, which waits for the web server to answer, then launches Chrome pointed at the app's URL.</li>
+    <li>The browser loads <code>index.html</code>, which loads <code>/src/main.tsx</code> as a JS module.</li>
+    <li><code>main.tsx</code> calls <code>ReactDOM.createRoot(...).render(&lt;App /&gt;)</code> — React takes over the <code>#root</code> <code>&lt;div&gt;</code>.</li>
+    <li><code>App.tsx</code> calls the <code>useSession()</code> hook. On mount, <code>useSession</code> immediately calls <code>logout()</code> (see Flow 3) which calls <code>hmiClient.logout()</code> → <code>POST /api/hmi-auth/logout</code>, then sets <code>status = "unauthenticated"</code>.</li>
+    <li>While <code>status === "loading"</code>, <code>App.tsx</code> renders <code>&lt;FullPageSpinner /&gt;</code> ("Starting up…").</li>
+    <li>Once unauthenticated, <code>App.tsx</code>'s internal <code>flow</code> state defaults to <code>"picker"</code>, so <code>UserPickerPage</code> renders next.</li>
+  </ol>
+
+  <h3>Flow 2 — User identification / PIN login</h3>
+  <p><strong>Trigger:</strong> the kiosk lock screen (<code>UserPickerPage</code>) is showing and someone wants to log in.</p>
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 720 420" role="img" aria-label="Identification and PIN login flow: the picker screen lists cached users via RobotServer; a known user goes straight to PIN login, a new user identifies by email first; PIN login posts to the login endpoint checked against a locally cached hash; a user without a PIN set goes through an OTP wizard that RobotServer relays to PlatformServer for email delivery, then verifies the code and confirms a new PIN.">
+        <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="10" y="10" width="110" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="65" y="33" text-anchor="middle" font-size="11" font-weight="600">User</text>
+        <rect x="190" y="10" width="220" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="300" y="33" text-anchor="middle" font-size="11" font-weight="600">Picker / Identify / PinLogin / Wizard</text>
+        <rect x="480" y="10" width="140" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="550" y="33" text-anchor="middle" font-size="11" font-weight="600">RobotServer</text>
+        <rect x="650" y="10" width="60" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor" opacity="0.8"/>
+        <text x="680" y="33" text-anchor="middle" font-size="10" font-weight="600">Platform-Server</text>
+
+        <line x1="65" y1="46" x2="65" y2="400" stroke="currentColor" opacity="0.35"/>
+        <line x1="300" y1="46" x2="300" y2="400" stroke="currentColor" opacity="0.35"/>
+        <line x1="550" y1="46" x2="550" y2="400" stroke="currentColor" opacity="0.35"/>
+        <line x1="680" y1="46" x2="680" y2="400" stroke="currentColor" opacity="0.35"/>
+
+        <line x1="300" y1="72" x2="548" y2="72" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="424" y="65" text-anchor="middle" font-size="10">① GET /api/hmi-auth/users</text>
+
+        <line x1="65" y1="102" x2="298" y2="102" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="182" y="95" text-anchor="middle" font-size="10">②a tap known user → pinSet? branch</text>
+
+        <line x1="65" y1="132" x2="298" y2="132" stroke="currentColor" marker-end="url(#a2)"/>
+        <line x1="300" y1="152" x2="548" y2="152" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="182" y="125" text-anchor="middle" font-size="10">②b "+ New user" → enter email</text>
+        <text x="424" y="145" text-anchor="middle" font-size="10">POST /api/hmi-auth/identify {email}</text>
+
+        <line x1="300" y1="190" x2="548" y2="190" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="424" y="183" text-anchor="middle" font-size="10">③ PIN login: POST /api/hmi-auth/login {email,pin}</text>
+        <text x="424" y="205" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">checked vs. local cached hash — works offline</text>
+
+        <line x1="300" y1="238" x2="548" y2="238" stroke="currentColor" marker-end="url(#a2)"/>
+        <line x1="550" y1="258" x2="678" y2="258" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="424" y="231" text-anchor="middle" font-size="10">④ PIN setup: POST .../pin-setup/request-otp</text>
+        <text x="614" y="251" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">relay send email</text>
+
+        <line x1="300" y1="296" x2="548" y2="296" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="424" y="289" text-anchor="middle" font-size="10">verify-otp → { pinSetupToken }</text>
+
+        <line x1="300" y1="334" x2="548" y2="334" stroke="currentColor" marker-end="url(#a2)"/>
+        <text x="424" y="327" text-anchor="middle" font-size="10">confirm(token, pin) → PIN set, logged in</text>
+
+        <text x="424" y="368" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">OTP auto-send on mount is guarded by a useRef flag so it fires exactly</text>
+        <text x="424" y="381" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">once, even under React StrictMode's double-invoke in development.</text>
+      </svg>
+    </div>
+    <figcaption>The branch point is whether the picked/identified user already has a PIN set: yes goes to PIN login, no goes to the OTP-based PIN setup wizard.</figcaption>
+  </figure>
+  <ol class="step-list">
+    <li><code>UserPickerPage</code> calls <code>hmiClient.listUsers()</code> → <code>GET /api/hmi-auth/users</code> on mount, showing the robot's locally cached roster of users who have access to this robot.</li>
+    <li><strong>(2a) Known user on list:</strong> tapping a name calls <code>onPickUser(email, name, pinSet, avatarUrl)</code>. In <code>App.tsx</code> this sets <code>flow</code> to <code>"pin-login"</code> if <code>pinSet</code> is true, else <code>"pin-setup"</code>.</li>
+    <li><strong>(2b) Not on list ("+ New user"):</strong> <code>flow</code> becomes <code>"identify"</code>. <code>IdentifyPage</code>'s form calls <code>hmiClient.identify(email)</code> → <code>POST /api/hmi-auth/identify</code> with <code>{ email }</code>, returning <code>{ status: "has-access" | "no-account" | "no-access", pinSet, name?, avatarUrl? }</code>. <code>"no-account"</code> shows a "create one at autonav.in" message; <code>"no-access"</code> shows a contact-admin message; <code>"has-access"</code> proceeds exactly like step 2a.</li>
+    <li><strong>PIN login path (<code>PinLoginPage</code>):</strong> user types their 4-digit PIN; on submit, <code>hmiClient.login(email, pin)</code> → <code>POST /api/hmi-auth/login</code> with <code>{ email, pin }</code>. RobotServer checks it against a locally cached hash — works even if the robot's link to PlatformServer/internet is down, per the README. On success, <code>App.tsx</code>'s <code>onLoggedIn</code> calls <code>refresh</code> (from <code>useSession</code>), which re-fetches <code>/api/hmi-auth/session</code> and flips <code>status</code> to <code>"authenticated"</code>.</li>
+    <li><strong>PIN setup path (<code>PinSetupWizard</code>, also used for "Forgot PIN"):</strong> on mount it auto-sends an OTP once via <code>hmiClient.requestPinSetupOtp(email)</code> → <code>POST /api/hmi-auth/pin-setup/request-otp</code>, which RobotServer relays to PlatformServer to actually send the email. The user enters the 6-digit code; <code>hmiClient.verifyPinSetupOtp(email, otp)</code> → <code>POST /api/hmi-auth/pin-setup/verify-otp</code> returns a short-lived <code>{ pinSetupToken }</code>. The user then chooses and confirms a 4-digit PIN; <code>hmiClient.confirmPinSetup(pinSetupToken, pin)</code> → <code>POST /api/hmi-auth/pin-setup/confirm</code> completes setup and effectively logs them in, after which <code>App.tsx</code> routes to <code>PinLoginPage</code> with a "PIN set — log in with it now" notice.</li>
+  </ol>
+  <p>A subtle but important guard in <code>PinSetupWizard.tsx</code>: the OTP auto-send on mount is wrapped in a <code>useRef</code> boolean (not <code>useState</code>) so it fires exactly once even under React's StrictMode double-invoke in development — otherwise the first emailed code would be silently invalidated by a second, near-simultaneous request before the user could use it.</p>
+
+  <h3>Flow 3 — Session persistence across reloads (intentionally <em>not</em> persistent)</h3>
+  <p><strong>Trigger:</strong> any full page reload/app restart while previously logged in.</p>
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 540 230" role="img" aria-label="Session persistence flow: useSession logs out unconditionally on every mount regardless of a valid cookie, so status only becomes authenticated through an explicit PIN submit calling refresh, which checks the session endpoint.">
+        <defs><marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="10" y="10" width="190" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="105" y="33" text-anchor="middle" font-size="11.5" font-weight="600">useSession.ts</text>
+        <rect x="360" y="10" width="170" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="445" y="33" text-anchor="middle" font-size="11.5" font-weight="600">RobotServer</text>
+        <line x1="105" y1="46" x2="105" y2="210" stroke="currentColor" opacity="0.35"/>
+        <line x1="445" y1="46" x2="445" y2="210" stroke="currentColor" opacity="0.35"/>
+
+        <line x1="105" y1="76" x2="443" y2="76" stroke="currentColor" marker-end="url(#a3)"/>
+        <text x="274" y="69" text-anchor="middle" font-size="10.5">① POST /api/hmi-auth/logout — on every mount</text>
+
+        <text x="274" y="110" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">② status → "unauthenticated" unless an explicit PIN submit follows</text>
+
+        <line x1="105" y1="140" x2="443" y2="140" stroke="currentColor" marker-end="url(#a3)"/>
+        <text x="274" y="133" text-anchor="middle" font-size="10.5">③ refresh(): GET /api/hmi-auth/session</text>
+        <line x1="445" y1="172" x2="107" y2="172" stroke="currentColor" marker-end="url(#a3)"/>
+        <text x="274" y="165" text-anchor="middle" font-size="10.5">200 { user } → authenticated, or 401 thrown → unauthenticated</text>
+      </svg>
+    </div>
+    <figcaption>A reload can never silently resume a previous operator's session, even with a still-valid cookie — only an interactive PIN submit calls refresh().</figcaption>
+  </figure>
+  <ol class="step-list">
+    <li><code>useSession()</code>'s <code>useEffect</code> runs <code>logout()</code> unconditionally on every mount — a deliberate design choice (see the comment in <code>useSession.ts</code>), not a bug: "A reload must always ask for the PIN again, even if the session cookie from before the reload is still valid."</li>
+    <li>This means the <em>only</em> way <code>status</code> becomes <code>"authenticated"</code> is an explicit, interactive PIN submit calling <code>refresh()</code> (Flow 2, step 3) — a stale browser session surviving a reload can never silently re-authenticate someone on a shared kiosk device.</li>
+    <li><code>refresh()</code> itself just calls <code>hmiClient.session()</code> → <code>GET /api/hmi-auth/session</code>, which returns <code>{ user: SessionUser }</code> if RobotServer's session cookie is currently valid, or throws (caught, setting <code>status = "unauthenticated"</code>) if not.</li>
+  </ol>
+
+  <h3>Flow 4 — Live telemetry via WebSocket (<code>topicsSocket.ts</code>)</h3>
+  <p><strong>Trigger:</strong> <code>RobotAppHomePage</code> mounts after a successful login.</p>
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 680 290" role="img" aria-label="Live telemetry flow: the home page subscribes to the robotStatus topic, TopicsSocket lazily opens a WebSocket to RobotServer's /ws/topics, RobotServer pushes typed frames, TopicsSocket dispatches data to listeners causing a re-render, and reconnects automatically three seconds after any disconnect.">
+        <defs><marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="10" y="10" width="190" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="105" y="33" text-anchor="middle" font-size="11" font-weight="600">HomePage / useTopic</text>
+        <rect x="265" y="10" width="170" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="350" y="33" text-anchor="middle" font-size="11" font-weight="600">TopicsSocket</text>
+        <rect x="500" y="10" width="170" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="585" y="33" text-anchor="middle" font-size="11" font-weight="600">RobotServer /ws/topics</text>
+        <line x1="105" y1="46" x2="105" y2="270" stroke="currentColor" opacity="0.35"/>
+        <line x1="350" y1="46" x2="350" y2="270" stroke="currentColor" opacity="0.35"/>
+        <line x1="585" y1="46" x2="585" y2="270" stroke="currentColor" opacity="0.35"/>
+
+        <line x1="105" y1="76" x2="348" y2="76" stroke="currentColor" marker-end="url(#a4)"/>
+        <text x="226" y="69" text-anchor="middle" font-size="10">① subscribe("robotStatus", listener)</text>
+
+        <line x1="350" y1="110" x2="583" y2="110" stroke="currentColor" marker-end="url(#a4)"/>
+        <text x="466" y="103" text-anchor="middle" font-size="10">② open WS (lazy, first subscribe)</text>
+
+        <line x1="585" y1="144" x2="352" y2="144" stroke="currentColor" marker-end="url(#a4)"/>
+        <text x="466" y="137" text-anchor="middle" font-size="10">③ push {type, data} frames</text>
+
+        <line x1="350" y1="178" x2="107" y2="178" stroke="currentColor" marker-end="url(#a4)"/>
+        <text x="226" y="171" text-anchor="middle" font-size="10">④ dispatch to listeners of type → re-render</text>
+
+        <path d="M 585 210 C 640 210 640 240 585 240" fill="none" stroke="currentColor" marker-end="url(#a4)"/>
+        <text x="650" y="220" font-size="9.5">⑤ on close:</text>
+        <text x="650" y="232" font-size="9.5">reconnect</text>
+        <text x="650" y="244" font-size="9.5">after 3s, forever</text>
+      </svg>
+    </div>
+    <figcaption>One shared socket, multiplexed by topic name, with indefinite auto-reconnect — appropriate for a kiosk expected to run forever.</figcaption>
+  </figure>
+  <ol class="step-list">
+    <li><code>RobotAppHomePage</code> calls <code>useTopic&lt;RobotStatus&gt;("robotStatus")</code>.</li>
+    <li>Internally, this calls <code>topicsSocket.subscribe("robotStatus", listener)</code>, which (a) lazily opens a WebSocket to <code>ws(s)://&lt;host&gt;/ws/topics</code> if not already open, and (b) registers the listener in a <code>Map&lt;topic, Set&lt;listener&gt;&gt;</code>.</li>
+    <li>RobotServer pushes JSON frames shaped <code>{ type: string, data: unknown }</code> over the socket; <code>TopicsSocket</code> parses each frame and dispatches <code>frame.data</code> to every listener registered under <code>frame.type</code>.</li>
+    <li>For the <code>"robotStatus"</code> topic the payload shape used by this page is <code>{ internetConnectivity: boolean }</code>; the hook stores it in component state, re-rendering whenever a new frame arrives.</li>
+    <li>If the socket closes (network blip, RobotServer restart), <code>TopicsSocket</code> nulls out its reference and schedules a reconnect in 3 seconds — it keeps retrying indefinitely.</li>
+    <li>The online/offline badge and pulsing status dot on the home screen are purely a reflection of the latest <code>robotStatus</code> frame — there is no REST fallback for this value.</li>
+  </ol>
+
+  <h3>Flow 5 — Settings: LED control</h3>
+  <p><strong>Trigger:</strong> a logged-in user opens Settings (<code>SettingsPage</code>) and toggles the light or drags the brightness slider.</p>
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 640 270" role="img" aria-label="LED control flow: toggling the light posts a pattern id, dragging the brightness slider posts a 0-255 value converted from the 0-100 percent shown on screen; both return a success/message payload where a 502 is shown inline rather than thrown; there is no endpoint to read current hardware state back, so the toggle and slider are optimistic." >
+        <defs><marker id="a5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="10" y="10" width="110" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="65" y="33" text-anchor="middle" font-size="11" font-weight="600">User</text>
+        <rect x="230" y="10" width="220" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="340" y="33" text-anchor="middle" font-size="11" font-weight="600">SettingsPage + firmwareClient</text>
+        <rect x="520" y="10" width="110" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="575" y="33" text-anchor="middle" font-size="10.5" font-weight="600">/api/firmware/led/*</text>
+        <line x1="65" y1="46" x2="65" y2="250" stroke="currentColor" opacity="0.35"/>
+        <line x1="340" y1="46" x2="340" y2="250" stroke="currentColor" opacity="0.35"/>
+        <line x1="575" y1="46" x2="575" y2="250" stroke="currentColor" opacity="0.35"/>
+
+        <line x1="65" y1="76" x2="338" y2="76" stroke="currentColor" marker-end="url(#a5)"/>
+        <text x="200" y="69" text-anchor="middle" font-size="10">① toggle light</text>
+        <line x1="340" y1="96" x2="573" y2="96" stroke="currentColor" marker-end="url(#a5)"/>
+        <text x="456" y="89" text-anchor="middle" font-size="10">POST /led/pattern {patternId}</text>
+
+        <line x1="65" y1="130" x2="338" y2="130" stroke="currentColor" marker-end="url(#a5)"/>
+        <text x="200" y="123" text-anchor="middle" font-size="10">② drag brightness</text>
+        <line x1="340" y1="150" x2="573" y2="150" stroke="currentColor" marker-end="url(#a5)"/>
+        <text x="456" y="143" text-anchor="middle" font-size="10">POST /led/brightness {0-255}</text>
+
+        <line x1="575" y1="184" x2="342" y2="184" stroke="currentColor" marker-end="url(#a5)"/>
+        <text x="456" y="177" text-anchor="middle" font-size="10">③ { success, message } — 502 shown inline</text>
+
+        <text x="340" y="220" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">④ no GET endpoint exists — toggle/slider state is optimistic, client-side only</text>
+      </svg>
+    </div>
+    <figcaption>Both controls fire-and-assume: the UI does not read hardware state back, so a reload always resets to the default display regardless of the light's actual state.</figcaption>
+  </figure>
+  <ol class="step-list">
+    <li>Toggling the light calls <code>firmwareClient.setLedPattern(patternId)</code> → <code>POST /api/firmware/led/pattern</code> with body <code>{ patternId }</code>, where <code>patternId</code> is <code>LED_PATTERN_IDLE</code> (2) to turn on or <code>LED_PATTERN_OFF</code> (0) to turn off — numeric IDs defined client-side to mirror the firmware's own <code>led_pattern.h</code> header.</li>
+    <li>Dragging the brightness slider (0–100%) calls <code>firmwareClient.setBrightness(brightness)</code> → <code>POST /api/firmware/led/brightness</code> with the percentage converted to the firmware's native 0–255 range: <code>Math.round((level / 100) * 255)</code>.</li>
+    <li>Both calls return <code>{ success: boolean, message: string }</code>. A <code>success: false</code> (e.g. firmware returned 502 because the ESP32 board didn't ACK) is thrown as a regular JS <code>Error</code> and shown inline rather than crashing the page.</li>
+    <li>There is <strong>no "read current state" endpoint</strong>, so this page deliberately tracks light-on/brightness optimistically in local <code>useState</code> rather than reading real hardware state back — a reload will reset the displayed toggle/slider to its default even if the light is actually still on.</li>
+  </ol>
+
+  <h3>Flow 6 — Wi-Fi &amp; VPN configuration</h3>
+  <p><strong>Trigger:</strong> from the pre-login <code>UserPickerPage</code> ("Wifi settings" button) or the authenticated <code>SettingsPage</code> ("Wifi settings" button) — reachable from both because a robot may need internet configured before anyone can even log in.</p>
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 680 300" role="img" aria-label="Wi-Fi and VPN flow: the settings page lists nearby networks and current connection in parallel on mount; tapping a network shows a password field for secured networks; connecting posts ssid and password and refreshes; VPN buttons post a connect or disconnect action; a 502 response is treated as a domain failure rather than thrown.">
+        <defs><marker id="a6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <rect x="10" y="10" width="110" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="65" y="33" text-anchor="middle" font-size="11" font-weight="600">User</text>
+        <rect x="245" y="10" width="220" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="355" y="33" text-anchor="middle" font-size="10.5" font-weight="600">WifiSettingsPage + networkClient</text>
+        <rect x="550" y="10" width="120" height="36" rx="6" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="610" y="33" text-anchor="middle" font-size="10" font-weight="600">/api/system/network/*</text>
+        <line x1="65" y1="46" x2="65" y2="280" stroke="currentColor" opacity="0.35"/>
+        <line x1="355" y1="46" x2="355" y2="280" stroke="currentColor" opacity="0.35"/>
+        <line x1="610" y1="46" x2="610" y2="280" stroke="currentColor" opacity="0.35"/>
+
+        <line x1="355" y1="76" x2="608" y2="76" stroke="currentColor" marker-end="url(#a6)"/>
+        <text x="482" y="69" text-anchor="middle" font-size="10">① GET /wifi + GET /wifi/current (parallel)</text>
+
+        <line x1="65" y1="110" x2="353" y2="110" stroke="currentColor" marker-end="url(#a6)"/>
+        <text x="209" y="103" text-anchor="middle" font-size="10">② tap network → password field if WPA/WEP</text>
+
+        <line x1="355" y1="148" x2="608" y2="148" stroke="currentColor" marker-end="url(#a6)"/>
+        <text x="482" y="141" text-anchor="middle" font-size="10">③ POST /wifi/connect {ssid,password}</text>
+
+        <line x1="355" y1="186" x2="608" y2="186" stroke="currentColor" marker-end="url(#a6)"/>
+        <text x="482" y="179" text-anchor="middle" font-size="10">④ POST /vpn {action}</text>
+
+        <text x="355" y="222" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">⑤ 502 → treated as domain failure {success:false,message}, not thrown</text>
+      </svg>
+    </div>
+    <figcaption>Network calls are deliberately unauthenticated, since a robot may need Wi-Fi fixed before anyone can log in at all.</figcaption>
+  </figure>
+  <ol class="step-list">
+    <li>On mount, <code>WifiSettingsPage</code> calls <code>networkClient.listWifiNetworks()</code> (<code>GET /api/system/network/wifi</code> → <code>{ networks: WifiNetwork[] }</code>, each <code>{ ssid, signal, security }</code>) and <code>networkClient.getCurrentWifi()</code> (<code>GET /api/system/network/wifi/current</code> → <code>{ connected, ssid? }</code>) in parallel via <code>Promise.all</code>.</li>
+    <li>Tapping a network in the list opens an inline connect panel; if its <code>security</code> field matches <code>/wpa|wep/i</code> a password field is shown.</li>
+    <li>Tapping "Connect" calls <code>networkClient.connectWifi(ssid, password)</code> → <code>POST /api/system/network/wifi/connect</code> with <code>{ ssid, password }</code>; on success the page re-runs step 1 to refresh the list/current state.</li>
+    <li>VPN connect/disconnect buttons call <code>networkClient.controlVpn(action)</code> → <code>POST /api/system/network/vpn</code> with <code>{ action: "connect" | "disconnect" }</code>.</li>
+    <li>As with the firmware client, a 502 response is treated as a well-formed <code>{ success: false, message }</code> domain failure (e.g. <code>nmcli</code> rejected the connection) rather than a thrown network error.</li>
+  </ol>
+</section>
+
+<!-- ======================= 6. CROSS-COMPONENT ======================= -->
+<section id="cross-component">
+  <h2><span class="eyebrow">06</span><br>Cross-Component Interaction</h2>
+
+  <figure class="diagram">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 700 260" role="img" aria-label="RobotApp talks only to RobotServer, same-origin, with no CORS. It never calls PlatformServer directly, shown as a crossed-out dashed line. The only path to PlatformServer is indirect, through RobotServer's own platformClient, used to relay OTP emails for the PIN setup wizard.">
+        <defs>
+          <marker id="a7" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          <marker id="a7w" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--warn-border)"/></marker>
+        </defs>
+
+        <rect x="20" y="90" width="170" height="70" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+        <text x="105" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent-strong)">RobotApp</text>
+        <text x="105" y="137" text-anchor="middle" font-size="10" fill="var(--accent-strong)">kiosk UI (this doc)</text>
+
+        <rect x="275" y="90" width="170" height="70" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="360" y="120" text-anchor="middle" font-size="13" font-weight="600">RobotServer</text>
+        <text x="360" y="137" text-anchor="middle" font-size="10" fill="var(--fg-muted)">same machine</text>
+
+        <rect x="520" y="90" width="160" height="70" rx="10" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2" opacity="0.85"/>
+        <text x="600" y="120" text-anchor="middle" font-size="13" font-weight="600">PlatformServer</text>
+        <text x="600" y="137" text-anchor="middle" font-size="10" fill="var(--fg-muted)">cloud/VPN</text>
+
+        <line x1="190" y1="112" x2="273" y2="112" stroke="currentColor" stroke-width="1.6" marker-end="url(#a7)" marker-start="url(#a7)"/>
+        <text x="231" y="100" text-anchor="middle" font-size="10">/api/*, /ws/*</text>
+        <text x="231" y="150" text-anchor="middle" font-size="9.5" fill="var(--fg-muted)">same-origin, no CORS</text>
+
+        <line x1="445" y1="140" x2="518" y2="140" stroke="currentColor" stroke-width="1.6" marker-end="url(#a7)"/>
+        <text x="482" y="156" text-anchor="middle" font-size="9.5">platformClient.ts</text>
+
+        <path d="M 105 90 C 105 20 600 20 600 88" fill="none" stroke="var(--warn-border)" stroke-width="1.8" stroke-dasharray="7 5" marker-end="url(#a7w)"/>
+        <circle cx="352" cy="32" r="11" fill="var(--warn-bg)" stroke="var(--warn-border)" stroke-width="1.6"/>
+        <text x="352" y="37" text-anchor="middle" font-size="13" font-weight="700" fill="var(--warn-border)">✕</text>
+        <text x="352" y="58" text-anchor="middle" font-size="10" fill="var(--warn-fg)">never called directly</text>
+
+        <text x="360" y="210" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">Indirect path: RobotApp → RobotServer → platformClient.ts → PlatformServer</text>
+        <text x="360" y="226" text-anchor="middle" font-size="10.5" fill="var(--fg-muted)">(only use case today: sending the PIN-setup OTP email)</text>
+      </svg>
+    </div>
+    <figcaption>RobotApp's entire network surface is RobotServer's same-origin API and WebSocket; it has no knowledge of PlatformServer's address at all.</figcaption>
+  </figure>
+
+  <ul class="step-list">
+    <li><strong>Talks directly to:</strong> RobotServer only, and <strong>always same-origin</strong> — no base URL/hostname is ever hardcoded in any <code>src/api/*.ts</code> file; every call is a relative path like <code>fetch("/api/hmi-auth/session")</code> or <code>new WebSocket(protocol + "://" + window.location.host + "/ws/topics")</code>.</li>
+    <li><strong>In development:</strong> <code>vite.config.ts</code>'s dev server runs on port <strong>5174</strong> and proxies any request to <code>/api</code> to <code>http://localhost:8000</code> (where RobotServer is expected to run locally). The WebSocket path (<code>/ws</code>) is <em>not</em> in the dev proxy config, so live topic data won't work against a local dev server unless RobotServer is reachable and proxying is set up separately — a potential dev-environment gap (see Gotchas).</li>
+    <li><strong>In production:</strong> RobotApp's static build is served by Nginx (<code>nginx.conf</code>) inside a Docker container running with <code>network_mode: host</code> (the container shares the robot's actual network interfaces), so <code>127.0.0.1:8000</code> inside the container <em>is</em> the host's own loopback, where RobotServer listens. Nginx reverse-proxies <code>/api/</code>, <code>/health</code>, <code>/maps/</code>, and <code>/ws/</code> (with WebSocket upgrade headers) to that address, forwarding the <code>Cookie</code> header explicitly. Everything else falls through to serving the static built files, with an SPA fallback (<code>try_files $uri $uri/ /index.html</code>) for any unmatched path.</li>
+    <li><strong>Auth mechanism:</strong> an HTTP-only session cookie issued by RobotServer (<code>RobotServer/src/modules/robot-auth/robotAuth.service.ts</code>). Because the browser always sees RobotApp and RobotServer as the exact same origin, there is no CORS configuration and no SameSite/cross-site cookie handling needed anywhere in this app — repeatedly called out in code comments (<code>hmiClient.ts</code>, <code>nginx.conf</code>, the README).</li>
+    <li><strong>Does NOT talk to PlatformServer directly</strong>, confirmed both by the README ("PlatformApp ... never talks to a robot directly ... RobotApp is the thing that does talk to RobotServer directly") and by the complete absence of any PlatformServer URL/hostname anywhere in <code>RobotApp/src</code>. When OTP emails need sending (PIN-setup flow), the request goes RobotApp → RobotServer → (RobotServer's own <code>platformClient.ts</code>) → PlatformServer; RobotApp itself only ever sees RobotServer's <code>/api/hmi-auth/*</code> surface.</li>
+  </ul>
+</section>
+
+<!-- ======================= 7. RUNNING LOCALLY ======================= -->
+<section id="running-locally">
+  <h2><span class="eyebrow">07</span><br>Running &amp; Developing Locally</h2>
+
+  <h3>npm scripts</h3>
+  <div class="code-wrap"><pre>npm run dev          # starts Vite dev server on port 5174 (strictPort: true — fails rather than picking another port)
+npm run build         # tsc -b (type-check only, no JS emitted) then `vite build` → produces dist/
+npm run preview       # serves the built dist/ locally for a production-like smoke test
+npm run lint          # ESLint over src/**/*.{ts,tsx}
+npm run test          # vitest run — runs the test suite once
+npm run test:watch    # vitest — reruns tests on file change</pre></div>
+
+  <h3>Dev server details</h3>
+  <p>Port <strong>5174</strong> (fixed, per <code>vite.config.ts</code>'s <code>server.strictPort: true</code>), with <code>/api/*</code> requests proxied to <code>http://localhost:8000</code> — so to develop against live data you need RobotServer running locally on port 8000 at the same time. No <code>.env</code> file or environment variables are used anywhere in this app (no <code>src/config</code> or <code>import.meta.env</code> usage was found) — all such configuration (base URLs, ports) is either a relative path or hardcoded directly in <code>vite.config.ts</code>/<code>nginx.conf</code>.</p>
+
+  <h3>Docker / Nginx deployment</h3>
+  <ol class="step-list">
+    <li><code>RobotApp/Dockerfile</code> (built from the <strong>repo root</strong> as its context — note the <code>COPY RobotApp/...</code> paths, matching <code>docker-compose.yml</code>'s <code>dockerfile: RobotApp/Dockerfile</code> with <code>context: .</code>) does a two-stage build: a <code>node:20-slim</code> stage runs <code>npm ci</code> and <code>npm run build</code>, producing <code>/robotapp/dist</code>; a second <code>nginx:1.27-alpine</code> stage copies that <code>dist/</code> into Nginx's web root and copies in the custom <code>nginx.conf</code>, exposing port 80.</li>
+    <li><code>docker-compose.yml</code>'s <code>robotapp</code> service builds this image, runs with <code>network_mode: host</code> (so Nginx's port 80 is directly the robot's own port 80, no Docker port-mapping needed — required so the <code>127.0.0.1:8000</code> proxy target inside <code>nginx.conf</code> really is RobotServer's host-level port), and depends on the <code>robotserver</code> service starting first.</li>
+    <li>For the kiosk screen itself: <code>deploy/kiosk/robotapp-kiosk.service</code> is a systemd unit that launches <code>deploy/kiosk/robotapp-kiosk.sh</code> on graphical login; that script polls the app's URL until it responds, then opens Google Chrome in <code>--app=</code> mode (no browser chrome) and forces true fullscreen via a simulated F11 keypress using <code>xdotool</code>.</li>
+  </ol>
+
+  <div class="code-wrap"><pre># Build the image from the repo root
+docker compose build robotapp
+
+# Run the full stack (robotserver first, then robotapp)
+docker compose up robotserver robotapp</pre></div>
+
+  <p><strong>Building for the kiosk device:</strong> build the Docker image (<code>docker compose build robotapp</code> from the repo root, or as part of a full <code>docker compose up</code>), deploy/run it on the robot's onboard computer with the existing <code>docker-compose.yml</code>, and ensure the systemd kiosk service/script are installed so Chrome auto-launches against it on boot.</p>
+</section>
+
+<!-- ======================= 8. GOTCHAS ======================= -->
+<section id="gotchas">
+  <h2><span class="eyebrow">08</span><br>Gotchas &amp; Things a New Developer Must Know</h2>
+
+  <p>Two of the items below are real bugs worth fixing. The rest are deliberate design choices that look like bugs at first glance — don't "fix" them.</p>
+
+  <div class="callout callout-bug">
+    <span class="tag">Bug — fix before relying on it</span>
+    <p><strong>The kiosk launcher script points at port 5174, not port 80.</strong> <code>deploy/kiosk/robotapp-kiosk.sh</code> has <code>URL="http://localhost:5174/"</code> active, with a commented-out <code># URL="http://localhost/"</code> right above it. Port 5174 is the <strong>Vite dev server</strong> port, while the production Docker/Nginx stack (<code>docker-compose.yml</code>, <code>network_mode: host</code>) serves on port <strong>80</strong>. As committed, the kiosk script would only work if a dev server happens to be running — confirm/fix this before relying on it against a <code>docker compose up</code> deployment.</p>
+  </div>
+
+  <div class="callout callout-bug">
+    <span class="tag">Bug — dev-environment gap</span>
+    <p><strong>The dev-server proxy only covers <code>/api</code>, not <code>/ws</code>.</strong> <code>vite.config.ts</code>'s proxy config only forwards <code>/api</code> to <code>localhost:8000</code>; <code>topicsSocket.ts</code> connects to <code>/ws/topics</code> on <code>window.location.host</code>, which during <code>npm run dev</code> would be the Vite dev server (port 5174) itself, not RobotServer — so live telemetry (the online/offline badge on the home screen) will not work against <code>npm run dev</code> without either adding a <code>/ws</code> proxy entry or testing against the full Docker/Nginx stack instead.</p>
+  </div>
+
+  <div class="callout callout-note">
+    <span class="tag">By design, not a bug</span>
+    <p><strong>Kiosk-mode fixed viewport.</strong> <code>index.html</code>'s viewport meta tag and <code>tailwind.css</code> both hardcode a <strong>1280×800</strong> layout (<code>width: 1280px; height: 800px; overflow: hidden</code> on <code>html</code>/<code>body</code>/<code>#root</code>) — this app is not responsive and is not meant to be; it assumes one specific touchscreen resolution. Changing target hardware would require revisiting these fixed dimensions.</p>
+  </div>
+
+  <div class="callout callout-note">
+    <span class="tag">By design, not a bug</span>
+    <p><strong>Every reload forces re-login, on purpose.</strong> <code>useSession.ts</code> calls <code>logout()</code> unconditionally on mount even if a still-valid session cookie exists — this is <em>not</em> a bug to "fix" by skipping it; removing it would let anyone who reloads the kiosk screen inherit the previous operator's session.</p>
+  </div>
+
+  <div class="callout callout-note">
+    <span class="tag">By design, not a bug</span>
+    <p><strong>Optimistic LED state, no read-back.</strong> <code>SettingsPage.tsx</code>'s LED toggle/brightness slider are optimistic, client-side-only state — there's no GET endpoint for current LED state, so a page reload resets the displayed UI regardless of the light's actual physical state.</p>
+  </div>
+
+  <div class="callout callout-note">
+    <span class="tag">By design, not a bug</span>
+    <p><strong>502 used as a valid domain response.</strong> Both <code>firmwareClient.ts</code> and <code>networkClient.ts</code> treat HTTP 502 specially — unwrapping it as a normal <code>{ success: false, message }</code> payload instead of throwing — because RobotServer uses 502 to mean "the downstream hardware/system command failed," not "the gateway failed." Any new endpoint following this convention needs the same handling; don't assume all non-2xx statuses are fatal in this API layer.</p>
+  </div>
+
+  <div class="gotcha-plain">
+    <span class="tag">Touch-only, no browser chrome</span>
+    <p><code>user-select: none</code> and <code>overscroll-behavior: none</code> are set globally in <code>tailwind.css</code> specifically to prevent accidental text selection and pull-to-refresh gestures on a touchscreen kiosk. There's no keyboard-first design consideration; everything is tap targets.</p>
+  </div>
+
+  <div class="gotcha-plain">
+    <span class="tag">The PIN model is shared-device security, not personal-device security</span>
+    <p>A 4-digit PIN is weak compared to PlatformApp's password/Google login, but that's by design: this device sits in a public/shared physical location, identity is pre-vetted by RobotServer's roster sync from PlatformServer, and the PIN only needs to gate <em>who on that pre-approved list</em> is currently operating the robot — not prove identity to the internet at large. Don't try to "harden" this into a full auth system without understanding that trade-off is deliberate (see README).</p>
+  </div>
+
+  <div class="gotcha-plain">
+    <span class="tag">No routing library</span>
+    <p>Flow state lives entirely in <code>App.tsx</code>'s component state. Adding a new screen means extending the <code>UnauthFlow</code>/<code>AuthedView</code> union types and the if/else chain in <code>App.tsx</code>, not adding a route. There is no browser back-button support or deep-linkable URLs for individual screens.</p>
+  </div>
+
+  <div class="gotcha-plain">
+    <span class="tag">UI primitives duplicated from PlatformApp</span>
+    <p>Confirmed in the README — not shared via a common package. If asked to "share" <code>Button</code>/<code>Card</code>/<code>Input</code> with PlatformApp, that's a conscious architectural trade-off (independent builds) that needs deliberate revisiting, not an oversight to silently fix.</p>
+  </div>
+
+  <div class="gotcha-plain">
+    <span class="tag">Test coverage is minimal</span>
+    <p><code>App.test.tsx</code> has exactly two integration tests (no-session → picker screen; new-user → PIN-setup wizard), using a hand-mocked <code>fetch</code>. There's no test coverage at all for the settings/Wi-Fi/firmware/WebSocket flows — a new developer adding features there currently has no existing test pattern beyond <code>App.test.tsx</code>'s <code>fetch</code>-mocking style to imitate.</p>
+  </div>
+
+  <div class="gotcha-plain">
+    <span class="tag">No TODO/FIXME comments anywhere in RobotApp/src</span>
+    <p>The explanatory comments present (e.g. in <code>useSession.ts</code>, <code>PinSetupWizard.tsx</code>, <code>hmiClient.ts</code>) are intentional design-rationale notes, not markers of unfinished work. The <code>RobotAppHomePage.tsx</code> "Teleop, navigation &amp; mapping controls land here in a future milestone" box is the one explicit placeholder for planned-but-not-yet-built functionality.</p>
+  </div>
+</section>
+
+<footer>
+  RobotApp architecture reference · one of five AutoNav onboarding docs (RobotApp, RobotServer, PlatformServer, PlatformApp, AndroidApp).
+</footer>
+
+</div>
+
+</body></html>
