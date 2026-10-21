@@ -34,7 +34,7 @@ class ScanAnalyzer(Node):
             self.get_logger().info(f"Unique Intensities and Counts:\n{intensity_counts}")
             self.get_logger().info("-" * 40)
         else:
-            self.get_logger().warn("Received scan with 0 intensity points. Your LiDAR might not output intensity data.")
+            self.get_logger().warning("Received scan with 0 intensity points. Your LiDAR might not output intensity data.")
 
 def main(args=None):
     rclpy.init(args=args)

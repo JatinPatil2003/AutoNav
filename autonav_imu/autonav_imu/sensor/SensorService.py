@@ -79,24 +79,24 @@ class SensorService:
 
         # IMU connected => apply IMU Configuration:
         if not (self.con.transmit(registers.BNO055_OPR_MODE_ADDR, 1, bytes([registers.OPERATION_MODE_CONFIG]))):
-            self.node.get_logger().warn('Unable to set IMU into config mode.')
+            self.node.get_logger().warning('Unable to set IMU into config mode.')
 
         if not (self.con.transmit(registers.BNO055_SYS_TRIGGER_ADDR, 1, bytes([0x20]), False)):
-            self.node.get_logger().warn('Unable to reset IMU.')
+            self.node.get_logger().warning('Unable to reset IMU.')
         
         sleep(0.25)
 
         if not (self.con.transmit(registers.BNO055_PWR_MODE_ADDR, 1, bytes([registers.POWER_MODE_NORMAL]))):
-            self.node.get_logger().warn('Unable to set IMU normal power mode.')
+            self.node.get_logger().warning('Unable to set IMU normal power mode.')
 
         if not (self.con.transmit(registers.BNO055_PAGE_ID_ADDR, 1, bytes([0x00]))):
-            self.node.get_logger().warn('Unable to set IMU register page 0.')
+            self.node.get_logger().warning('Unable to set IMU register page 0.')
 
         if not (self.con.transmit(registers.BNO055_SYS_TRIGGER_ADDR, 1, bytes([0x00]))):
-            self.node.get_logger().warn('Unable to start IMU.')
+            self.node.get_logger().warning('Unable to start IMU.')
 
         if not (self.con.transmit(registers.BNO055_UNIT_SEL_ADDR, 1, bytes([0x83]))):
-            self.node.get_logger().warn('Unable to set IMU units.')
+            self.node.get_logger().warning('Unable to set IMU units.')
 
         # The sensor placement configuration (Axis remapping) defines the
         # position and orientation of the sensor mount.
@@ -113,7 +113,7 @@ class SensorService:
         }
         if not (self.con.transmit(registers.BNO055_AXIS_MAP_CONFIG_ADDR, 2,
                                   mount_positions[self.param.placement_axis_remap.value])):
-            self.node.get_logger().warn('Unable to set sensor placement configuration.')
+            self.node.get_logger().warning('Unable to set sensor placement configuration.')
 
         # Show the current sensor offsets
         self.node.get_logger().info('Current sensor offsets:')
@@ -130,7 +130,7 @@ class SensorService:
                 self.node.get_logger().info('Successfully configured sensor offsets to:')
                 self.print_calib_data()
             else:
-                self.node.get_logger().warn('setting offsets failed')
+                self.node.get_logger().warning('setting offsets failed')
 
 
         # Set Device mode
@@ -138,7 +138,7 @@ class SensorService:
         self.node.get_logger().info(f"Setting device_mode to {device_mode}")
 
         if not (self.con.transmit(registers.BNO055_OPR_MODE_ADDR, 1, bytes([device_mode]))):
-            self.node.get_logger().warn('Unable to set IMU operation mode into operation mode.')
+            self.node.get_logger().warning('Unable to set IMU operation mode into operation mode.')
 
         self.node.get_logger().info('Bosch BNO055 IMU configuration complete.')
 
@@ -417,11 +417,11 @@ class SensorService:
 
     def calibration_request_callback(self, request, response):
         if not (self.con.transmit(registers.BNO055_OPR_MODE_ADDR, 1, bytes([registers.OPERATION_MODE_CONFIG]))):
-            self.node.get_logger().warn('Unable to set IMU into config mode.')
+            self.node.get_logger().warning('Unable to set IMU into config mode.')
         sleep(0.025)
         calib_data = self.get_calib_data()
         if not (self.con.transmit(registers.BNO055_OPR_MODE_ADDR, 1, bytes([registers.OPERATION_MODE_NDOF]))):
-            self.node.get_logger().warn('Unable to set IMU operation mode into operation mode.')
+            self.node.get_logger().warning('Unable to set IMU operation mode into operation mode.')
         response.success = True
         response.message = str(calib_data)
         return response

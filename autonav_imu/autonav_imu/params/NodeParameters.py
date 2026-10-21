@@ -187,5 +187,5 @@ class NodeParameters:
             self.variance_mag = node.get_parameter('variance_mag')
             node.get_logger().info('\tvariance_mag:\t\t"%s"' % self.variance_mag.value)
         except Exception as e:  # noqa: B902
-            node.get_logger().warn('Could not get parameters...setting variables to default')
-            node.get_logger().warn('Error: "%s"' % e)
+            node.get_logger().warning('Could not get parameters...setting variables to default')
+            node.get_logger().warning('Error: "%s"' % e)

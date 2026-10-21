@@ -44,15 +44,15 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
-            name='map',
-            default_value=default_map_path,
-            description='Navigation map path'
-        ),
-
-        DeclareLaunchArgument(
             name='map_name',
             default_value='map',
             description='Navigation map name'
+        ),
+
+        DeclareLaunchArgument(
+            name='map',
+            default_value=default_map_path,
+            description='Navigation map path'
         ),
 
         IncludeLaunchDescription(

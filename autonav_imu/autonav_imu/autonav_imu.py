@@ -101,7 +101,7 @@ def main(args=None):
             if lock.locked():
                 # critical area still locked
                 # that means that the previous data query is still being processed
-                node.get_logger().warn('Message communication in progress - skipping query cycle')
+                node.get_logger().warning('Message communication in progress - skipping query cycle')
                 return
 
             # Acquire lock before entering critical area to prevent overlapping data queries
@@ -116,7 +116,7 @@ def main(args=None):
                 # division by zero in get_sensor_data, return
                 return
             except Exception as e:  # noqa: B902
-                node.get_logger().warn('Receiving sensor data failed with %s:"%s"'
+                node.get_logger().warning('Receiving sensor data failed with %s:"%s"'
                                        % (type(e).__name__, e))
             finally:
                 lock.release()
@@ -126,7 +126,7 @@ def main(args=None):
             if lock.locked():
                 # critical area still locked
                 # that means that the previous data query is still being processed
-                node.get_logger().warn('Message communication in progress - skipping query cycle')
+                node.get_logger().warning('Message communication in progress - skipping query cycle')
                 # traceback.print_exc()
                 return
 
@@ -136,7 +136,7 @@ def main(args=None):
                 # perform synchronized block:
                 node.sensor.get_calib_status()
             except Exception as e:  # noqa: B902
-                node.get_logger().warn('Receiving calibration status failed with %s:"%s"'
+                node.get_logger().warning('Receiving calibration status failed with %s:"%s"'
                                        % (type(e).__name__, e))
                 # traceback.print_exc()
             finally:
