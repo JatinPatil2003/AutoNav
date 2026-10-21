@@ -6,6 +6,7 @@ const COVARIANCE_THRESHOLD = 0.15;
 
 export type OccupancyGridMsg = nav_msgs.msg.OccupancyGrid;
 export type PoseMsg = geometry_msgs.msg.PoseWithCovarianceStamped;
+export type PoseStampedMsg = geometry_msgs.msg.PoseStamped;
 
 export function mapOccupancyGridToMapUpdate(msg: OccupancyGridMsg): MapUpdate {
   return {
@@ -27,6 +28,20 @@ export function mapPoseToLocationUpdate(msg: PoseMsg): LocationUpdate {
     x: msg.pose.pose.position.x,
     y: msg.pose.pose.position.y,
     theta: yawFromQuaternion(msg.pose.pose.orientation),
+  };
+}
+
+/**
+ * Same shape as mapPoseToLocationUpdate, for the plain (uncovaried)
+ * PoseStamped published by autonav_utils's tf_pose_bridge
+ * node — the map->base_footprint TF republished as a topic during SLAM,
+ * when AMCL (and its PoseWithCovarianceStamped) isn't running.
+ */
+export function mapPoseStampedToLocationUpdate(msg: PoseStampedMsg): LocationUpdate {
+  return {
+    x: msg.pose.position.x,
+    y: msg.pose.position.y,
+    theta: yawFromQuaternion(msg.pose.orientation),
   };
 }
 

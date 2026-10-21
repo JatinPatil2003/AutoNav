@@ -1,0 +1,11 @@
+---
+bool success
+string message
+float32 voltage_volts
+uint8 percentage
+bool charging
+# True until the ESP32 has a real voltage-sense ADC wired up — see
+# autonav_firmware/include/autonav_firmware/esp32_protocol.hpp's
+# BATTERY_STATUS_RESPONSE payload comment. Consumers must not present these
+# fields as a live reading while this is true.
+bool is_default

@@ -1,5 +1,7 @@
 #include "autonav_firmware/esp32_bridge_node.hpp"
 
+#include <cstring>
+
 namespace autonav_firmware
 {
 
@@ -7,6 +9,7 @@ namespace
 {
 constexpr auto kWatchdogPeriod = std::chrono::milliseconds(50);
 constexpr auto kGetDeviceIdWaitTimeout = std::chrono::milliseconds(500);
+constexpr auto kGetBatteryStatusWaitTimeout = std::chrono::milliseconds(500);
 constexpr auto kAckWaitTimeout = std::chrono::milliseconds(500);
 
 std::string deviceIdFromPayload(const uint8_t * payload)
@@ -78,6 +81,14 @@ Esp32BridgeNode::Esp32BridgeNode()
       handleSetBrightness(request, response);
     });
 
+  get_battery_status_srv_ = create_service<autonav_msgs::srv::GetBatteryStatus>(
+    "~/get_battery_status",
+    [this](
+      const autonav_msgs::srv::GetBatteryStatus::Request::SharedPtr request,
+      autonav_msgs::srv::GetBatteryStatus::Response::SharedPtr response) {
+      handleGetBatteryStatus(request, response);
+    });
+
   transport_.setFrameCallback(
     [this](esp32_protocol::CommandId cmd, const uint8_t * payload, uint8_t len) {
       onFrame(cmd, payload, len);
@@ -127,6 +138,20 @@ void Esp32BridgeNode::onFrame(esp32_protocol::CommandId cmd, const uint8_t * pay
         return;
       }
       estop_physical_.store(payload[0] != 0);
+      break;
+    }
+
+    case esp32_protocol::CommandId::BATTERY_STATUS_RESPONSE: {
+      if (len < esp32_protocol::BATTERY_STATUS_PAYLOAD_LEN) {
+        return;
+      }
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      std::memcpy(&cached_battery_voltage_volts_, &payload[0], sizeof(cached_battery_voltage_volts_));
+      cached_battery_percentage_ = payload[4];
+      cached_battery_charging_ = payload[5] != 0;
+      cached_battery_is_default_ = payload[6] != 0;
+      battery_status_received_ = true;
+      battery_status_cv_.notify_all();
       break;
     }
 
@@ -279,6 +304,37 @@ void Esp32BridgeNode::handleGetDeviceId(
 
   response->success = true;
   response->message = cached_device_id_;
+}
+
+void Esp32BridgeNode::handleGetBatteryStatus(
+  const autonav_msgs::srv::GetBatteryStatus::Request::SharedPtr /*request*/,
+  autonav_msgs::srv::GetBatteryStatus::Response::SharedPtr response)
+{
+  // Unlike device id, battery status isn't cached/reused across calls — it
+  // can genuinely change between requests — so this always sends a fresh
+  // GET_BATTERY_STATUS rather than short-circuiting on a non-empty cache.
+  std::unique_lock<std::mutex> lock(state_mutex_);
+  battery_status_received_ = false;
+  lock.unlock();
+
+  transport_.sendFrame(esp32_protocol::CommandId::GET_BATTERY_STATUS, nullptr, 0);
+
+  lock.lock();
+  const bool got_response = battery_status_cv_.wait_for(
+    lock, kGetBatteryStatusWaitTimeout, [this]() {return battery_status_received_;});
+
+  if (!got_response) {
+    response->success = false;
+    response->message = "No response from ESP32";
+    return;
+  }
+
+  response->success = true;
+  response->message = "OK";
+  response->voltage_volts = cached_battery_voltage_volts_;
+  response->percentage = cached_battery_percentage_;
+  response->charging = cached_battery_charging_;
+  response->is_default = cached_battery_is_default_;
 }
 
 }  // namespace autonav_firmware

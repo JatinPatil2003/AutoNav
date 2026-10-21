@@ -139,15 +139,15 @@ def generate_launch_description():
         )
     )
 
-    lidar_republisher = Node(
-        package='autonav_controller',
-        executable='lidar_republisher.py',
+    velocity_republisher = Node(
+        package='autonav_utils',
+        executable='cmd_vel_republisher',
         output='screen',
     )
 
-    velocity_republisher = Node(
-        package='autonav_controller',
-        executable='cmd_vel_republisher.py',
+    system_heartbeat = Node(
+        package='autonav_utils',
+        executable='system_heartbeat',
         output='screen',
     )
 
@@ -169,7 +169,7 @@ def generate_launch_description():
             lidar,
             esp32_bridge,
             ekf,
-            lidar_republisher,
             velocity_republisher,
+            system_heartbeat,
         ]
     )

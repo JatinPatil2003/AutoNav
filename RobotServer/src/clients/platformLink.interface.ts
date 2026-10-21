@@ -15,4 +15,6 @@ export interface IPlatformLink {
   isConnected(): boolean;
   send(frame: unknown): void;
   onFrame(handler: PlatformLinkFrameHandler): void;
+  /** Tears down the current connection (if any) and reconnects immediately, re-reading whatever credential dial() uses at the time — needed after a credential rotation so the link doesn't keep using a stale secret until its next natural disconnect. */
+  forceReconnect(): void;
 }

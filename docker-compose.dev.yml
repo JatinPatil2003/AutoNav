@@ -4,15 +4,15 @@
 # always-on robot stack.
 #
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml build
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm save_map
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm autonav-save_map
 #
 # Note: camera/camera_view services are intentionally omitted — they depend
 # on autonav_perception, which isn't present in this repo (see CLAUDE.md).
 
 services:
-  rviz:
+  autonav-rviz:
     image: jatinpatil2003/autonav:base
-    container_name: rviz
+    container_name: autonav-rviz
     network_mode: "host"
     ipc: host
     privileged: true
@@ -25,30 +25,30 @@ services:
     command: >
       ros2 launch autonav_bringup view_rviz.launch.py rviz:=True
 
-  rviz_slam:
-    extends: rviz
-    container_name: rviz_slam
+  autonav-rviz_slam:
+    extends: autonav-rviz
+    container_name: autonav-rviz_slam
     command: >
       ros2 launch autonav_bringup view_rviz_slam.launch.py rviz:=True
 
-  rviz_navigation:
-    extends: rviz
-    container_name: rviz_navigation
+  autonav-rviz_navigation:
+    extends: autonav-rviz
+    container_name: autonav-rviz_navigation
     command: >
       ros2 launch autonav_bringup view_rviz_navigation.launch.py rviz:=True
 
-  rviz_cartographer:
-    extends: rviz
-    container_name: rviz_cartographer
+  autonav-rviz_cartographer:
+    extends: autonav-rviz
+    container_name: autonav-rviz_cartographer
     command: >
       ros2 launch autonav_bringup view_rviz_cartographer.launch.py rviz:=True
 
-  save_map:
+  autonav-save_map:
     build:
       context: .
       dockerfile: docker/navigation.Dockerfile
     image: jatinpatil2003/autonav:navigation
-    container_name: save_map
+    container_name: autonav-save_map
     network_mode: "host"
     ipc: host
     privileged: true

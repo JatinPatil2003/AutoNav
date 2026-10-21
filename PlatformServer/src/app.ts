@@ -54,16 +54,27 @@ import { ControlSessionGateway } from "./modules/control/controlSession.gateway"
 import { RobotConnectionRegistry } from "./modules/robot-link/robotConnectionRegistry";
 import { RobotLinkGateway } from "./modules/robot-link/robotLink.gateway";
 
+import { TelemetryRelayService } from "./modules/telemetry-relay/telemetryRelay.service";
+import { TelemetryRelayGateway } from "./modules/telemetry-relay/telemetryRelay.gateway";
+
+import { HttpRobotApiClient } from "./modules/robot-proxy/robotApiClient";
+import { RobotProxyService } from "./modules/robot-proxy/robotProxy.service";
+import { RobotProxyController } from "./modules/robot-proxy/robotProxy.controller";
+import { createRobotProxyRouter } from "./modules/robot-proxy/robotProxy.routes";
+
 import { WsRouter } from "./core/wsRouter";
 
 export interface CreatedApp {
   app: Express;
   /**
    * Attached to the internal HTTP listener only (see src/index.ts).
-   * Both `/ws/robot-link` and `/ws/control` are proxied publicly by nginx
-   * (see AWS/nginx/platform-server.autonav.in.conf) — `/ws/robot-link` is
-   * guarded by `ROBOT_LINK_SECRET` (robotLinkGateway.authenticate) rather
-   * than a VPN trust boundary.
+   * `/ws/robot-link`, `/ws/control`, and `/ws/telemetry` are all proxied
+   * publicly by nginx under its one `/ws/` wildcard block (see
+   * AWS/nginx/platform-server.autonav.in.conf) — any new `/ws/*` route is
+   * public-by-default under that block. `/ws/robot-link` is guarded by
+   * `ROBOT_LINK_SECRET` (robotLinkGateway.authenticate) rather than a VPN
+   * trust boundary; `/ws/control` and `/ws/telemetry` both require an
+   * active platformAccess assignment.
    */
   wsRouter: WsRouter;
 }
@@ -176,11 +187,13 @@ export function createApp(): CreatedApp {
   const requestController = new RobotAccessRequestController(requestService);
   const authController = new AuthController(authService);
   const adminController = new AdminController(adminService, requestService);
-  const robotAuthController = new RobotAuthController(robotAuthService);
+  const robotAuthController = new RobotAuthController(robotAuthService, robotService);
 
   // --- WebSocket infra (robot-link + client control relay) ---
   const robotConnectionRegistry = new RobotConnectionRegistry(robotRepository);
-  const robotLinkGateway = new RobotLinkGateway(robotRepository, robotConnectionRegistry);
+  const telemetryRelayService = new TelemetryRelayService(robotConnectionRegistry, robotRepository);
+  const robotLinkGateway = new RobotLinkGateway(robotRepository, robotConnectionRegistry, telemetryRelayService);
+  const telemetryRelayGateway = new TelemetryRelayGateway(robotRepository, robotAssignmentService, telemetryRelayService);
   const controlSessionService = new ControlSessionService(robotConnectionRegistry, robotAssignmentService);
   const controlSessionGateway = new ControlSessionGateway(
     robotRepository,
@@ -190,9 +203,14 @@ export function createApp(): CreatedApp {
   const robotHealthService = new RobotHealthService(robotRepository, robotConnectionRegistry);
   const robotHealthController = new RobotHealthController(robotHealthService, robotAssignmentService);
 
+  const robotApiClient = new HttpRobotApiClient();
+  const robotProxyService = new RobotProxyService(robotRepository, robotApiClient);
+  const robotProxyController = new RobotProxyController(robotProxyService, robotAssignmentService);
+
   const wsRouter = new WsRouter();
   wsRouter.register("/ws/robot-link", robotLinkGateway.onConnection, robotLinkGateway.authenticate);
   wsRouter.register("/ws/control", controlSessionGateway.onConnection, controlSessionGateway.authenticate);
+  wsRouter.register("/ws/telemetry", telemetryRelayGateway.onConnection, telemetryRelayGateway.authenticate);
 
   app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -201,6 +219,7 @@ export function createApp(): CreatedApp {
   app.use("/api/users", createUserRouter(userController));
   app.use("/api/robots", createPublicRobotRouter(robotController));
   app.use("/api/robots", createRobotHealthRouter(robotHealthController));
+  app.use("/api/robots", createRobotProxyRouter(robotProxyController));
   app.use("/api/robot-access-requests", createRobotAccessRequestRouter(requestController));
   app.use("/api/admin/robots", createRobotRouter(robotController));
   app.use("/api/admin", createAdminRouter(adminController));

@@ -1,5 +1,5 @@
 import { quaternionFromYaw } from "../../../src/ros/quaternion";
-import { PoseMsg } from "../../../src/modules/telemetry/telemetry.mappers";
+import { PoseMsg, PoseStampedMsg } from "../../../src/modules/telemetry/telemetry.mappers";
 
 interface MakePoseMessageOptions {
   x: number;
@@ -31,4 +31,21 @@ export function makePoseMessage({ x, y, theta, confident = true }: MakePoseMessa
       covariance,
     },
   } as PoseMsg;
+}
+
+/**
+ * Builds a plain PoseStamped-shaped fixture (no covariance) matching what
+ * autonav_utils's tf_pose_bridge node publishes on
+ * /pose_bridge/map_pose during SLAM.
+ */
+export function makePoseStampedMessage({ x, y, theta }: Pick<MakePoseMessageOptions, "x" | "y" | "theta">): PoseStampedMsg {
+  const quat = quaternionFromYaw(theta);
+
+  return {
+    header: { frame_id: "map", stamp: { sec: 0, nanosec: 0 } },
+    pose: {
+      position: { x, y, z: 0 },
+      orientation: { x: 0, y: 0, z: quat.z, w: quat.w },
+    },
+  } as PoseStampedMsg;
 }

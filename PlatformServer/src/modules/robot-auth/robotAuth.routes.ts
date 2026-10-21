@@ -112,5 +112,19 @@ export function createRobotAuthRouter(
     asyncHandler(controller.confirmPinSetup),
   );
 
+  /**
+   * @openapi
+   * /api/robot-auth/rotate-link-secret:
+   *   post:
+   *     summary: Rotate the calling robot's own ROBOT_LINK_SECRET, proven by presenting the current one
+   *     description: Distinct from the admin-only rotate-link-secret route — a robot never has a human admin session. The response's linkSecret is shown once; RobotServer must start using it immediately and persist it so a restart doesn't regress to the old value.
+   *     tags: [Robot Auth]
+   *     security: [{ robotHeaderAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: New plaintext linkSecret
+   */
+  router.post("/rotate-link-secret", asyncHandler(controller.rotateLinkSecret));
+
   return router;
 }

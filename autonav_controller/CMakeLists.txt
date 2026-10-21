@@ -27,12 +27,10 @@ install(DIRECTORY launch config
 ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
-  ${PROJECT_NAME}/odom_logger.py 
-  ${PROJECT_NAME}/pid_controller.py 
+  ${PROJECT_NAME}/odom_logger.py
+  ${PROJECT_NAME}/pid_controller.py
   ${PROJECT_NAME}/tune_pid.py
   ${PROJECT_NAME}/control.py
-  ${PROJECT_NAME}/lidar_republisher.py
-  ${PROJECT_NAME}/cmd_vel_republisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

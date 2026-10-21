@@ -34,6 +34,8 @@ const char * commandName(esp32_protocol::CommandId cmd)
     case esp32_protocol::CommandId::ESTOP_PHYSICAL_PUSH: return "ESTOP_PHYSICAL_PUSH";
     case esp32_protocol::CommandId::EMERGENCY_COMMAND: return "EMERGENCY_COMMAND";
     case esp32_protocol::CommandId::ACK: return "ACK";
+    case esp32_protocol::CommandId::GET_BATTERY_STATUS: return "GET_BATTERY_STATUS";
+    case esp32_protocol::CommandId::BATTERY_STATUS_RESPONSE: return "BATTERY_STATUS_RESPONSE";
     default: return "UNKNOWN";
   }
 }

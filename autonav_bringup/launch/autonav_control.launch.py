@@ -120,12 +120,6 @@ def generate_launch_description():
         )
     )
 
-    velocity_republisher = Node(
-        package='autonav_controller',
-        executable='cmd_vel_republisher.py',
-        output='screen',
-    )
-
     return LaunchDescription(
         [
             # set_locale,
@@ -135,6 +129,5 @@ def generate_launch_description():
             delayed_controller_manager,
             delayed_diff_drive_spawner,
             delayed_joint_broad_spawner,
-            velocity_republisher,
         ]
     )

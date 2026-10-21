@@ -52,6 +52,21 @@ void SendHeartbeat(uint32_t now_ms) {
   SendFrame(CommandId::kHeartbeat, payload, sizeof(payload));
 }
 
+// No voltage-sense ADC is wired up on this board yet — returns a fixed
+// placeholder, flagged via is_default so nothing downstream mistakes it
+// for a real reading. Replace this body with a real ADC read (and drop
+// is_default to 0) once that hardware exists; the wire format doesn't
+// need to change.
+void SendBatteryStatus() {
+  uint8_t payload[autonav_protocol::kBatteryStatusPayloadLen] = {};
+  const float voltage_volts = 12.0f;  // placeholder
+  memcpy(&payload[0], &voltage_volts, sizeof(voltage_volts));
+  payload[4] = 100;  // percentage placeholder
+  payload[5] = 0;     // charging placeholder
+  payload[6] = 1;     // is_default
+  SendFrame(CommandId::kBatteryStatusResponse, payload, sizeof(payload));
+}
+
 void HandleFrame(const Frame& frame) {
   switch (frame.cmd) {
     case CommandId::kGetDeviceId: {
@@ -99,6 +114,11 @@ void HandleFrame(const Frame& frame) {
       }
       led.SetEmergency(frame.payload[0] != 0);
       SendAck(frame.cmd, AckStatus::kOk);
+      break;
+    }
+
+    case CommandId::kGetBatteryStatus: {
+      SendBatteryStatus();
       break;
     }
 

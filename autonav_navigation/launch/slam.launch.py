@@ -41,6 +41,17 @@ def generate_launch_description():
             }.items()
         ),
 
+        # Republishes map->base_footprint as a plain topic while SLAM runs —
+        # AMCL (RobotServer's usual pose source) isn't active during mapping.
+        # Not needed under navigation.launch.py, where /amcl_pose covers it.
+        Node(
+            package='autonav_utils',
+            executable='tf_pose_bridge',
+            name='tf_pose_bridge',
+            output='screen',
+            parameters=[{'use_sim_time': LaunchConfiguration('sim')}]
+        ),
+
         Node(
             package='rviz2',
             executable='rviz2',

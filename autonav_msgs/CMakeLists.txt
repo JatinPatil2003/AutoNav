@@ -7,6 +7,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetLedPattern.srv"
   "srv/SetBrightness.srv"
+  "srv/GetBatteryStatus.srv"
 )
 
 if(BUILD_TESTING)

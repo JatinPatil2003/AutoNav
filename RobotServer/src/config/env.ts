@@ -11,6 +11,11 @@ const envSchema = z.object({
 
   MAPS_DIR: z.string().default("./maps"),
 
+  // Small persisted runtime state that must survive a process restart but
+  // isn't a "map" — currently just the rotated ROBOT_LINK_SECRET override
+  // (see config/linkSecretStore.ts). Mounted the same way MAPS_DIR is.
+  RUNTIME_DIR: z.string().default("./runtime"),
+
   CAMERA_DEVICE: z.string().default("/dev/robotcam"),
 
   // --- Service-to-service (this robot <-> PlatformServer) ---
@@ -74,6 +79,7 @@ function loadConfig() {
       .filter(Boolean),
 
     mapsDir: env.MAPS_DIR,
+    runtimeDir: env.RUNTIME_DIR,
 
     cameraDevice: env.CAMERA_DEVICE,
 

@@ -3,7 +3,7 @@ set -e
 
 # setup ros2 environment
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-export FASTDDS_DEFAULT_PROFILES_FILE=/fastdds.xml
+# export FASTDDS_DEFAULT_PROFILES_FILE=/fastdds.xml
 
 source /opt/venv/bin/activate
 

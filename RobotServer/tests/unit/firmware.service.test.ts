@@ -37,4 +37,28 @@ describe("FirmwareService", () => {
       speed_ms: 40,
     });
   });
+
+  it("maps the battery status response's snake_case fields to camelCase, preserving isDefault", async () => {
+    const serviceGateway = new FakeRosServiceGateway();
+    serviceGateway.setResponse("/esp32_bridge_node/get_battery_status", {
+      success: true,
+      message: "OK",
+      voltage_volts: 12.0,
+      percentage: 100,
+      charging: false,
+      is_default: true,
+    });
+    const service = new FirmwareService(serviceGateway);
+
+    const result = await service.getBatteryStatus();
+
+    expect(result).toEqual({
+      success: true,
+      message: "OK",
+      voltageVolts: 12.0,
+      percentage: 100,
+      charging: false,
+      isDefault: true,
+    });
+  });
 });

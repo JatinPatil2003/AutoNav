@@ -9,7 +9,7 @@ ARG BASE_IMAGE=jatinpatil2003/autonav:base
 FROM ${BASE_IMAGE}
 
 ENV NAV_MODE=navigation
-ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+# ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 WORKDIR /colcon_ws
 

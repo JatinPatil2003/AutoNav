@@ -50,3 +50,59 @@ export interface HealthResultFrame {
   maxLinear: number;
   maxAngular: number;
 }
+
+/**
+ * Phase 3 streaming frames — mirrors robotLink.protocol.ts's zod schemas on
+ * PlatformServer's side field-for-field (contract by convention, same as
+ * everything else in this file). Pushed unconditionally on a timer by
+ * telemetry.broadcaster.ts, regardless of whether any dashboard viewer is
+ * currently watching — PlatformServer's telemetry-relay fans each one out
+ * to whoever's subscribed, it never asks this side to start/stop.
+ *
+ * map.delta (a changed-cells/bounding-box patch, cheaper than a full
+ * snapshot every tick) is deliberately not implemented yet — map.snapshot
+ * alone is correct, just not yet bandwidth-optimized for a long SLAM
+ * session. Noted as a follow-up, not a gap in this pass.
+ */
+export interface PoseUpdateFrame {
+  type: "pose.update";
+  x: number;
+  y: number;
+  theta: number;
+  source: "amcl" | "slam_bridge";
+  confident: boolean;
+}
+
+export interface MapSnapshotFrame {
+  type: "map.snapshot";
+  info: {
+    width: number;
+    height: number;
+    resolution: number;
+    origin: {
+      position: { x: number; y: number; z: number };
+      orientation: { x: number; y: number; z: number; w: number };
+    };
+  };
+  data: number[];
+}
+
+export interface NavStatusLinkFrame {
+  type: "nav.status";
+  status: "IDLE" | "ACTIVE" | "SUCCEEDED" | "CANCELED" | "FAILED";
+  feedbackDistanceRemaining: number | null;
+  activeGoalName: string | null;
+}
+
+export interface RobotStatusFrame {
+  type: "robot.status";
+  rclOk: boolean;
+  navigationActive: boolean;
+  mappingActive: boolean;
+  activeBackend: "cartographer" | "slam_toolbox" | null;
+  maxLinear: number;
+  maxAngular: number;
+  estopEngaged: boolean;
+}
+
+export type TelemetryStreamFrame = PoseUpdateFrame | MapSnapshotFrame | NavStatusLinkFrame | RobotStatusFrame;

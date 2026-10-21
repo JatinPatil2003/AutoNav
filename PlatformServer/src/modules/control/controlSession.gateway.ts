@@ -1,6 +1,7 @@
 import { IncomingMessage } from "node:http";
 import { WebSocket } from "ws";
 import { extractAccessToken } from "../../common/middleware/auth.middleware";
+import { parseCookieHeader } from "../../common/utils/cookie.util";
 import { verifyAccessToken } from "../../common/utils/jwt.util";
 import { logger } from "../../common/utils/logger.util";
 import { WsAuthenticator, WsConnectionHandler } from "../../core/wsRouter";
@@ -12,29 +13,6 @@ interface ControlAuthContext {
   userId: string;
   robotMongoId: string;
   robotSlug: string;
-}
-
-/**
- * Raw WS upgrade requests never pass through Express's middleware chain
- * (the http.Server 'upgrade' event bypasses it entirely), so `cookie-parser`
- * never runs and `req.cookies` is undefined here. Reparse the Cookie header
- * by hand so `extractAccessToken` — written against `Request.cookies` — sees
- * the same shape it does on a normal HTTP request, giving the dashboard's
- * cookie-based session parity with the mobile Bearer-token path.
- */
-function parseCookieHeader(header: string | undefined): Record<string, string> {
-  if (!header) return {};
-  return Object.fromEntries(
-    header
-      .split(";")
-      .map((pair) => pair.trim())
-      .filter(Boolean)
-      .map((pair) => {
-        const index = pair.indexOf("=");
-        if (index === -1) return [pair, ""];
-        return [decodeURIComponent(pair.slice(0, index)), decodeURIComponent(pair.slice(index + 1))];
-      }),
-  );
 }
 
 /**

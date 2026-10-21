@@ -1,64 +1,49 @@
 import { Router } from "express";
-import { NotImplementedError } from "../../../common/errors";
 import { asyncHandler } from "../../../common/utils/asyncHandler.util";
+import { MaintenanceController } from "./maintenance.controller";
 
 /**
- * Mounted at /api/system/maintenance — reboot, NTP sync, DB reset,
- * credentials. Stubbed (501) in this pass — see network.routes.ts for
- * why. Note the old WebServer's /reboot and /credentials were already
- * non-functional stubs that answered `success: true` for nothing; this
- * at least says so honestly instead of lying about it.
+ * Mounted at /api/system/maintenance — reboot and credential rotation.
+ * The old stub also listed /sync-datetime and /db/reset; both were dropped
+ * entirely (not just left stubbed) rather than implemented — NTP sync and
+ * a destructive local DB wipe weren't judged worth the risk/complexity for
+ * this pass. If either is wanted later, it's a fresh addition, not a
+ * revival of dead code.
  */
-export function createMaintenanceRouter(): Router {
+export function createMaintenanceRouter(controller: MaintenanceController): Router {
   const router = Router();
-
-  const notImplemented = asyncHandler(async () => {
-    throw new NotImplementedError("Maintenance actions are not implemented yet");
-  });
 
   /**
    * @openapi
    * /api/system/maintenance/reboot:
    *   post:
-   *     summary: Reboot the robot's onboard computer
+   *     summary: Request a reboot of the robot's onboard computer
+   *     description: RobotServer itself has no host-reboot privilege — this writes a trigger file a host-level systemd unit (deploy/maintenance/autonav-reboot.path) watches and acts on. 202 means the request was recorded, not that the reboot has happened yet.
    *     tags: [System/Maintenance]
    *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
+   *       202:
+   *         description: Reboot requested
+   *         content:
+   *           application/json:
+   *             schema: { type: object, properties: { status: { type: string, example: reboot_requested } } }
    */
-  router.post("/reboot", notImplemented);
-
-  /**
-   * @openapi
-   * /api/system/maintenance/sync-datetime:
-   *   post:
-   *     summary: Force an NTP time sync
-   *     tags: [System/Maintenance]
-   *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
-   */
-  router.post("/sync-datetime", notImplemented);
-
-  /**
-   * @openapi
-   * /api/system/maintenance/db/reset:
-   *   post:
-   *     summary: Reset the local database (maps, saved goals)
-   *     tags: [System/Maintenance]
-   *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
-   */
-  router.post("/db/reset", notImplemented);
+  router.post("/reboot", asyncHandler(controller.reboot));
 
   /**
    * @openapi
    * /api/system/maintenance/credentials:
    *   post:
-   *     summary: Update robot credentials
+   *     summary: Rotate this robot's ROBOT_LINK_SECRET
+   *     description: Asks PlatformServer for a new secret (proving identity with the current one), applies it immediately, persists it so a restart doesn't regress to the old value, and forces the robot-link connection to reconnect with it right away.
    *     tags: [System/Maintenance]
    *     responses:
-   *       501: { $ref: '#/components/responses/NotImplemented' }
+   *       200:
+   *         description: New plaintext linkSecret (shown once)
+   *         content:
+   *           application/json:
+   *             schema: { type: object, properties: { linkSecret: { type: string } } }
    */
-  router.post("/credentials", notImplemented);
+  router.post("/credentials", asyncHandler(controller.rotateCredentials));
 
   return router;
 }

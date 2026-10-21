@@ -348,7 +348,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:2.5rem 0}
 
     <div class="stack-card"><h4>Express</h4><p>A minimalist web framework: define "routes" (e.g. <code>POST /api/navigation/start</code>) and attach handler functions, plus "middleware" that runs on every request.</p><p class="where"><b>Where:</b> the whole HTTP layer — <code>src/app.ts</code> (composition root) and every <code>*.routes.ts</code> file.</p></div>
 
-    <div class="stack-card"><h4>rclnodejs</h4><p>The JS/TypeScript client library for ROS2 — the Node.js equivalent of Python's <code>rclpy</code>. Lets a Node process become a real ROS2 node.</p><p class="where"><b>Where:</b> exclusively inside <code>src/ros/*</code> — a hard rule states "nothing outside this folder imports rclnodejs directly." Pinned to 2.x for ROS2 "Kilted" support.</p></div>
+    <div class="stack-card"><h4>rclnodejs</h4><p>The JS/TypeScript client library for ROS2 — the Node.js equivalent of Python's <code>rclpy</code>. Lets a Node process become a real ROS2 node.</p><p class="where"><b>Where:</b> exclusively inside <code>src/ros/*</code> — a hard rule states "nothing outside this folder imports rclnodejs directly." Pinned to 2.x, which supports ROS2 "Lyrical" (the distro this repo targets) as well as Kilted/Jazzy/Humble/Rolling.</p></div>
 
     <div class="stack-card"><h4>ws</h4><p>A WebSocket server/client implementation — a persistent, two-way connection unlike one-shot HTTP request/response.</p><p class="where"><b>Where:</b> <code>src/core/wsRouter.ts</code> (incoming connections on the robot) and <code>src/clients/platformLink.client.ts</code> (outbound link to PlatformServer).</p></div>
 
@@ -1101,7 +1101,7 @@ setupFiles: ["&lt;rootDir&gt;/tests/setupEnv.ts"]</code></pre>
   <p><strong>Running locally without hardware:</strong> <code>npm install</code> genuinely needs a <em>sourced</em> ROS2 environment, because <code>rclnodejs</code> compiles native bindings against the installed ROS2 client libraries at install time — this cannot be skipped even for pure unit-test development, though the <strong>tests themselves</strong> don't need a live ROS2 node once installed. <code>DEV_DEVICE_ID_OVERRIDE</code> lets the server boot and resolve an identity without a physically-attached ESP32 board.</p>
 
   <h3>Docker</h3>
-  <p><code>RobotServer/Dockerfile</code> is built from the <strong>repo root</strong> as its context (not <code>./RobotServer</code>), based on <code>ros:lyrical</code> (confusingly, the actual base ROS2 image tag used is <code>lyrical</code>, while <code>.env</code>/README reference ROS2 "Kilted" rclnodejs support — see Gotchas). It's a multi-stage build: a <code>build</code> stage adds <code>build-essential</code>/<code>cmake</code>/<code>python3</code> (needed to compile rclnodejs's native bindings and <code>tsc</code>-compile the TypeScript) and a lean runtime stage that only copies <code>node_modules</code> + compiled <code>dist/</code> + <code>package*.json</code>, keeping the final image smaller than the heavy <code>autonav:base</code> image (which bundles nav2-bringup/slam-toolbox/etc. that RobotServer itself never runs — it only talks to those as separate ROS2 nodes over the network).</p>
+  <p><code>RobotServer/Dockerfile</code> is built from the <strong>repo root</strong> as its context (not <code>./RobotServer</code>), based on <code>ros:lyrical</code> — the distro this repo now consistently targets end-to-end (base image, README, and docs). It's a multi-stage build: a <code>build</code> stage adds <code>build-essential</code>/<code>cmake</code>/<code>python3</code> (needed to compile rclnodejs's native bindings and <code>tsc</code>-compile the TypeScript) and a lean runtime stage that only copies <code>node_modules</code> + compiled <code>dist/</code> + <code>package*.json</code>, keeping the final image smaller than the heavy <code>autonav:base</code> image (which bundles nav2-bringup/slam-toolbox/etc. that RobotServer itself never runs — it only talks to those as separate ROS2 nodes over the network).</p>
 
   <p><strong>API docs:</strong> interactive, browsable API documentation is available at <code>GET /api/docs</code> whenever the server is running (built from the <code>@openapi</code> JSDoc comments in every <code>*.routes.ts</code> file).</p>
 </section>
@@ -1173,11 +1173,6 @@ setupFiles: ["&lt;rootDir&gt;/tests/setupEnv.ts"]</code></pre>
   <div class="callout">
     <h4>Revoked local users are never deleted, only status-flagged</h4>
     <p><code>MongooseLocalUserRepository.replaceAll</code> marks anyone missing from a fresh roster pull as <code>status: "revoked"</code> rather than removing their document — this preserves <code>failedAttempts</code>/<code>lockedUntil</code> history in case access is re-granted later. If you're querying <code>LocalUserModel</code> directly for any reason, remember stale/revoked rows accumulate rather than disappearing.</p>
-  </div>
-
-  <div class="callout stub">
-    <h4><span class="badge">Flag for team</span> Dockerfile base-image naming inconsistency</h4>
-    <p>The Dockerfile uses <code>FROM ros:lyrical</code> and sets <code>ROS_DISTRO=lyrical</code>, while the README and several code comments reference ROS2 "Kilted" support as the target distribution. Confirm which is actually intended before relying on either in a deployment — this looks like it could be a stale/transitional value.</p>
   </div>
 
   <div class="callout">

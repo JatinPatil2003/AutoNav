@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validate } from "../../common/middleware/validate.middleware";
 import { asyncHandler } from "../../common/utils/asyncHandler.util";
 import { MappingController } from "./mapping.controller";
-import { saveMapSchema, waypointSchema } from "./mapping.validation";
+import { saveMapSchema, startMappingSchema, waypointSchema } from "./mapping.validation";
 
 /** Mounted at /api/mapping — SLAM session lifecycle and the save-map workflow. Manual drive during mapping is a future milestone's concern, not duplicated here. */
 export function createMappingRouter(mappingController: MappingController): Router {
@@ -12,16 +12,26 @@ export function createMappingRouter(mappingController: MappingController): Route
    * @openapi
    * /api/mapping/start:
    *   post:
-   *     summary: Launch SLAM (slam_toolbox) and clear any leftover temp waypoints
+   *     summary: Launch SLAM and clear any leftover temp waypoints
+   *     description: Defaults to the Cartographer backend; pass backend "slam_toolbox" to use that instead. Both backends also launch autonav_utils's tf_pose_bridge node, so getCurrentLocation()/waypoint capture have a live pose during mapping.
    *     tags: [Mapping]
+   *     requestBody:
+   *       required: false
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               backend: { type: string, enum: [cartographer, slam_toolbox], default: cartographer }
    *     responses:
    *       200:
    *         description: SLAM launch started
    *         content:
    *           application/json:
    *             schema: { type: object, properties: { status: { type: string, example: started } } }
+   *       400: { $ref: '#/components/responses/ValidationError' }
    */
-  router.post("/start", asyncHandler(mappingController.start));
+  router.post("/start", validate({ body: startMappingSchema }), asyncHandler(mappingController.start));
 
   /**
    * @openapi
@@ -58,7 +68,7 @@ export function createMappingRouter(mappingController: MappingController): Route
    * /api/mapping/current/location:
    *   get:
    *     summary: Get the latest live pose while SLAM is running
-   *     description: AMCL isn't running during SLAM, so this is null until the TF2 lookup gap noted in telemetry.broadcaster.ts is resolved — see RobotServer/README.md "Known gaps".
+   *     description: Sourced from autonav_utils's tf_pose_bridge node (the map->base_footprint TF republished as a topic) rather than AMCL, which isn't running during SLAM. Null until that node has published at least once.
    *     tags: [Mapping]
    *     responses:
    *       200:

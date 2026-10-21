@@ -45,6 +45,7 @@ export class NavigationService {
   private goalHandle: rclnodejs.ClientGoalHandle<any> | undefined;
   private status: NavStatus = NavStatus.IDLE;
   private feedback = 0;
+  private activeGoalName: string | null = null;
 
   constructor(
     private readonly actionGateway: ActionGateway,
@@ -138,6 +139,7 @@ export class NavigationService {
 
   async startGoal(mapName: string, name: string): Promise<void> {
     const pose = await this.getGoal(mapName, name);
+    this.activeGoalName = name;
     await this.sendGoal(pose);
   }
 
@@ -148,6 +150,7 @@ export class NavigationService {
     await this.actionGateway.cancelGoal(this.goalHandle);
     this.status = NavStatus.CANCELED;
     this.feedback = 0;
+    this.activeGoalName = null;
     this.goalHandle = undefined;
   }
 
@@ -157,6 +160,11 @@ export class NavigationService {
 
   getStatus(): NavStatus {
     return this.status;
+  }
+
+  /** Null once the goal reaches a terminal state — mirrors getStatus()/getFeedback()'s lifecycle. */
+  getActiveGoalName(): string | null {
+    return this.status === NavStatus.ACTIVE ? this.activeGoalName : null;
   }
 
   async setInitialPose(pose: Pose): Promise<void> {

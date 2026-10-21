@@ -1,4 +1,5 @@
 import { config } from "../config/env";
+import { linkSecretStore } from "../config/linkSecretStore";
 import { AppError } from "../common/errors";
 import { DeviceIdentityService } from "../ros/deviceIdentity";
 import { IPlatformClient, RosterEntryDto } from "./platformClient.interface";
@@ -55,6 +56,10 @@ export class PlatformClient implements IPlatformClient {
     return body.entry;
   }
 
+  async rotateLinkSecret(): Promise<{ linkSecret: string }> {
+    return this.requestJson("POST", "/api/robot-auth/rotate-link-secret");
+  }
+
   private async requestJson<T>(method: string, path: string, body?: unknown, isRetry = false): Promise<T> {
     const robotId = this.deviceIdentity.getRobotId();
     if (!robotId) {
@@ -71,7 +76,7 @@ export class PlatformClient implements IPlatformClient {
         headers: {
           "Content-Type": "application/json",
           "x-robot-id": robotId,
-          authorization: `Robot ${config.robotLinkSecret}`,
+          authorization: `Robot ${linkSecretStore.getSecret()}`,
         },
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,

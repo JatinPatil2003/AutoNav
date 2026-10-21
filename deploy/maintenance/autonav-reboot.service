@@ -1,0 +1,10 @@
+[Unit]
+Description=Reboot the host on RobotServer's /api/system/maintenance/reboot request
+
+[Service]
+Type=oneshot
+# Remove the trigger file BEFORE rebooting — otherwise it's still present
+# on the next boot and this unit (via autonav-reboot.path) fires again
+# immediately, rebooting in a loop.
+ExecStartPre=/usr/bin/rm -f /home/jatin/Projects/AutoNav/RobotServer/runtime/reboot-requested
+ExecStart=/usr/bin/systemctl reboot

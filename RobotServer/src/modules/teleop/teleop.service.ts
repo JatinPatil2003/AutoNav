@@ -17,7 +17,7 @@ const EMERGENCY_TOPIC = "/motor/emergency";
 /**
  * Default per-command deadline for `setVelocity`: 10 publish ticks at 20Hz,
  * matching the downstream `cmd_vel_timeout: 0.5` in
- * `autonav_controller/cmd_vel_republisher.py` — tolerates ordinary mobile
+ * `autonav_utils/cmd_vel_republisher.py` — tolerates ordinary mobile
  * network jitter for a remote teleop client while still failing safe if
  * commands stop arriving (see `publishTick`'s staleness check below).
  */
@@ -29,6 +29,7 @@ export class TeleopService {
   private active = false;
   private wasActive = false;
   private expiresAt = 0;
+  private emergencyEngaged = false;
 
   /**
    * Resolves whether Nav2 is currently driving the robot itself (an active
@@ -99,7 +100,13 @@ export class TeleopService {
   }
 
   setEmergency(status: boolean): void {
+    this.emergencyEngaged = status;
     this.topicGateway.publish("std_msgs/msg/Bool", EMERGENCY_TOPIC, { data: status });
+  }
+
+  /** Last value this process itself commanded via setEmergency — not a readback from the ROS topic, since nothing subscribes to /motor/emergency. */
+  isEmergencyEngaged(): boolean {
+    return this.emergencyEngaged;
   }
 
   /** Spins the robot in place `rotations` times, then stops. Used by navigation's localize-at-point flow to help AMCL converge. */

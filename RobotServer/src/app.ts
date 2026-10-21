@@ -48,7 +48,12 @@ import { createFirmwareRouter } from "./modules/firmware/firmware.routes";
 import { NetworkService } from "./modules/system/network/network.service";
 import { NetworkController } from "./modules/system/network/network.controller";
 import { createNetworkRouter } from "./modules/system/network/network.routes";
+import { TopicFrequencyMonitor } from "./ros/topicFrequencyMonitor";
+import { DiagnosticsService } from "./modules/system/diagnostics/diagnostics.service";
+import { DiagnosticsController } from "./modules/system/diagnostics/diagnostics.controller";
 import { createDiagnosticsRouter } from "./modules/system/diagnostics/diagnostics.routes";
+import { MaintenanceService } from "./modules/system/maintenance/maintenance.service";
+import { MaintenanceController } from "./modules/system/maintenance/maintenance.controller";
 import { createMaintenanceRouter } from "./modules/system/maintenance/maintenance.routes";
 
 import { requireAuth } from "./common/middleware/auth.middleware";
@@ -128,7 +133,6 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
   const firmwareService = new FirmwareService(serviceGateway);
   const networkService = new NetworkService();
 
-  registerTelemetryBroadcast(topicGateway, navigationService);
   registerConnectivityBroadcast();
 
   // --- Robot-auth (human HMI session + robot<->PlatformServer calls) ---
@@ -136,6 +140,16 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
   const localUserRepository = new MongooseLocalUserRepository();
   const rosterSyncService = new RosterSyncService(platformClient, localUserRepository, deviceIdentity);
   const robotAuthService = new RobotAuthService(localUserRepository, platformClient, deviceIdentity);
+  const maintenanceService = new MaintenanceService(platformClient, config.runtimeDir);
+  const topicFrequencyMonitor = new TopicFrequencyMonitor(topicGateway);
+  const diagnosticsService = new DiagnosticsService(
+    topicGateway,
+    topicFrequencyMonitor,
+    deviceIdentity,
+    launchManager,
+    mappingService,
+    firmwareService,
+  );
 
   // --- Controllers ---
   const navigationController = new NavigationController(navigationService);
@@ -143,6 +157,8 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
   const firmwareController = new FirmwareController(firmwareService);
   const networkController = new NetworkController(networkService);
   const robotAuthController = new RobotAuthController(robotAuthService);
+  const maintenanceController = new MaintenanceController(maintenanceService);
+  const diagnosticsController = new DiagnosticsController(diagnosticsService);
 
   app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
   app.use("/maps", requireAuth, express.static(config.mapsDir));
@@ -160,8 +176,8 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
   app.use("/api/navigation", requireAuth, createNavigationRouter(navigationController));
   app.use("/api/mapping", requireAuth, createMappingRouter(mappingController));
   app.use("/api/firmware", requireAuth, createFirmwareRouter(firmwareController));
-  app.use("/api/system/diagnostics", requireAuth, createDiagnosticsRouter());
-  app.use("/api/system/maintenance", requireAuth, createMaintenanceRouter());
+  app.use("/api/system/diagnostics", requireAuth, createDiagnosticsRouter(diagnosticsController));
+  app.use("/api/system/maintenance", requireAuth, createMaintenanceRouter(maintenanceController));
 
   // RobotApp (the local HMI PWA) is now served by its own container,
   // reverse-proxying /api, /ws, /maps and /health back to this process on
@@ -177,6 +193,16 @@ export function createApp(rosNode: rclnodejs.Node, deviceIdentity: DeviceIdentit
 
   const registerPlatformLink = (link: IPlatformLink): void => {
     registerTeleopLinkHandler({ link, teleopService, navigationService, deviceIdentity, topicGateway });
+    registerTelemetryBroadcast({
+      topicGateway,
+      navigationService,
+      mappingService,
+      teleopService,
+      deviceIdentity,
+      launchManager,
+      link,
+    });
+    maintenanceService.setPlatformLink(link);
   };
 
   return { app, registerWebSockets, registerPlatformLink, teleopService, rosterSyncService };

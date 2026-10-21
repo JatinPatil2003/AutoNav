@@ -50,4 +50,11 @@ export class FakePlatformClient implements IPlatformClient {
     entry.pinUpdatedCount += 1;
     return entry;
   }
+
+  rotatedSecret: string | null = null;
+
+  async rotateLinkSecret(): Promise<{ linkSecret: string }> {
+    this.rotatedSecret = "fake-rotated-secret";
+    return { linkSecret: this.rotatedSecret };
+  }
 }

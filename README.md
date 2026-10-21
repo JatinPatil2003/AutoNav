@@ -84,10 +84,12 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
     │   ├── controller.Dockerfile      # ros2_control + autonav_firmware (ESP32)
     │   ├── localization.Dockerfile    # robot_localization EKF
     │   ├── navigation.Dockerfile      # Nav2 / slam_toolbox / cartographer
+    │   ├── firmware.Dockerfile        # esp32_bridge_node serial middleware
+    │   ├── utils.Dockerfile           # always-on cmd_vel watchdog + heartbeat
     │   ├── joystick.Dockerfile        # standalone teleop image (ros:humble)
     │   └── entrypoint.bash
-    ├── docker-compose.yml             # always-on robot stack: mongo, robotserver, lidar, imu, controller, localization, navigation, micro_ros
-    ├── docker-compose.dev.yml         # rviz viewers + interactive save_map, for a dev machine
+    ├── docker-compose.yml             # always-on robot stack: autonav-mongodb, autonav-robotserver, autonav-lidar, autonav-imu, autonav-controller, autonav-localization, autonav-navigation, autonav-firmware, autonav-utils
+    ├── docker-compose.dev.yml         # rviz viewers + interactive autonav-save_map, for a dev machine
     ├── autonav_bringup
     │   ├── CMakeLists.txt
     │   └── launch
@@ -100,9 +102,7 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
     ├── autonav_controller
     │   ├── CMakeLists.txt
     │   ├── autonav_controller
-    │   │   ├── cmd_vel_republisher.py
     │   │   ├── control.py
-    │   │   ├── lidar_republisher.py
     │   │   ├── odom_logger.py
     │   │   ├── pid_controller.py
     │   │   └── tune_pid.py
@@ -149,6 +149,7 @@ It excels in autonomous pathfinding and obstacle avoidance. At its core, AutoNav
     │       ├── cartographer.rviz
     │       ├── navigation.rviz
     │       └── slam.rviz
+    ├── autonav_utils                   # always-on cmd_vel watchdog, heartbeat, SLAM-time tf_pose_bridge; used by docker/utils.Dockerfile
     ├── autonav_imu                     # IMU driver, used by docker/imu.Dockerfile
     ├── rplidar_ros                     # lidar driver, used by docker/lidar.Dockerfile
     └── RobotServer                     # Node/TypeScript ROS bridge (rclnodejs) — see RobotServer/README.md
@@ -193,7 +194,7 @@ Make sure you are in the project directory:
 cd colcon_ws/src/AutoNav
 ```
 
- - For the always-on robot stack (mongo, robotserver, lidar, imu, controller, localization, navigation, micro_ros)
+ - For the always-on robot stack (autonav-mongodb, autonav-robotserver, autonav-lidar, autonav-imu, autonav-controller, autonav-localization, autonav-navigation, autonav-firmware, autonav-utils)
 
     ```bash
     docker compose up -d
@@ -202,9 +203,9 @@ cd colcon_ws/src/AutoNav
  - For Mapping (swap the navigation container into slam/cartographer mode)
 
     ```bash
-    NAV_MODE=slam docker compose up navigation
+    NAV_MODE=slam docker compose up autonav-navigation
     # or
-    NAV_MODE=cartographer docker compose up navigation
+    NAV_MODE=cartographer docker compose up autonav-navigation
     ```
 
     https://github.com/JatinPatil2003/AutoNav/assets/89979346/1e70e5b4-4566-484d-8f96-549d4326ddfe
@@ -212,13 +213,13 @@ cd colcon_ws/src/AutoNav
  - For Saving a Map
 
     ```bash
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm save_map
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm autonav-save_map
     ```
 
  - For Navigation on a saved map
 
     ```bash
-    docker compose up navigation
+    docker compose up autonav-navigation
     ```
 
     https://github.com/JatinPatil2003/AutoNav/assets/89979346/8b9d2ae8-db69-4070-b972-aa64177b11e3
@@ -227,7 +228,7 @@ cd colcon_ws/src/AutoNav
 
     ```bash
     xhost +local:
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml up {rviz/rviz_cartographer/rviz_navigation}
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml up {autonav-rviz/autonav-rviz_cartographer/autonav-rviz_navigation}
     ```
 
 ### 🧪 Tests

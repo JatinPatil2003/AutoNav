@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 
 import { config } from "../config/env";
+import { linkSecretStore } from "../config/linkSecretStore";
 import { logger } from "../common/utils/logger.util";
 import { DeviceIdentityService } from "../ros/deviceIdentity";
 import { IPlatformLink, PlatformLinkFrameHandler } from "./platformLink.interface";
@@ -74,6 +75,31 @@ export class PlatformLinkClient implements IPlatformLink {
     this.frameHandlers.push(handler);
   }
 
+  forceReconnect(): void {
+    if (this.stopped) return;
+    logger.info("platformLink: forcing reconnect to pick up a rotated credential");
+
+    // Fail-safe, same as any other disconnect — see this class's doc comment.
+    this.teleop.stop();
+
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.clearPingWatchdog();
+    this.backoffMs = INITIAL_BACKOFF_MS;
+
+    const oldSocket = this.socket;
+    this.socket = undefined;
+    if (oldSocket) {
+      // Strip listeners before terminating so the old socket's own
+      // close/error handlers don't also fire teardownAndScheduleReconnect()
+      // — that would race a second reconnect attempt against the explicit
+      // one below.
+      oldSocket.removeAllListeners();
+      oldSocket.terminate();
+    }
+
+    void this.connectWhenIdentityReady();
+  }
+
   private async connectWhenIdentityReady(): Promise<void> {
     let robotId = this.deviceIdentity.getRobotId();
     while (!robotId && !this.stopped) {
@@ -93,7 +119,7 @@ export class PlatformLinkClient implements IPlatformLink {
     const socket = new WebSocket(url, {
       headers: {
         "x-robot-id": robotId,
-        Authorization: `Robot ${config.robotLinkSecret}`,
+        Authorization: `Robot ${linkSecretStore.getSecret()}`,
       },
     });
     this.socket = socket;

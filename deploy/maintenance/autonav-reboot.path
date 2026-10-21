@@ -1,0 +1,14 @@
+[Unit]
+Description=Watch for RobotServer's reboot trigger file
+After=docker.service
+
+[Path]
+# Must match RUNTIME_DIR's host-side mount in docker-compose.yml
+# (./RobotServer/runtime:/app/runtime) and
+# RobotServer/src/modules/system/maintenance/maintenance.service.ts's
+# REBOOT_TRIGGER_FILE name. Adjust the path if your checkout isn't at this
+# location — systemd path units don't expand ~ or relative paths.
+PathExists=/home/jatin/Projects/AutoNav/RobotServer/runtime/reboot-requested
+
+[Install]
+WantedBy=multi-user.target

@@ -3,6 +3,7 @@ import { IncomingMessage } from "node:http";
 import { WebSocket } from "ws";
 import { logger } from "../../common/utils/logger.util";
 import { WsAuthenticator, WsConnectionHandler } from "../../core/wsRouter";
+import { ITelemetryRelay } from "../telemetry-relay/telemetryRelay.interface";
 import { IRobotDocument } from "../robots/robot.model";
 import { IRobotRepository } from "../robots/robot.repository.interface";
 import { IRobotConnectionRegistry } from "./robotConnectionRegistry.interface";
@@ -25,6 +26,7 @@ export class RobotLinkGateway {
   constructor(
     private readonly robotRepository: IRobotRepository,
     private readonly registry: IRobotConnectionRegistry,
+    private readonly telemetryRelay: ITelemetryRelay,
   ) {}
 
   authenticate: WsAuthenticator<RobotLinkAuthContext> = async (request: IncomingMessage) => {
@@ -64,6 +66,7 @@ export class RobotLinkGateway {
     }
 
     const { robotId } = context.robot;
+    const robotMongoId = context.robot._id.toString();
     logger.info({ robotId }, "RobotLinkGateway: robot connected");
 
     this.registry.register(robotId, ws);
@@ -91,7 +94,14 @@ export class RobotLinkGateway {
           maxLinear: frame.maxLinear,
           maxAngular: frame.maxAngular,
         });
+        return;
       }
+
+      // Every other inbound frame type is a Phase 3 streaming frame
+      // (pose.update/map.snapshot/nav.status/robot.status) — forwarded
+      // as-is to telemetry-relay's fan-out, which is the only thing that
+      // interprets their contents.
+      this.telemetryRelay.handleRobotFrame(robotMongoId, frame);
     });
 
     ws.on("close", () => {

@@ -64,6 +64,8 @@ export const baseApi = createApi({
     "AdminUsers",
     "UserAssignments",
     "RobotAssignments",
+    "RobotMaps",
+    "RobotGoals",
   ],
   endpoints: () => ({}),
 });

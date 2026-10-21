@@ -4,8 +4,8 @@ import { MappingService } from "./mapping.service";
 export class MappingController {
   constructor(private readonly mappingService: MappingService) {}
 
-  start = async (_req: Request, res: Response): Promise<void> => {
-    await this.mappingService.start();
+  start = async (req: Request, res: Response): Promise<void> => {
+    await this.mappingService.start(req.body.backend);
     res.status(200).json({ status: "started" });
   };
 

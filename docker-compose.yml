@@ -16,36 +16,58 @@
 # run on the robot itself.
 
 services:
-  mongodb:
+  autonav-mongodb:
     image: mongo:9.0.2
+    container_name: autonav-mongodb
     ports:
       - 27017:27017
     volumes:
       - ~/mongodb_data:/data/db
     restart: unless-stopped
 
-  micro_ros:
-    image: microros/micro-ros-agent:kilted
-    command: serial --dev /dev/esp
+  autonav-firmware:
+    # Replaces the old micro-ROS agent: the ESP32 firmware now speaks a
+    # custom serial protocol (see autonav_firmware/src/esp32_bridge_node.cpp)
+    # instead of micro-ROS, bridged by this node over /dev/esp.
+    build:
+      context: .
+      dockerfile: docker/firmware.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:firmware
+    container_name: autonav-firmware
     privileged: true
     network_mode: host
     ipc: host
     user: "1000:1000"
     volumes:
       - /dev/esp:/dev/esp
-      - ./fastdds.xml:/fastdds.xml
-    environment:
-      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-      - FASTDDS_DEFAULT_PROFILES_FILE=/fastdds.xml
     restart: unless-stopped
 
-  lidar:
+  autonav-utils:
+    # Always-on utilities, decoupled from controller/navigation's own
+    # lifecycles: the cmd_vel safety-timeout watchdog and the system
+    # liveness heartbeat. See autonav_utils/.
+    build:
+      context: .
+      dockerfile: docker/utils.Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
+    image: jatinpatil2003/autonav:utils
+    container_name: autonav-utils
+    network_mode: host
+    ipc: host
+    user: "1000:1000"
+    restart: unless-stopped
+
+  autonav-lidar:
     build:
       context: .
       dockerfile: docker/lidar.Dockerfile
       args:
         BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
     image: jatinpatil2003/autonav:lidar
+    container_name: autonav-lidar
     network_mode: host
     ipc: host
     privileged: true
@@ -54,13 +76,14 @@ services:
       - /dev/lidar:/dev/lidar
     restart: unless-stopped
 
-  imu:
+  autonav-imu:
     build:
       context: .
       dockerfile: docker/imu.Dockerfile
       args:
         BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
     image: jatinpatil2003/autonav:imu
+    container_name: autonav-imu
     network_mode: host
     ipc: host
     privileged: true
@@ -69,13 +92,14 @@ services:
       - /dev/imu:/dev/imu
     restart: unless-stopped
 
-  controller:
+  autonav-controller:
     build:
       context: .
       dockerfile: docker/controller.Dockerfile
       args:
         BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
     image: jatinpatil2003/autonav:controller
+    container_name: autonav-controller
     network_mode: host
     ipc: host
     privileged: true
@@ -84,28 +108,30 @@ services:
       - /dev/esp:/dev/esp
     restart: unless-stopped
 
-  localization:
+  autonav-localization:
     build:
       context: .
       dockerfile: docker/localization.Dockerfile
       args:
         BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
     image: jatinpatil2003/autonav:localization
+    container_name: autonav-localization
     network_mode: host
     ipc: host
     user: "1000:1000"
     restart: unless-stopped
     depends_on:
-      - imu
-      - controller
+      - autonav-imu
+      - autonav-controller
 
-  navigation:
+  autonav-navigation:
     build:
       context: .
       dockerfile: docker/navigation.Dockerfile
       args:
         BASE_IMAGE: ${BASE_IMAGE:-jatinpatil2003/autonav:base}
     image: jatinpatil2003/autonav:navigation
+    container_name: autonav-navigation
     network_mode: host
     ipc: host
     privileged: true
@@ -116,14 +142,15 @@ services:
       - ./RobotServer/maps:/colcon_ws/maps
     restart: unless-stopped
     depends_on:
-      - lidar
-      - localization
+      - autonav-lidar
+      - autonav-localization
 
-  robotserver:
+  autonav-robotserver:
     build:
       context: .
       dockerfile: RobotServer/Dockerfile
     image: jatinpatil2003/autonav:robotserver
+    container_name: autonav-robotserver
     network_mode: host
     ipc: host
     user: "1000:1000"
@@ -133,6 +160,7 @@ services:
       - MONGO_URI=mongodb://localhost:27017/autonav
       - CORS_ORIGINS=
       - MAPS_DIR=/app/maps
+      - RUNTIME_DIR=/app/runtime
       - CAMERA_DEVICE=/dev/robotcam
       - PLATFORM_BASE_URL=${PLATFORM_BASE_URL}
       - ROBOT_LINK_SECRET=${ROBOT_LINK_SECRET}
@@ -146,17 +174,23 @@ services:
     volumes:
       - /dev/robotcam:/dev/robotcam
       - ./RobotServer/maps:/app/maps
+      # Small persisted runtime state (rotated ROBOT_LINK_SECRET override,
+      # the reboot trigger file) — see config/linkSecretStore.ts and
+      # modules/system/maintenance/maintenance.service.ts. The reboot
+      # trigger's host path must match deploy/maintenance/autonav-reboot.path.
+      - ./RobotServer/runtime:/app/runtime
     restart: unless-stopped
     depends_on:
-      - mongodb
-      - navigation
+      - autonav-mongodb
+      - autonav-navigation
 
-  robotapp:
+  autonav-robotapp:
     build:
       context: .
       dockerfile: RobotApp/Dockerfile
     image: jatinpatil2003/autonav:robotapp
+    container_name: autonav-robotapp
     network_mode: host
     restart: unless-stopped
     depends_on:
-      - robotserver
+      - autonav-robotserver

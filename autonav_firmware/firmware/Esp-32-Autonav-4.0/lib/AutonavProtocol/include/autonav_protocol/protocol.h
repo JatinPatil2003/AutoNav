@@ -10,15 +10,25 @@
 namespace autonav_protocol {
 
 enum class CommandId : uint8_t {
-  kHeartbeat = 0x01,          // ESP32 -> ROS, periodic
-  kGetDeviceId = 0x02,        // ROS -> ESP32
-  kDeviceIdResponse = 0x03,   // ESP32 -> ROS
-  kSetLedPattern = 0x04,      // ROS -> ESP32
-  kSetBrightness = 0x05,      // ROS -> ESP32
-  kEstopPhysicalPush = 0x06,  // ESP32 -> ROS, on change
-  kEmergencyCommand = 0x07,   // ROS -> ESP32
-  kAck = 0x08,                // either direction
+  kHeartbeat = 0x01,            // ESP32 -> ROS, periodic
+  kGetDeviceId = 0x02,          // ROS -> ESP32
+  kDeviceIdResponse = 0x03,     // ESP32 -> ROS
+  kSetLedPattern = 0x04,        // ROS -> ESP32
+  kSetBrightness = 0x05,        // ROS -> ESP32
+  kEstopPhysicalPush = 0x06,    // ESP32 -> ROS, on change
+  kEmergencyCommand = 0x07,     // ROS -> ESP32
+  kAck = 0x08,                  // either direction
+  kGetBatteryStatus = 0x09,     // ROS -> ESP32
+  kBatteryStatusResponse = 0x0A, // ESP32 -> ROS
 };
+
+// kBatteryStatusResponse payload — packed manually into Frame::payload
+// byte-by-byte, same convention as kSetLedPattern's multi-field payload.
+// Little-endian, 7 bytes: float32 voltage_volts, uint8 percentage (0-100),
+// uint8 charging (0/1), uint8 is_default (1 until a real voltage-sense ADC
+// is wired up on this board — see GetBatteryStatus() in main.cpp). Must
+// stay identical to the ROS-side mirror's comment in esp32_protocol.hpp.
+constexpr size_t kBatteryStatusPayloadLen = 7;
 
 enum class AckStatus : uint8_t {
   kOk = 0,

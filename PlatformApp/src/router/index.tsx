@@ -9,8 +9,8 @@ import { AdminUsersPage } from "../features/admin/pages/AdminUsersPage";
 import { AdminRobotsPage } from "../features/admin/pages/AdminRobotsPage";
 import { DashboardLayout } from "../features/dashboard/layout/DashboardLayout";
 import { DashboardHome } from "../features/dashboard/pages/DashboardHome";
-import { MappingPlaceholderPage } from "../features/dashboard/pages/MappingPlaceholderPage";
-import { NavigationPlaceholderPage } from "../features/dashboard/pages/NavigationPlaceholderPage";
+import { MappingPage } from "../features/dashboard/pages/MappingPage";
+import { NavigationPage } from "../features/dashboard/pages/NavigationPage";
 import { AnalyticsPlaceholderPage } from "../features/dashboard/pages/AnalyticsPlaceholderPage";
 import { DocumentationPlaceholderPage } from "../features/dashboard/pages/DocumentationPlaceholderPage";
 import { PublicRoute } from "./PublicRoute";
@@ -88,8 +88,8 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <DashboardHome /> },
-      { path: "mapping", element: <MappingPlaceholderPage /> },
-      { path: "navigation", element: <NavigationPlaceholderPage /> },
+      { path: "mapping", element: <MappingPage /> },
+      { path: "navigation", element: <NavigationPage /> },
       { path: "analytics", element: <AnalyticsPlaceholderPage /> },
       { path: "docs", element: <DocumentationPlaceholderPage /> },
     ],

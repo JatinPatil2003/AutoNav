@@ -3,15 +3,28 @@ import { RosUnavailableError } from "../../common/errors";
 import { LaunchManager } from "../../ros/launchManager";
 import { runOnce } from "../../ros/runOnce";
 import { TopicGateway } from "../../ros/rosTopicGateway";
-import { mapOccupancyGridToMapUpdate, mapPoseToLocationUpdate, OccupancyGridMsg, PoseMsg } from "../telemetry/telemetry.mappers";
+import {
+  mapOccupancyGridToMapUpdate,
+  mapPoseStampedToLocationUpdate,
+  mapPoseToLocationUpdate,
+  OccupancyGridMsg,
+  PoseMsg,
+  PoseStampedMsg,
+} from "../telemetry/telemetry.mappers";
 import { IGoalRepository } from "../goals/goal.repository.interface";
 import { IMapRepository } from "../maps/map.repository.interface";
+import { DEFAULT_SLAM_BACKEND, SLAM_LAUNCH_FILE, SlamBackend } from "./mapping.types";
 
 const TEMP_MAP_NAME = "temp";
+const MAPPING_LAUNCH_NAME = "mapping";
 const MAP_TOPIC = "/map";
 const AMCL_POSE_TOPIC = "/amcl_pose";
+const SLAM_BRIDGE_POSE_TOPIC = "/pose_bridge/map_pose";
 
 export class MappingService {
+  /** Only meaningful while launchManager.status().name === "mapping" — see getActiveBackend(). */
+  private currentBackend: SlamBackend | null = null;
+
   constructor(
     private readonly topicGateway: TopicGateway,
     private readonly goalRepository: IGoalRepository,
@@ -20,13 +33,20 @@ export class MappingService {
     private readonly mapsDir: string,
   ) {}
 
-  async start(): Promise<void> {
-    this.launchManager.start("mapping", "ros2", ["launch", "autonav_navigation", "slam.launch.py"]);
+  async start(backend: SlamBackend = DEFAULT_SLAM_BACKEND): Promise<void> {
+    this.launchManager.start(MAPPING_LAUNCH_NAME, "ros2", ["launch", "autonav_navigation", SLAM_LAUNCH_FILE[backend]]);
+    this.currentBackend = backend;
     await this.goalRepository.deleteByMap(TEMP_MAP_NAME);
   }
 
   stop(): void {
     this.launchManager.stop();
+    this.currentBackend = null;
+  }
+
+  /** Null unless mapping is the launch actually running right now — guards against a stale backend value if something else (e.g. NavigationService.start()) stopped mapping via the shared LaunchManager without going through this.stop(). */
+  getActiveBackend(): SlamBackend | null {
+    return this.launchManager.status().name === MAPPING_LAUNCH_NAME ? this.currentBackend : null;
   }
 
   getCurrentMap() {
@@ -35,10 +55,18 @@ export class MappingService {
   }
 
   /**
-   * AMCL isn't running during SLAM, so this relies on the TF2 gap noted in
-   * telemetry.broadcaster.ts and will be null until that's resolved.
+   * AMCL isn't running during SLAM, so while mapping is active this prefers
+   * the map->base_footprint TF republished as a topic by
+   * autonav_utils's tf_pose_bridge node (launched alongside
+   * both SLAM backends); otherwise falls back to AMCL.
    */
   getCurrentLocation() {
+    if (this.launchManager.status().name === MAPPING_LAUNCH_NAME) {
+      const bridgePose = this.topicGateway.getLatest<PoseStampedMsg>(SLAM_BRIDGE_POSE_TOPIC);
+      if (bridgePose) {
+        return mapPoseStampedToLocationUpdate(bridgePose);
+      }
+    }
     const poseMsg = this.topicGateway.getLatest<PoseMsg>(AMCL_POSE_TOPIC);
     return poseMsg ? mapPoseToLocationUpdate(poseMsg) : null;
   }
@@ -46,9 +74,7 @@ export class MappingService {
   async captureWaypoint(name: string): Promise<void> {
     const location = this.getCurrentLocation();
     if (!location) {
-      throw new RosUnavailableError(
-        "No live pose available to capture — this needs the TF2 lookup noted in telemetry.broadcaster.ts, not yet implemented",
-      );
+      throw new RosUnavailableError("No live pose available to capture — tf_pose_bridge hasn't published a map->base_footprint transform yet");
     }
     await this.goalRepository.upsert(TEMP_MAP_NAME, name, location);
   }

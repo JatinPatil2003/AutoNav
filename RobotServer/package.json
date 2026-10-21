@@ -11,7 +11,8 @@
     "start": "node dist/index.js",
     "lint": "eslint \"src/**/*.ts\"",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "smoke:ros": "ts-node scripts/ros-smoke-test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
